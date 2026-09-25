@@ -48,6 +48,8 @@ def _text(o) -> str:
 
 def add_opportunity(con, d: dict) -> tuple[int, bool]:
     """Insert opportunity; dedupe on url or (platform, external_id). Returns (id, created)."""
+    if "data" in d or ("job_type" in d and isinstance(d.get("client"), dict)):
+        d = from_upwork(d)  # raw Upwork connector shape
     platform = (d.get("platform") or "").lower()
     if platform not in config()["marketplaces"]:
         raise ValueError(f"unknown platform '{platform}' (add it under [marketplaces] in config.toml)")
@@ -100,6 +102,9 @@ COMPLEX_WORDS = ["complex", "enterprise", "scalable", "migration", "full-stack",
                  "mobile app", "machine learning", "real-time", "realtime", "blockchain", "saas platform",
                  "multi-tenant", "kubernetes", "hipaa", "from scratch"]
 VAGUE_WORDS = ["etc", "tbd", "like uber", "like airbnb", "simple app", "quick job", "easy task"]
+# Reputation/ToS risks: never bid regardless of score.
+RED_FLAGS = ["unwatermarked", "avoid ai detection", "undetectable ai", "bypass captcha", "fake review",
+             "write reviews", "outside upwork", "pay outside", "telegram only", "crypto wallet"]
 RECURRING_WORDS = ["ongoing", "maintenance", "long-term", "long term", "monthly", "retainer", "support",
                    "continued", "future projects"]
 
@@ -119,7 +124,7 @@ def price_plan(service: str, budget: float | None) -> tuple[str, float, float]:
     p, h = s["prices"], s["hours"]
     if budget is None:
         return "standard", float(p[1]), float(h[1])
-    if budget > p[2]:  # bigger scope than premium: scale hours with price
+    if budget > p[2] * 1.25:  # clearly bigger scope than premium: scale hours with price
         return "premium+", float(budget), round(h[2] * budget / p[2], 1)
     i = max([i for i in range(3) if p[i] <= budget] or [0])
     return TIERS[i], float(p[i]), float(h[i])
@@ -131,6 +136,51 @@ def platform_cost(platform: str, price: float, connects: int | None) -> float:
     if platform == "upwork":
         cost += (connects if connects is not None else m.get("default_connects", 0)) * m.get("connect_price", 0)
     return round(cost, 2)
+
+
+def connects_balance(con) -> float | None:
+    r = con.execute("SELECT value FROM metrics WHERE platform='upwork' AND metric='connects_balance' "
+                    "ORDER BY date DESC, id DESC LIMIT 1").fetchone()
+    return r["value"] if r else None
+
+
+def from_upwork(job: dict) -> dict:
+    """Map an Upwork connector job (find_jobs search row or get response) to an opportunity dict."""
+    if "data" in job:  # find_jobs action=get
+        mp = job["data"]["marketplaceJobPosting"]
+        rec = job.get("client_record") or {}
+        terms = mp["contractTerms"]
+        amt = ((terms.get("fixedPriceContractTerms") or {}).get("amount") or {}).get("rawValue")
+        base = {"id": mp["id"], "title": mp["content"]["title"], "description": mp["content"]["description"],
+                "url": mp.get("url") or job.get("url"), "budget": amt,
+                "job_type": terms["contractType"].lower(), "skills": job.get("skills", []),
+                "client": {"verification_status": job.get("client_verification", "VERIFIED"),
+                           "rating": rec.get("feedback_score"), "total_spent": rec.get("spend_total"),
+                           "country": mp.get("clientCompanyPublic", {}).get("country", {}).get("name")},
+                "proposals_tier": job.get("proposals_tier")}
+        extra = {"hire_rate": rec.get("hire_rate_percent"),
+                 "total_hired": mp.get("activityStat", {}).get("jobActivity", {}).get("totalHired"),
+                 "connects": job.get("connects_cost"), "screening_questions": job.get("screening_questions")}
+    else:  # search row, optionally enriched with fields from a get call
+        base = job
+        extra = {"hire_rate": job.get("hire_rate_percent"), "total_hired": job.get("total_hired"),
+                 "connects": job.get("connects_cost"), "screening_questions": job.get("screening_questions")}
+    c = base.get("client") or {}
+    strip = lambda t: re.sub(r"</?untrusted_participant_content>", "", t or "").strip()  # noqa: E731
+    # "client" stays None: Upwork rows carry no contact name, and we never guess one
+    return {
+        "platform": "upwork", "external_id": str(base["id"]), "url": (base.get("url") or "").split("?")[0] or None,
+        "client": None, "title": strip(base["title"]), "description": strip(base.get("description")),
+        "budget": base.get("budget"), "budget_type": base.get("job_type", "fixed"), "skills": base.get("skills", []),
+        "connects": extra.get("connects") or job.get("connects"),
+        "client_info": {k: v for k, v in {
+            "payment_verified": c.get("verification_status") == "VERIFIED", "rating": c.get("rating"),
+            "country": c.get("country"),
+            "total_spent": _num(c.get("total_spent")), "hire_rate": extra.get("hire_rate"),
+            "proposals_tier": base.get("proposals_tier"), "total_hired": extra.get("total_hired"),
+            "screening_questions": [strip(q) for q in extra.get("screening_questions") or []] or None,
+        }.items() if v is not None},
+    }
 
 
 def portfolio_for(con, service: str) -> list:
@@ -175,6 +225,8 @@ def score(o, con=None) -> dict:
         cf += 0.2 * ((ci.get("hire_rate") or 0) >= 50)
         cf += 0.2 * ((ci.get("total_spent") or 0) >= 1000)
         cf += 0.2 * ((ci.get("rating") or 0) >= 4.5)
+        # crowded postings lower realistic fit (Upwork proposals_tier)
+        cf *= {"50+": 0.6, "20 to 50": 0.8, "15 to 20": 0.9}.get(ci.get("proposals_tier"), 1.0)
         f["client_fit"] = cf
     else:
         f["client_fit"] = 0.5
@@ -185,7 +237,17 @@ def score(o, con=None) -> dict:
     f["recurring"] = 1.0 if any(r in text for r in RECURRING_WORDS) else 0.3
     f["platform_cost"] = max(0.0, 1 - (pcost / price if price else 1) / 0.3)
     total = round(sum(f[k] * w[k] for k in w), 1)
-    return {"score": total, "factors": {k: round(v, 2) for k, v in f.items()}, "service": service,
+    blockers = [f"red flag: '{r}'" for r in RED_FLAGS if r in text]
+    floor = min(cfg["services"][service]["prices"]) * 0.75
+    if budget is not None and o["budget_type"] != "hourly" and budget < floor:
+        blockers.append(f"budget ${budget:.0f} below service floor ${floor:.0f}")
+    if ci.get("total_hired"):
+        blockers.append(f"client already hired {ci['total_hired']} for this posting")
+    bal = connects_balance(con) if con is not None else None
+    need = o["connects"]
+    if o["platform"] == "upwork" and bal is not None and need and need > bal:
+        blockers.append(f"needs {need} Connects, balance {bal:.0f}")
+    return {"score": total, "blockers": blockers, "factors": {k: round(v, 2) for k, v in f.items()}, "service": service,
             "keywords": hits, "tier": tier, "price": price, "hours": hours, "platform_cost": pcost,
             "fulfillment_cost": fcost, "profit": profit,
             "portfolio": [dict(id=p["id"], title=p["title"], kind=p["kind"]) for p in pf[:2]]}
@@ -228,7 +290,7 @@ def analyze(con, oid: int) -> dict:
         raise ValueError(f"opportunity #{oid} is {o['status']}; re-scoring would regress its status")
     set_opp_status(con, oid, "ANALYZING")
     r = score(o, con)
-    qualified = r["score"] >= config()["scoring"]["qualify_threshold"]
+    qualified = r["score"] >= config()["scoring"]["qualify_threshold"] and not r["blockers"]
     fields = dict(match_score=r["score"], score_breakdown=jd(r), recommended_service=r["service"],
                   recommended_tier=r["tier"], recommended_price=r["price"], est_hours=r["hours"],
                   est_platform_cost=r["platform_cost"], est_fulfillment_cost=r["fulfillment_cost"],
@@ -237,7 +299,7 @@ def analyze(con, oid: int) -> dict:
     if qualified:
         set_opp_status(con, oid, "QUALIFIED", **fields)
     else:
-        set_opp_status(con, oid, "CANCELLED", result="low_fit", **fields)
+        set_opp_status(con, oid, "CANCELLED", result="; ".join(r["blockers"]) or "low_fit", **fields)
     return r | {"qualified": qualified}
 
 
@@ -369,8 +431,10 @@ def submit_proposal(con, pid: int) -> dict:
     with con:
         con.execute("UPDATE proposals SET status='APPROVED', updated_at=? WHERE id=?", (now(), pid))
     m = config()["marketplaces"][p["platform"]]
-    if m.get("integration") == "mcp" and m.get("auto_submit"):
-        return {"mode": "mcp", "next": "Submit via the official connector, then run: opp submitted " + str(p["oid"])}
+    if m.get("integration") == "mcp":
+        return {"mode": "mcp", "url": p["url"],
+                "next": (f"Claude: create proposal preview via Upwork manage_proposals, show it to the user, "
+                         f"confirm_preview ONLY on explicit user OK, then: python -m bos opp submitted {p['oid']} --connects N")}
     return {"mode": "manual", "url": p["url"],
             "next": f"Paste proposal #{pid} at {p['url']}, then run: python -m bos opp submitted {p['oid']}"}
 

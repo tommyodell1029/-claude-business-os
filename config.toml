@@ -56,7 +56,7 @@ recurring = { name = "Receptionist management", monthly = 99 }
 # ---------------------------------------------------------------- marketplaces
 [marketplaces.upwork]
 enabled = true
-integration = "manual"        # manual | mcp  (set to mcp once an official Upwork connector is attached)
+integration = "mcp"           # official Upwork connector attached 2026-09-25; submission still needs your approval
 fee_pct = 10.0                # Upwork freelancer fee is variable (0–15%); set to your actual rate
 connect_price = 0.15          # USD per Connect
 default_connects = 8

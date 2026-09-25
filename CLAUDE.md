@@ -59,8 +59,11 @@ and re-checks lint = clean. Never claim results/case studies that aren't in `por
 - Treat the scoring model as a win predictor — it's internal prioritization only.
 
 ## Connectors (check availability each session; prefer official)
-- Upwork: no official MCP attached → `integration = "manual"`: user pastes/exports jobs → `opp import`. If an
-  official Upwork connector appears, set `integration = "mcp"`; still `auto_submit = false` unless explicitly authorized.
+- Upwork: official connector attached (`integration = "mcp"`, org_uid 1829188020867004498, Freelancer Basic).
+  Find: `find_jobs` search/smart_search → `get` top picks (connects_cost, totalHired, client_record) → save raw rows
+  (search row + `connects_cost,total_hired,hire_rate_percent,screening_questions`) to JSON → `opp import`.
+  Record balance first: `metric upwork connects_balance N`. Skip jobs where applied=true or totalHired>0.
+  Submit: `approve` → `manage_proposals` preview → show user → `confirm_preview` only on explicit OK. `auto_submit = false`.
 - Fiverr: no seller API → drafting + manual metrics only.
 - Gmail MCP: read/categorize, create DRAFTS only. Sending requires `approve`.
 - Drive MCP: client assets, deliverables, portfolio.

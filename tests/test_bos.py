@@ -58,7 +58,7 @@ class TestDB(Base):
     def test_config_valid(self):
         self.assertEqual(core.validate_config(core.config()), [])
         bad = json.loads(json.dumps(core.config()))
-        bad["marketplaces"]["upwork"]["auto_submit"] = True
+        bad["marketplaces"]["fiverr"]["auto_submit"] = True  # fiverr has no official integration
         self.assertTrue(any("auto_submit" in e for e in core.validate_config(bad)))
 
 
@@ -200,6 +200,7 @@ class TestMarketplace(Base):
         self.assertEqual(biz.price_plan("n8n", 150), ("standard", 99.0, 4.0))
         self.assertEqual(biz.price_plan("n8n", 30)[0], "basic")
         self.assertEqual(biz.price_plan("n8n", None)[0], "standard")
+        self.assertEqual(biz.price_plan("n8n", 200)[0], "premium")
         t, p, h = biz.price_plan("n8n", 400)
         self.assertEqual((t, p), ("premium+", 400.0))
         self.assertGreater(h, 8)
@@ -209,6 +210,56 @@ class TestMarketplace(Base):
         self.assertAlmostEqual(biz.platform_cost("upwork", 100, None), 11.2)
         self.assertAlmostEqual(biz.platform_cost("upwork", 100, 4), 10.6)
         self.assertAlmostEqual(biz.platform_cost("fiverr", 100, None), 20.0)
+
+
+UPWORK_ROW = {
+    "id": "2103419839125733470", "title": "Shopify Product Import Automation (n8n + API)", "budget": "200.00",
+    "job_type": "fixed", "proposals_tier": "15 to 20", "skills": ["Shopify", "API Integration", "Automation"],
+    "description": "<untrusted_participant_content>\nn8n + Shopify product import automation with API integration, "
+                   "pricing rules, variant creation and error handling.\n</untrusted_participant_content>",
+    "client": {"country": "India", "verification_status": "VERIFIED"},
+    "url": "https://www.upwork.com/jobs/~022103419839125733470?utm_campaign=x",
+    "connects_cost": 11, "total_hired": 0, "hire_rate_percent": 0,
+}
+
+
+class TestUpworkConnector(Base):
+    def test_mapping(self):
+        d = biz.from_upwork(UPWORK_ROW)
+        self.assertEqual(d["url"], "https://www.upwork.com/jobs/~022103419839125733470")
+        self.assertNotIn("untrusted", d["description"])
+        self.assertEqual((d["connects"], d["client_info"]["payment_verified"]), (11, True))
+        self.assertIsNone(d["client"])  # country must never become a greeting name
+
+    def test_auto_detect_on_add(self):
+        i, new = biz.add_opportunity(self.con, dict(UPWORK_ROW))
+        o = self.con.execute("SELECT * FROM marketplace_opportunities WHERE id=?", (i,)).fetchone()
+        self.assertEqual((o["platform"], o["external_id"], o["connects"], o["budget_max"]), ("upwork", UPWORK_ROW["id"], 11, 200))
+        self.assertFalse(biz.add_opportunity(self.con, dict(UPWORK_ROW))[1])
+
+    def test_already_hired_blocks(self):
+        i, _ = biz.add_opportunity(self.con, dict(UPWORK_ROW, total_hired=1))
+        r = biz.analyze(self.con, i)
+        self.assertFalse(r["qualified"])
+        self.assertIn("already hired", self.con.execute("SELECT result FROM marketplace_opportunities WHERE id=?", (i,)).fetchone()[0])
+
+    def test_connects_balance_blocks(self):
+        biz.add_metric(self.con, "upwork", "connects_balance", 5)
+        i, _ = biz.add_opportunity(self.con, dict(UPWORK_ROW))
+        self.assertIn("needs 11 Connects, balance 5", biz.analyze(self.con, i)["blockers"])
+
+    def test_red_flag_and_budget_floor_block(self):
+        i, _ = biz.add_opportunity(self.con, dict(UPWORK_ROW, description="n8n pipeline producing unwatermarked AI text"))
+        self.assertTrue(any("red flag" in b for b in biz.analyze(self.con, i)["blockers"]))
+        j, _ = biz.add_opportunity(self.con, dict(UPWORK_ROW, id="3", url=None, budget="10.00"))
+        self.assertTrue(any("below service floor" in b for b in biz.analyze(self.con, j)["blockers"]))
+
+    def test_competition_lowers_fit(self):
+        a = biz.score(self.con.execute("SELECT * FROM marketplace_opportunities WHERE id=?",
+                                       (biz.add_opportunity(self.con, dict(UPWORK_ROW))[0],)).fetchone())
+        b = biz.score(self.con.execute("SELECT * FROM marketplace_opportunities WHERE id=?",
+                                       (biz.add_opportunity(self.con, dict(UPWORK_ROW, id="2", url=None, proposals_tier="50+"))[0],)).fetchone())
+        self.assertLess(b["factors"]["client_fit"], a["factors"]["client_fit"])
 
 
 class TestProposals(Base):
@@ -247,7 +298,8 @@ class TestProposals(Base):
         tid = self.con.execute("SELECT id FROM tasks WHERE type='approval'").fetchone()[0]
         core.decide(self.con, tid, True)
         r = biz.submit_proposal(self.con, pid)
-        self.assertEqual(r["mode"], "manual")
+        self.assertEqual(r["mode"], "mcp")  # config: official Upwork connector
+        self.assertIn("confirm_preview ONLY on explicit user OK", r["next"])
         self.assertEqual(self.con.execute("SELECT status FROM marketplace_opportunities WHERE id=?", (i,)).fetchone()[0], "APPROVED")
 
 
@@ -441,7 +493,7 @@ class TestCLI(Base):
         self.assertIn("submit_upwork_proposal", o)
         tid = self.con.execute("SELECT id FROM tasks WHERE type='approval'").fetchone()[0]
         rc, o = self.cli("approve", str(tid))
-        self.assertIn("manual", o)
+        self.assertIn("manage_proposals", o)
         rc, o = self.cli("opp", "submitted", "1", "--connects", "10")
         self.assertEqual(self.con.execute("SELECT amount FROM financial_transactions WHERE kind='connects'").fetchone()[0], 1.5)
         rc, o = self.cli("daily")
