@@ -895,7 +895,7 @@ def fiverr_gig(con, service: str) -> dict:
         names, s["prices"], s["hours"], [1, 2, 3],
         [f"1 simple {s['name'].lower()} deliverable", "Multi-step build + documentation", "Advanced build + testing + handoff call"])]
     body = render(template(con, "fiverr_gig_description") or "{hook}", hook=hooks[service],
-                  bullets="\n".join(f"- {u.capitalize()}" for u in ["Working, tested build", "Short usage guide"] + s["upsells"][:2]),
+                  bullets="\n".join(f"- {u[:1].upper() + u[1:]}" for u in ["Working, tested build", "Short usage guide"] + s["upsells"][:2]),
                   tools=", ".join(k for k in kws[:8]))
     gig = {"service": service, "title": titles[service][:80], "tags": [k[:20] for k in kws[:5]], "packages": pkgs,
            "description": body[:1200],
