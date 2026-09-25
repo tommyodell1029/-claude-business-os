@@ -1,0 +1,157 @@
+# Seed template library. Loaded into the `templates` table on first DB creation.
+# Search before building: `python -m bos templates <query>`. {placeholders} are filled by bos.biz.render().
+
+[proposal_core]
+kind = "proposal"
+tags = ["upwork", "all"]
+body = """{opening}
+
+{understanding}
+
+How I'd build it:
+{plan}
+
+Timeline: {timeline_days} day(s). Price: ${price:.0f} ({tier} scope).
+{proof}
+Questions before I start:
+{questions}
+
+{cta}"""
+
+[outreach_initial]
+kind = "outreach"
+tags = ["email", "INITIAL"]
+body = """Subject: {subject}
+
+Hi {greeting},
+
+{observation}
+
+{offer}
+
+{cta}
+
+{signature}
+{footer}"""
+
+[outreach_follow_up_1]
+kind = "outreach"
+tags = ["email", "FOLLOW_UP_1"]
+body = """Subject: Re: {subject}
+
+Hi {greeting},
+
+Quick follow-up on my note about {problem_short}. {offer_short}
+
+Worth a 10-minute look? If not, just say so and I won't follow up.
+
+{signature}
+{footer}"""
+
+[outreach_follow_up_2]
+kind = "outreach"
+tags = ["email", "FOLLOW_UP_2"]
+body = """Subject: Re: {subject}
+
+Hi {greeting},
+
+Last note from me on this. If {problem_short} ever becomes a priority, I can set up {service_name} in about {days} days.
+
+{signature}
+{footer}"""
+
+[outreach_long_term_follow_up]
+kind = "outreach"
+tags = ["email", "LONG_TERM_FOLLOW_UP"]
+body = """Subject: {subject} — checking back
+
+Hi {greeting},
+
+Checking back after a few weeks in case timing is better now for {problem_short}. Happy to share a short demo.
+
+{signature}
+{footer}"""
+
+[playbook_n8n]
+kind = "playbook"
+tags = ["n8n"]
+body = """Read requirements
+Identify systems + credentials needed (request access via client, never store passwords)
+Design workflow (nodes, triggers, error branch)
+Build workflow (reuse templates first)
+Test with sample + edge-case data
+Write documentation
+Create handoff (export JSON, credentials checklist, runbook)
+Deliver (APPROVAL: send_deliverable)
+Request approval / revisions
+Archive reusable components to template library"""
+
+[playbook_leadgen]
+kind = "playbook"
+tags = ["leadgen"]
+body = """Confirm niche, geography, criteria, permitted data sources
+Collect records from permitted sources only
+Normalize + dedupe
+Enrich permitted business fields only (no personal data)
+Score + qualify
+QA sample (no fabricated contacts)
+Package sheet/CSV + method notes
+Deliver (APPROVAL: send_deliverable)
+Request approval / revisions
+Archive reusable components"""
+
+[playbook_microbuild]
+kind = "playbook"
+tags = ["microbuild"]
+body = """Analyze requirements
+Create minimal architecture
+Implement
+Test
+Fix
+Document
+Package
+Deliver (APPROVAL: send_deliverable)
+Request approval / revisions
+Archive reusable components"""
+
+[playbook_sheets]
+kind = "playbook"
+tags = ["sheets"]
+body = """Inspect file
+Understand desired outcome
+Build formulas/scripts/workflow
+Test edge cases
+Deliver clean version (APPROVAL: send_deliverable)
+Document usage
+Request approval / revisions
+Archive reusable components"""
+
+[playbook_voice]
+kind = "playbook"
+tags = ["voice"]
+body = """Collect business info, hours, FAQs, booking rules, escalation contacts
+Choose voice platform (reuse existing account/connector; APPROVAL: spend_money if new plan)
+Write agent prompt + knowledge base
+Configure booking/SMS/call routing integrations
+Test calls (happy path, edge cases, escalation)
+Document + handoff
+Go live (APPROVAL: deploy_production)
+Request approval / revisions
+Archive reusable components"""
+
+[fiverr_gig_description]
+kind = "fiverr"
+tags = ["gig"]
+body = """{hook}
+
+What you get:
+{bullets}
+
+How it works:
+1. You send your goal + current tools.
+2. I confirm scope and the right package.
+3. I build, test, and hand off with a short guide.
+
+Tools I work with: {tools}
+
+Message me before ordering if you're unsure which package fits."""

@@ -1,0 +1,131 @@
+# Business OS — central configuration. One file. Edit values, not code.
+
+[business]
+name = "AI Automation Studio"
+owner = "Tommy O'Dell"
+# Required in cold email footers (CAN-SPAM). Fill before sending any outreach.
+postal_address = ""
+timezone = "America/New_York"
+hourly_cost = 0.0            # your own time cost per hour, used in profit estimates (0 = ignore)
+
+[paths]
+db = "data/bos.db"           # override with env BOS_DB
+
+# ---------------------------------------------------------------- services
+# prices: [basic, standard, premium]; hours: estimated fulfillment hours per tier
+[services.n8n]
+name = "n8n AI Automation"
+prices = [49, 99, 199]
+hours = [2, 4, 8]
+keywords = ["n8n", "automation", "workflow", "zapier", "make.com", "integromat", "webhook", "api", "integration", "crm", "email automation", "ai agent", "google sheets", "notifications", "lead routing", "follow-up"]
+upsells = ["error monitoring + alerts", "CRM sync", "AI classification step", "monthly maintenance"]
+recurring = { name = "Workflow maintenance & monitoring", monthly = 49 }
+
+[services.leadgen]
+name = "AI Lead Generation Systems"
+prices = [49, 99, 199]
+hours = [2, 4, 8]
+keywords = ["lead generation", "leads", "lead list", "prospecting", "enrichment", "google maps", "b2b", "qualification", "crm", "data collection", "outreach list"]
+upsells = ["automated weekly lead refresh", "CRM import", "outreach sequence drafting", "lead scoring dashboard"]
+recurring = { name = "Monthly lead refresh", monthly = 79 }
+
+[services.microbuild]
+name = "Claude Code Micro-Builds"
+prices = [59, 149, 299]
+hours = [2, 5, 10]
+keywords = ["python", "script", "tool", "dashboard", "api", "ai assistant", "chatbot", "claude", "openai", "llm", "internal tool", "utility", "web app", "automation script", "scraper"]
+upsells = ["hosting/deployment", "admin dashboard", "additional integration", "monthly support"]
+recurring = { name = "Tool support & updates", monthly = 59 }
+
+[services.sheets]
+name = "Google Sheets / Excel Automation"
+prices = [25, 50, 100]
+hours = [1, 2, 4]
+keywords = ["google sheets", "excel", "spreadsheet", "formula", "vba", "apps script", "dashboard", "data cleaning", "pivot", "report", "csv", "import"]
+upsells = ["automated reporting", "dashboard", "CRM integration", "AI data extraction"]
+recurring = { name = "Monthly reporting upkeep", monthly = 29 }
+
+[services.voice]
+name = "AI Voice / Receptionist Systems"
+prices = [149, 299, 499]
+hours = [3, 6, 12]
+keywords = ["ai receptionist", "voice agent", "voice ai", "phone", "call", "vapi", "retell", "elevenlabs", "twilio", "appointment booking", "missed call", "sms", "ivr"]
+upsells = ["SMS follow-up", "calendar booking", "CRM logging", "monthly call review & tuning"]
+recurring = { name = "Receptionist management", monthly = 99 }
+
+# ---------------------------------------------------------------- marketplaces
+[marketplaces.upwork]
+enabled = true
+integration = "manual"        # manual | mcp  (set to mcp once an official Upwork connector is attached)
+fee_pct = 10.0                # Upwork freelancer fee is variable (0–15%); set to your actual rate
+connect_price = 0.15          # USD per Connect
+default_connects = 8
+auto_submit = false           # never true unless an official integration explicitly permits it
+
+[marketplaces.fiverr]
+enabled = true
+integration = "manual"        # no public seller API; drafting only
+fee_pct = 20.0
+auto_submit = false
+
+# ---------------------------------------------------------------- scoring (weights sum to 100)
+[scoring.weights]
+skill_match = 25
+scope_clarity = 10
+budget = 15
+complexity = 10
+fulfillment_time = 5
+client_fit = 10
+portfolio_fit = 5
+profit = 10
+recurring = 5
+platform_cost = 5
+
+[scoring]
+qualify_threshold = 60        # >= goes to QUALIFIED
+min_budget = 25
+
+# ---------------------------------------------------------------- outreach
+[outreach]
+sequence = ["INITIAL", "FOLLOW_UP_1", "FOLLOW_UP_2", "LONG_TERM_FOLLOW_UP"]
+delays_days = [0, 3, 7, 30]   # each step relative to the previous step
+auto_send_channels = []       # e.g. ["email"] ONLY if you explicitly approve automated sending
+max_daily_drafts = 25
+
+# ---------------------------------------------------------------- lead gen
+[leads]
+default_niches = ["plumbers", "hvac", "dentists", "roofers", "med spas"]
+default_locations = ["Jacksonville, FL"]
+permitted_sources = ["manual", "csv_import", "google_places_api", "public_website", "client_provided"]
+
+# ---------------------------------------------------------------- approval gate
+[approval]
+# Actions that always require a human approval task. The system prepares everything, then stops.
+required = [
+  "send_external_message", "publish_fiverr", "submit_fiverr", "submit_upwork_proposal",
+  "spend_money", "accept_contract", "accept_offer", "change_account_settings",
+  "delete_data", "send_deliverable", "deploy_production", "modify_credentials", "irreversible",
+]
+
+# ---------------------------------------------------------------- tasks / recovery
+[tasks]
+max_retries = 3
+timeout_seconds = 60
+stale_minutes = 30
+backoff_seconds = [5, 30, 120]
+
+# ---------------------------------------------------------------- cost control
+[costs]
+monthly_budget = 50.0         # alert when tracked monthly costs exceed this
+subscriptions = [
+  # { name = "n8n cloud", monthly = 0.0, needed = true },
+]
+
+[n8n]
+enabled = true
+plan_execution_limit = 2500   # monthly executions on your plan (0 = self-hosted/unlimited)
+warn_pct = 80
+
+# Env vars the system may use. Never put values here.
+[env]
+optional = ["UPWORK_CLIENT_ID", "UPWORK_CLIENT_SECRET", "GOOGLE_PLACES_API_KEY", "N8N_API_KEY", "N8N_BASE_URL"]
