@@ -70,6 +70,8 @@ def blockers(con) -> list[str]:
     for mp, m in config()["marketplaces"].items():
         if m.get("enabled") and m.get("integration") == "manual":
             b.append(f"{mp}: no official connector attached — jobs/metrics must be pasted in (opp add / metric)")
+    if n8n_report(con)["exhausted"]:
+        b.append("n8n: out of executions — run/test locally or self-hosted; cloud workflows paused until reset/upgrade")
     return b
 
 
@@ -132,8 +134,12 @@ def n8n_report(con) -> dict:
         needs_cloud = re.search(r"webhook|trigger|gmail|drive|form|inbound", r["name"], re.I)
         plan.append({"workflow": r["name"], "runs": r["n"], "failed": r["f"],
                      "recommend": "keep on n8n (external trigger)" if needs_cloud else "MOVE LOCAL: python -m bos task / cron via Claude Code"})
+    rem = con.execute("SELECT value FROM metrics WHERE platform='n8n' AND metric='executions_remaining' "
+                      "ORDER BY date DESC, id DESC LIMIT 1").fetchone()
+    exhausted = rem is not None and rem["value"] <= 0  # reported by user/n8n UI; local runs don't see cloud quota
     return {"executions_this_month": used, "limit": lim or "unlimited", "used_pct": pct,
-            "warning": pct >= cfg.get("warn_pct", 80), "migration_plan": plan,
+            "executions_remaining": rem["value"] if rem else "unknown", "exhausted": exhausted,
+            "warning": exhausted or pct >= cfg.get("warn_pct", 80), "migration_plan": plan,
             "core_dependency": False, "note": "Business OS core runs without n8n."}
 
 # ------------------------------------------------------------------ audit

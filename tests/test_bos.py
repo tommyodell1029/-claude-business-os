@@ -467,6 +467,13 @@ class TestOps(Base):
         self.assertIn("MOVE LOCAL", recs["daily report"])
         self.assertIn("keep", recs["form webhook"])
 
+    def test_n8n_exhausted_is_blocker(self):
+        from bos.__main__ import blockers
+        self.assertFalse(n8n_report(self.con)["exhausted"])
+        biz.add_metric(self.con, "n8n", "executions_remaining", 0)
+        self.assertTrue(n8n_report(self.con)["exhausted"])
+        self.assertTrue(any("n8n: out of executions" in b for b in blockers(self.con)))
+
     def test_optimize_shape(self):
         self.assertEqual({"KEEP", "IMPROVE", "REMOVE", "TEST", "note"}, set(optimize(self.con)))
 
