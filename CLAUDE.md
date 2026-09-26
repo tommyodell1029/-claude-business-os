@@ -1,70 +1,59 @@
-# AI Business OS — operating manual for Claude Code
+# LaunchPad Local — operating manual for Claude Code
 
-Local-first business OS for a freelance AI-automation business (Fiverr + Upwork).
-Python stdlib + SQLite only. n8n optional, never core.
+AI receptionist agency, Jacksonville FL (launchpadlocal.org). We sell **inbound** AI phone receptionists to local businesses.
+Full target spec lives in the takeover prompt; this file is the short version. Keep it short.
 
-## Output mode (compact / "caveman")
-Terse. No preamble, no recap. Report phases as:
-`DONE: / WHAT_CHANGED: / TESTS: / BLOCKERS: / NEXT:`
-Terse never means skipping tests, security, validation, or compliance checks.
+## Output mode
+- Chat replies to owner: caveman. `DONE: / WHAT_CHANGED: / TESTS: / BLOCKERS: / NEXT:`. No filler, no recaps.
+- NEVER caveman in: website copy, agent prompts/scripts, outreach emails, client-facing text, docs.
+- Terse never means skipping tests, security, validation, or compliance.
+- Targeted edits only. Never rewrite whole files for small changes.
 
-## Files (keep it this small — ask "is a new file necessary?" first)
-- `config.toml` — ALL config: pricing, scoring weights, approval rules, fees, outreach timing, cost limits.
-- `templates.toml` — seed template library (proposals, outreach, playbooks, gig copy). Loaded into DB on first run.
-- `bos/core.py` — config, SQLite schema/migrations, audit log, secret redaction, approval gate, task queue + retries.
-- `bos/biz.py` — opportunities, scoring, proposals, leads, outreach, fulfillment, portfolio, finance, analytics, research, Fiverr.
-- `bos/__main__.py` — orchestrator CLI, dashboard, daily priorities, costs, n8n report, audit, optimize, NL router.
-- `tests/test_bos.py` — `python -m unittest tests.test_bos`
-- `data/bos.db` — runtime DB (gitignored, chmod 600).
-
-## Commands  (`python -m bos <cmd>`)
-| Slash intent | Command |
+## Layout
+| Path | What |
 |---|---|
-| /status /daily | `status`, `daily` (command center + today's priorities) |
-| /tasks | `tasks [STATUS]`, `run` (process queue by priority) |
-| /upwork /proposals | `opp import jobs.json` → `run` (auto score → draft) or `score all` / `propose qualified` → `review` → `proposal show ID` → `proposal edit ID file.txt` → `approve TASK` → submit manually → `opp submitted OPP --connects N` → `opp set OPP RESPONSE_RECEIVED --response "..."` / `WON` / `LOST` |
-| /fiverr | `fiverr <service>` (gig draft → approval), `metric fiverr impressions 120` |
-| /research | `research [service]` (only from stored listings; reports sample size) |
-| /leads | `leads import f.csv --niche X --location Y [--source S]`, `leads add '{json}'`, `leads list/show` |
-| /outreach | `outreach draft LEAD`, `outreach due`, `outreach show ID`, `outreach send ID` (gate), `outreach mark ID SENT/REPLIED/BOUNCED/NEGATIVE/...` |
-| /clients /fulfill | `intake '{"client":{...},"project":{"service":"n8n","price":99,...}}'`, `projects`, `advance PROJECT` |
-| /portfolio | `portfolio add '{"title":..,"kind":"DEMO","service":..}'`, `portfolio list` |
-| /finance | `txn revenue 99 --service n8n --platform upwork` (fee auto-booked), `txn api 2.5`, `finance [--days 7]`, `recurring [ID ACTIVE/ENDED]` |
-| /analytics | `analytics` |
-| /costs /n8n | `costs`, `n8n`, `n8n-record NAME [--count N]` |
-| /audit /optimize | `audit` (never deletes), `optimize [--days 7]` |
-| /templates | `templates <query>` — search BEFORE building anything new |
-| natural language | `ask "..."` prints the command plan; Claude then executes it |
-| approvals | `review`, `approve TASK [note]`, `reject TASK [note]` |
+| `config/models.yaml` | ALL runtime model IDs. Code reads via `lp.config.model(role, component)` |
+| `lib/lp/` | shared Python: `text` (norm_phone E.164, norm_email, domain_of, redact), `retry`, `config` |
+| `agents/` | Pipecat voice agent — ONE template, config from `clients/<slug>.yaml` |
+| `agents/notify/` | post-call handler: Supabase → Twilio SMS → Resend. Schema doc in README |
+| `clients/` | one YAML per client; `demo.yaml` powers the website demo number |
+| `leadgen/` | Places sourcing → research → score → personalize → send → replies. Schema doc in README |
+| `audit/` | weekly quality/compliance audit (only place the `audit` model is allowed) |
+| `site/` | Next.js marketing site + `/api/lead` + password-protected `/admin/review` |
+| `ops/` | onboarding, client intake, outreach templates |
+| `supabase/migrations/` | additive SQL only; RLS on, no policies, service role only |
+| `.claude/agents/` | Haiku subagents: builder, tester, docs-writer, researcher |
+| `legacy/` | replaced code kept until owner approves removal (see `legacy/README.md`) |
 
-Opportunity JSON fields: `platform, url, external_id, client, client_info{payment_verified,hire_rate,total_spent,rating}, title, description, budget|budget_min|budget_max, budget_type(fixed|hourly), skills[], connects`.
-Lead signals (`;`-separated in CSV `signals` column): `missed_calls, no_online_booking, slow_response, no_lead_capture, weak_website, no_website, manual_spreadsheets, no_crm`.
+Tests: `python3 -m unittest discover -s tests`. Python 3.11, deps via uv, exact pins in `pyproject.toml`.
 
-## Operating loop (every task)
-1. Understand goal → 2. `templates`/DB check for existing work → 3. do it locally (Claude Code / `bos`) →
-4. existing permitted connector → 5. n8n only for webhooks/cloud triggers → 6. paid service last →
-7. prepare external actions as approval tasks → 8. test → 9. record (`txn`, `opp set`, `outreach mark`) → 10. note cheaper/faster next time.
-
-## Proposals
-`propose` builds a structured, job-specific draft + lint. Claude then rewrites it in a specialist voice
-(concise, reference client's words + tech, real plan, real price, 2–3 questions), saves via `proposal edit`,
-and re-checks lint = clean. Never claim results/case studies that aren't in `portfolio` with the right kind.
+## Model strategy
+- Build: main session = orchestrator. Opus for architecture, complex logic (auth, security, call flow, compliance), every checkpoint audit. Sonnet for straightforward build phases. Subagents always Haiku.
+- At each phase start / before each audit: tell owner which `/model` to run, list needed keys, WAIT.
+- Haiku subagent fails same task twice → orchestrator takes over. Always audit subagent diffs.
+- Runtime: `small` (Haiku) everywhere. `audit` model ONLY in `/audit` weekly job — never in a live call or per-prospect loop (enforced in `lp.config`).
 
 ## Hard rules (never)
-- Send, submit, publish, spend, accept, deploy, delete, or change credentials without an approved `approval` task.
-- Scrape Fiverr, automate Fiverr/Upwork via browser bots, bypass CAPTCHA/rate limits/Connects, mass-message.
-- Fabricate contacts, metrics, reviews, case studies, or client results. DEMO ≠ CASE_STUDY ≠ PAID_CLIENT_WORK.
-- Store passwords; commit or log secrets. Credentials only via env vars / OAuth connectors (`core.secret()`).
-- Cold email without `business.postal_address` + opt-out line (enforced).
-- Treat the scoring model as a win predictor — it's internal prioritization only.
+- Commit secrets. `.env` gitignored; keys only via env vars; log through `lp.text.redact`. Supabase service key server-side only.
+- n8n or any third-party automation tool. All post-call logic in `agents/notify/`.
+- Outbound calling features. Lead gen never places calls.
+- Voice agent: skip disclosure line ("...I'm their AI assistant. This call may be recorded." — FL all-party consent); invent prices, availability, or promises; answer outside client config.
+- Scrape Google Maps HTML (Places API only); guess or generate email addresses; ignore robots.txt.
+- Cold email from launchpadlocal.org or via Resend; send without `{{MAILING_ADDRESS}}` + one-click unsubscribe; send without checking `suppression`; remove an opt-out.
+- State anything not in prospect data. "I called you" only if `called_after_hours = true` (owner sets it).
+- Fabricate stats, testimonials, logos, pricing (use `{{PRICING}}`), case studies, or client results.
+- Drop tables/columns with data, delete working code (move to `/legacy`), or touch DNS MX/SPF/DKIM/DMARC.
+- Merge `takeover` into main or switch voice engines without owner OK.
 
-## Connectors (check availability each session; prefer official)
-- Upwork: official connector attached (`integration = "mcp"`, org_uid 1829188020867004498, Freelancer Basic).
-  Find: `find_jobs` search/smart_search → `get` top picks (connects_cost, totalHired, client_record) → save raw rows
-  (search row + `connects_cost,total_hired,hire_rate_percent,screening_questions`) to JSON → `opp import`.
-  Record balance first: `metric upwork connects_balance N`. Skip jobs where applied=true or totalHired>0.
-  Submit: `approve` → `manage_proposals` preview → show user → `confirm_preview` only on explicit OK. `auto_submit = false`.
-- Fiverr: no seller API → drafting + manual metrics only.
-- Gmail MCP: read/categorize, create DRAFTS only. Sending requires `approve`.
-- Drive MCP: client assets, deliverables, portfolio.
-- n8n MCP: build/test client workflows; log usage with `n8n-record`; `n8n` shows limit + migration plan.
+## Takeover status
+- Snapshot: tag `pre-takeover` @ `cd6caf0` (local only — tag push blocked by proxy; same commit preserved on branch `claude/ai-business-os-wga6sr`).
+- Working branch: `claude/launchpad-takeover-7xy730` (= `takeover`; session may only push this branch).
+- T0 ✅ audit · T1 ✅ gap report · T2 ⏳ foundation (migrations written + tested on local PG16; not yet applied — Supabase project TBD)
+- Next: T3 voice agent (Pipecat + Flows, demo client).
+
+## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
+1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.
+2. n8n "optional, for webhooks" → n8n removed entirely.
+3. "Python stdlib + SQLite only" → Python (uv, pinned) + Supabase + Next.js.
+4. Outreach "send only after approval task" → `review_mode` + `/admin/review` page; auto-send allowed only when `review_mode: false`.
+5. Kept unchanged: no fabrication, no secrets, no scraping, CAN-SPAM address + opt-out enforcement, prepare-then-approve for irreversible actions.

@@ -1,0 +1,16 @@
+# All runtime model IDs. Swap here; never hardcode model IDs in code.
+# Code reads these via lib/lp/config.py -> model("small") / model("audit").
+models:
+  # Default everywhere: voice conversation, call summaries, lead scoring,
+  # email personalization, reply classification.
+  small: claude-haiku-4-5-20251001
+  # Weekly audit job ONLY. Swap to claude-sonnet-5 to cut cost.
+  # Never used inside a live call or a per-prospect loop.
+  audit: claude-opus-5-5
+
+# Which roles each component may use. Enforced by lp.config.model(role, component=...).
+allowed:
+  voice: [small]
+  notify: [small]
+  leadgen: [small]
+  audit: [audit, small]

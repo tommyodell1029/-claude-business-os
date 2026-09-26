@@ -15,8 +15,8 @@ const RULES = 'Rules: answer ONLY from the knowledge base. Never invent prices, 
   'If the knowledge base does not fully answer the question, set can_answer to false and do not guess. ' +
   'Tone: warm, concise, plain text, no markdown, sign off as "The Brightside Team".';
 
-const gmailCred = { gmailOAuth2: { id: 'LHH0Oh7O2tdrtDPh', name: 'Gmail account' } };
-const claudeCred = { anthropicApi: { id: '4UQs2Ua0Cpr4Mmoz', name: 'Anthropic account' } };
+const gmailCred = { gmailOAuth2: { id: 'REPLACE_WITH_GMAIL_CREDENTIAL_ID', name: 'Gmail account' } };
+const claudeCred = { anthropicApi: { id: 'REPLACE_WITH_ANTHROPIC_CREDENTIAL_ID', name: 'Anthropic account' } };
 const haiku = { __rl: true, mode: 'id', value: 'claude-haiku-4-5-20251001' };
 
 const newEmail = trigger({
