@@ -55,7 +55,7 @@ Tests: `python3 -m unittest discover -s tests`. Python 3.11, deps via uv, exact 
 ## Takeover status
 - Snapshot: tag `pre-takeover` @ `cd6caf0` (local only — tag push blocked by proxy; same commit preserved on branch `claude/ai-business-os-wga6sr`).
 - Working branch: `claude/launchpad-takeover-7xy730` (= `takeover`; session may only push this branch).
-- T0 ✅ audit · T1 ✅ gap report · T2 ⏳ foundation (migrations written + tested on local PG16; not yet applied — Supabase project TBD)
+- T0 ✅ audit · T1 ✅ gap report · T2 ⏳ foundation (migrations written + tested on local PG16; not yet applied — owner upgrading Supabase to paid ~Fri 2026-10-02, then new `launchpad-local` project)
 - 2026-09-27 scope change (owner): full agency — voice agents + websites + add-ons on our page. Site (T6) gets services + add-ons sections. Client-website delivery workflow = new phase, TBD.
 - Added: 6 sales skills (from ai-sales-team-claude, adapted) + 5 web design skills (from claudedesignskills, unmodified).
 - Next: T3 voice agent (Pipecat + Flows, demo client).
