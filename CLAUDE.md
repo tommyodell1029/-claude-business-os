@@ -49,7 +49,8 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - Outbound calling features. Lead gen never places calls.
 - Voice agent: skip disclosure line ("...I'm their AI assistant. This call may be recorded." — FL all-party consent); invent prices, availability, or promises; answer outside client config.
 - Scrape Google Maps HTML (Places API only); guess or generate email addresses; ignore robots.txt.
-- Cold email from launchpadlocal.org or via Resend; send without `{{MAILING_ADDRESS}}` + one-click unsubscribe; send without checking `suppression`; remove an opt-out.
+- Cold email via Resend; send without `{{MAILING_ADDRESS}}` + opt-out; send without checking `suppression`; remove an opt-out; exceed the Gmail outreach caps below.
+- **Owner override 2026-09-27:** cold email goes out from the launchpadlocal.org Workspace inbox via the Gmail connector (risk to main-domain reputation explained and accepted). Guardrails: start 5/day, ramp to max 20/day/inbox; send Tue–Thu mornings; stop sequence on any reply/bounce/unsubscribe; pause all sending if bounce >3% or any spam complaint; plain text, no tracking pixels; connector works only in-session, so every batch is approved by owner before send.
 - State anything not in prospect data. "I called you" only if `called_after_hours = true` (owner sets it).
 - Fabricate stats, testimonials, logos, pricing (use `{{PRICING}}`), case studies, or client results.
 - Drop tables/columns with data, delete working code (move to `/legacy`), or touch DNS MX/SPF/DKIM/DMARC.

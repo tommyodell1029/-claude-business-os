@@ -18,7 +18,7 @@
 | 5 Database / auth / config | T2 | ⏳ Schema written and tested locally, **not applied** (Supabase upgrade expected ~Fri 2026-10-02). Additions below. |
 | — Voice demo agent | T3, T4 | ⬜ Next. The revenue proof asset. |
 | 9 CRM / leads / research / scoring | T7a, T7b | ⬜ |
-| 10 Outreach / replies | T7c, T7d | ⬜ Waiting on domain warm-up (owner) |
+| 10 Outreach / replies | T7c, T7d | ⬜ Gmail-connector sending (owner override); needs full mailing address |
 | 8 Command Center (lite, mobile) | T6 + `/admin` | ⬜ |
 | 11 Sales / proposals / appointments | sales skills (done) + appointments config | 🟡 Skills exist, no scheduling yet |
 | 12 Stripe / payments / onboarding | new + T5 | ⬜ Payment Link first, webhooks after |
@@ -29,9 +29,9 @@
 ## Phase 5 additions (to the unapplied migration, before it is applied)
 Pipeline stages (§50) on `prospects.status`; the expanded reply classes (§49); `payments`, `proposals` and `appointments` tables; SMS consent records (§48); `feature_flags` and `system_events`. The migration has not been applied anywhere, so editing it now is safe.
 
-## Open conflicts between spec 1 and spec 2 (owner to decide)
+## Conflicts between spec 1 and spec 2 — RESOLVED 2026-09-27 (owner: "do the recommended path")
 
-| # | Topic | Spec 1 | Spec 2 | Recommendation |
+| # | Topic | Spec 1 | Spec 2 | Decision (= recommendation) |
 |---|---|---|---|---|
 | C1 | Outbound voice | Inbound only, no outbound calling | "Inbound, outbound … where legally appropriate" (§57) | **Keep inbound only.** Under the FCC's 2024 ruling, AI-generated voices count as "artificial voice" under the TCPA, so outbound calls need prior express written consent. High legal risk, not needed for the first dollar. |
 | C2 | Missed-call text-back (§58) | Not in scope | Required | **Defer to after the first client.** It needs a consent basis per caller, A2P 10DLC approval, and a STOP flow. Offer it later as an add-on. |
@@ -42,8 +42,12 @@ Pipeline stages (§50) on `prospects.status`; the expanded reply classes (§49);
 | C7 | n8n | Removed | "Preserve stable workflows temporarily" (§70) | No conflict in practice: no LaunchPad n8n workflows exist. |
 | C8 | Appointment hours | — | Weekdays 5–6 PM, Saturday 10:30 AM–2:30 PM (§51) | Adopt as configurable defaults. Confirm the weekday window really is 1 hour. |
 
+C6 still needs the owner's package prices. C8 weekday window kept at 5–6 PM as configurable default until the owner changes it.
+
+**Owner override (2026-09-27):** no separate outreach domain. Cold email sends from the launchpadlocal.org Workspace inbox through the Gmail connector, under the caps in CLAUDE.md.
+
 ## Owner actions blocking revenue (the critical path)
-1. Outreach domain, inboxes and warm-up (2–3 week lead time). **Biggest calendar bottleneck.**
+1. Full CAN-SPAM mailing address (street, city, state, ZIP) or a PO box / virtual mailbox, stored only in the `MAILING_ADDRESS` secret.
 2. Twilio account, local number, start A2P 10DLC registration.
 3. Stripe account.
 4. Package prices and the mailing address for cold email.
