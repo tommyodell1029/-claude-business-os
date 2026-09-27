@@ -1,7 +1,7 @@
 # LaunchPad Local — operating manual for Claude Code
 
 AI agency, Jacksonville FL (launchpadlocal.org). Core: **inbound** AI phone receptionists for local businesses. Also: websites for local businesses + add-ons (see `config/offerings.yaml`; prices stay `{{PRICING}}` until owner sets them).
-Full target spec lives in the takeover prompt; this file is the short version. Keep it short.
+Specs: takeover spec (T0–T9) + Master Build Specification (revenue-first agency OS, 2026-09-27). Status, phase map and open spec conflicts: `docs/BUILD_STATUS.md`. Revenue path: `docs/FIRST_DOLLAR_PLAN.md`. New repos/platforms: `docs/REPOSITORY_ACQUISITION.md` gate first. This file is the short version. Keep it short.
 
 ## Output mode
 - Chat replies to owner: caveman. `DONE: / WHAT_CHANGED: / TESTS: / BLOCKERS: / NEXT:`. No filler, no recaps.
@@ -39,6 +39,9 @@ Tests: `python3 -m unittest discover -s tests`. Python 3.11, deps via uv, exact 
 - Our landing page: max 3 animated effects. Client sites: performance first (mobile Lighthouse ≥ 90 target), respect `prefers-reduced-motion`, no 3D/WebGL unless client asks.
 - Pin npm versions; bundle libs — no `unpkg`/`@next`/`@latest` CDN tags in shipped code (design skills show them; don't copy).
 - No fake stats, testimonials, logos, or reviews on any site.
+
+## Revenue-first rule
+Revenue > fulfillment > repeatability > automation > polish. No new framework/platform unless its matrix row says GO. Never show invented metrics — show `DATA UNAVAILABLE`.
 
 ## Hard rules (never)
 - Commit secrets. `.env` gitignored; keys only via env vars; log through `lp.text.redact`. Supabase service key server-side only.
