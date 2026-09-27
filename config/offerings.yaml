@@ -1,0 +1,23 @@
+# What LaunchPad Local sells. Prices stay {{PRICING}} until the owner sets them. Never invent prices.
+# The site, proposals and sales skills read service names and descriptions from here.
+services:
+  voice_receptionist:
+    name: AI Phone Receptionist
+    summary: Inbound AI receptionist that answers calls 24/7, answers FAQs from approved info, takes messages or books, transfers emergencies, and texts and emails the owner a summary.
+    price: "{{PRICING}}"
+    status: core
+  website:
+    name: Websites for Local Businesses
+    summary: Fast, mobile-first marketing website with a contact form and click-to-call, built and hosted for the client.
+    price: "{{PRICING}}"
+    status: planned   # delivery workflow not built yet
+
+# Add-ons: owner to confirm which to offer. Candidates only; nothing below is live.
+addons: []
+# candidates:
+#   - Bilingual (English/Spanish) receptionist
+#   - Calendar booking integration
+#   - Website chat widget answering from the same approved FAQs
+#   - Google Business Profile setup and cleanup
+#   - Monthly call report and tuning
+#   - Extra phone number or location

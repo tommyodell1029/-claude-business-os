@@ -1,6 +1,6 @@
 # LaunchPad Local — operating manual for Claude Code
 
-AI receptionist agency, Jacksonville FL (launchpadlocal.org). We sell **inbound** AI phone receptionists to local businesses.
+AI agency, Jacksonville FL (launchpadlocal.org). Core: **inbound** AI phone receptionists for local businesses. Also: websites for local businesses + add-ons (see `config/offerings.yaml`; prices stay `{{PRICING}}` until owner sets them).
 Full target spec lives in the takeover prompt; this file is the short version. Keep it short.
 
 ## Output mode
@@ -12,6 +12,8 @@ Full target spec lives in the takeover prompt; this file is the short version. K
 ## Layout
 | Path | What |
 |---|---|
+| `config/offerings.yaml` | services + add-ons sold (names, summaries, `{{PRICING}}`) |
+| `.claude/skills/` | sales-* skills (adapted, shared guardrails) + web design skills (motion, modern-web-design, animated components, scroll reveal, lottie). Notices in `THIRD_PARTY_NOTICES.md` |
 | `config/models.yaml` | ALL runtime model IDs. Code reads via `lp.config.model(role, component)` |
 | `lib/lp/` | shared Python: `text` (norm_phone E.164, norm_email, domain_of, redact), `retry`, `config` |
 | `agents/` | Pipecat voice agent — ONE template, config from `clients/<slug>.yaml` |
@@ -33,6 +35,11 @@ Tests: `python3 -m unittest discover -s tests`. Python 3.11, deps via uv, exact 
 - Haiku subagent fails same task twice → orchestrator takes over. Always audit subagent diffs.
 - Runtime: `small` (Haiku) everywhere. `audit` model ONLY in `/audit` weekly job — never in a live call or per-prospect loop (enforced in `lp.config`).
 
+## Website builds (ours + client sites)
+- Our landing page: max 3 animated effects. Client sites: performance first (mobile Lighthouse ≥ 90 target), respect `prefers-reduced-motion`, no 3D/WebGL unless client asks.
+- Pin npm versions; bundle libs — no `unpkg`/`@next`/`@latest` CDN tags in shipped code (design skills show them; don't copy).
+- No fake stats, testimonials, logos, or reviews on any site.
+
 ## Hard rules (never)
 - Commit secrets. `.env` gitignored; keys only via env vars; log through `lp.text.redact`. Supabase service key server-side only.
 - n8n or any third-party automation tool. All post-call logic in `agents/notify/`.
@@ -49,6 +56,8 @@ Tests: `python3 -m unittest discover -s tests`. Python 3.11, deps via uv, exact 
 - Snapshot: tag `pre-takeover` @ `cd6caf0` (local only — tag push blocked by proxy; same commit preserved on branch `claude/ai-business-os-wga6sr`).
 - Working branch: `claude/launchpad-takeover-7xy730` (= `takeover`; session may only push this branch).
 - T0 ✅ audit · T1 ✅ gap report · T2 ⏳ foundation (migrations written + tested on local PG16; not yet applied — Supabase project TBD)
+- 2026-09-27 scope change (owner): full agency — voice agents + websites + add-ons on our page. Site (T6) gets services + add-ons sections. Client-website delivery workflow = new phase, TBD.
+- Added: 6 sales skills (from ai-sales-team-claude, adapted) + 5 web design skills (from claudedesignskills, unmodified).
 - Next: T3 voice agent (Pipecat + Flows, demo client).
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
