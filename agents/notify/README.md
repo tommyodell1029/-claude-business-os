@@ -38,6 +38,9 @@ Row-level security is on for every table and there are no policies, so the anon 
 | duration_sec | int | |
 | est_cost | numeric(10,4) | estimated cost of the call in USD |
 | transferred | bool | true if the call was handed to `handoff_number` |
+| end_reason | text | `completed`, `transferred`, `spam`, `abusive`, `silence`, `max_duration` or `hangup` |
+| disclosure_spoken | bool | true once the recording disclosure was played (checked by the weekly audit) |
+| details | jsonb | `address`, `best_time`, `preferred_time` |
 | sms_status, email_status | text | `sent`, `failed` or `skipped` |
 | created_at | timestamptz | |
 

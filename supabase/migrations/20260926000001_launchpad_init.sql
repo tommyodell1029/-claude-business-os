@@ -38,6 +38,9 @@ create table if not exists public.calls (
   duration_sec  integer check (duration_sec >= 0),
   est_cost      numeric(10,4),
   transferred   boolean not null default false,
+  end_reason    text check (end_reason in ('completed','transferred','spam','abusive','silence','max_duration','hangup')),
+  disclosure_spoken boolean not null default false,        -- audit: FL all-party-consent line was played
+  details       jsonb not null default '{}'::jsonb,         -- address, best_time, preferred_time
   sms_status    text check (sms_status in ('sent','failed','skipped')),
   email_status  text check (email_status in ('sent','failed','skipped')),
   created_at    timestamptz not null default now()

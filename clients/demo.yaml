@@ -1,0 +1,74 @@
+# DEMO client. Powers the demo number on launchpadlocal.org.
+# A clearly fictional Jacksonville home-services company. Every fact below is sample data for the
+# demo only; the business name says "demo" so no caller mistakes it for a real company.
+# Values like ${VAR} are read from environment secrets at runtime, so no real phone numbers or emails live in git.
+
+slug: demo
+business_name: "Harborline Home Services, a LaunchPad Local demo"
+industry: home_services
+timezone: America/New_York
+twilio_number: ${DEMO_TWILIO_NUMBER}
+
+# 24h "HH:MM-HH:MM" or "closed"
+hours:
+  mon: "08:00-18:00"
+  tue: "08:00-18:00"
+  wed: "08:00-18:00"
+  thu: "08:00-18:00"
+  fri: "08:00-18:00"
+  sat: "09:00-13:00"
+  sun: closed
+
+services:
+  - Plumbing repairs (leaks, clogs, water heaters)
+  - Heating and air conditioning repair and maintenance
+  - Electrical repairs (outlets, breakers, lighting)
+
+service_area:
+  - Jacksonville
+  - Orange Park
+  - St. Augustine
+  - Ponte Vedra
+  - Fernandina Beach
+
+faqs:
+  - q: Do you charge for estimates?
+    a: A technician gives you an exact quote after looking at the job. I can't quote prices over the phone, but I can take your details so the team can follow up.
+  - q: Are you licensed and insured?
+    a: This is a demonstration business, so I can't confirm licensing. For a real business, this answer would come from the owner.
+  - q: Do you offer emergency service?
+    a: Yes. If you have an emergency like flooding, no heat or air in extreme weather, a gas smell, or sparking, tell me and I'll try to connect you to someone right away.
+  - q: What forms of payment do you take?
+    a: The team will go over payment options when they confirm your appointment.
+
+booking_method:
+  type: take_message        # take_message | request_time (caller picks a preferred time; the team confirms)
+
+owner_phone: ${DEMO_OWNER_PHONE}
+owner_email: ${DEMO_OWNER_EMAIL}
+handoff_number: ${DEMO_HANDOFF_NUMBER}
+
+emergency_keywords:
+  - flooding
+  - flood
+  - burst pipe
+  - gas smell
+  - smell gas
+  - gas leak
+  - sparking
+  - sparks
+  - smoke
+  - fire
+  - no heat
+  - carbon monoxide
+  - emergency
+
+tts:
+  provider: elevenlabs      # elevenlabs | cartesia
+  voice_id: 8fwYhwfiWkLjR4FKLHSQ   # ElevenLabs "Elise Hart"
+
+# Spoken right after the mandatory disclosure line.
+greeting: "How can I help you today?"
+
+max_call_minutes: 8
+silence_timeout_secs: 12

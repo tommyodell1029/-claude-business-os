@@ -1,0 +1,9 @@
+# Per-minute cost rates (USD) used for the per-call cost ESTIMATE stored in calls.est_cost.
+# Leave null until filled from each provider's current pricing page; est_cost stays null
+# (shown as DATA UNAVAILABLE) rather than guessing.
+cost_per_minute:
+  telephony: null   # Twilio inbound voice + media stream
+  stt: null         # Deepgram
+  tts: null         # ElevenLabs / Cartesia (approx per spoken minute)
+  llm: null         # Anthropic small model (approx per call-minute)
+  platform: null    # Pipecat Cloud agent-minute

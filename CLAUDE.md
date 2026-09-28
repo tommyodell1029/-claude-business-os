@@ -27,7 +27,7 @@ Specs: takeover spec (T0–T9) + Master Build Specification (revenue-first agenc
 | `.claude/agents/` | Haiku subagents: builder, tester, docs-writer, researcher |
 | `legacy/` | replaced code kept until owner approves removal (see `legacy/README.md`) |
 
-Tests: `python3 -m unittest discover -s tests`. Python 3.11, deps via uv, exact pins in `pyproject.toml`.
+Tests: `uv run python -m unittest discover -s tests` (includes scripted end-to-end calls through the real Pipecat pipeline). Text call sim: `uv run python -m agents.simulate demo "caller line" ...` (needs ANTHROPIC_API_KEY). Python 3.11, deps via uv, exact pins in `pyproject.toml` + `uv.lock`.
 
 ## Model strategy
 - Build: main session = orchestrator. Opus for architecture, complex logic (auth, security, call flow, compliance), every checkpoint audit. Sonnet for straightforward build phases. Subagents always Haiku.
