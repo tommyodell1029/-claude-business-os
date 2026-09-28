@@ -62,7 +62,8 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - T0 ✅ audit · T1 ✅ gap report · T2 ⏳ foundation (migrations written + tested on local PG16; not yet applied — owner upgrading Supabase to paid ~Fri 2026-10-02, then new `launchpad-local` project)
 - 2026-09-27 scope change (owner): full agency — voice agents + websites + add-ons on our page. Site (T6) gets services + add-ons sections. Client-website delivery workflow = new phase, TBD.
 - Added: 6 sales skills (from ai-sales-team-claude, adapted) + 5 web design skills (from claudedesignskills, unmodified).
-- Next: T3 voice agent (Pipecat + Flows, demo client).
+- T3 ✅ voice agent code (agents/, clients/demo.yaml); live tests need keys.
+- Next: T4 Twilio + Pipecat Cloud deploy + 8 test calls.
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
 1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.

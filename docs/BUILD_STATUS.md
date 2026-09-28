@@ -16,7 +16,7 @@
 | 3 External platform audit | — | ✅ `REPOSITORY_INTEGRATION_MATRIX.md` (4 GO, 7 DEFER, 13 NO-GO) |
 | 4 Architecture stabilization | T2 | ✅ Layout, shared library, models config, subagents |
 | 5 Database / auth / config | T2 | ⏳ Schema written and tested locally, **not applied** (Supabase upgrade expected ~Fri 2026-10-02). Additions below. |
-| — Voice demo agent | T3, T4 | ⬜ Next. The revenue proof asset. |
+| — Voice demo agent | T3, T4 | 🟡 T3 built + tested with scripted calls (69 tests). Live text test waits on ANTHROPIC_API_KEY; phone test = T4. |
 | 9 CRM / leads / research / scoring | T7a, T7b | ⬜ |
 | 10 Outreach / replies | T7c, T7d | ⬜ Gmail-connector sending (owner override); needs full mailing address |
 | 8 Command Center (lite, mobile) | T6 + `/admin` | ⬜ |
