@@ -428,6 +428,14 @@ class TestFinance(Base):
         self.assertEqual(f["mrr"], 49)
         self.assertEqual(f["by_service"]["n8n"]["net"], 85)
 
+    def test_credit_offsets_cost(self):
+        biz.add_txn(self.con, "connects", 1.65, platform="upwork")
+        biz.add_txn(self.con, "credit", 1.65, platform="upwork", memo="connects refunded")
+        f = biz.finance(self.con)
+        self.assertEqual(f["total_cost"], 0)
+        self.assertEqual(f["gross_revenue"], 0)
+        self.assertEqual(f["orders"], 0)
+
     def test_validation(self):
         with self.assertRaises(ValueError):
             biz.add_txn(self.con, "revenue", -5)

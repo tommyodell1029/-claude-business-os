@@ -107,7 +107,7 @@ def costs(con) -> dict:
     month = now()[:7]
     rows = con.execute("SELECT kind, SUM(amount) s FROM financial_transactions WHERE kind!='revenue' AND date>=? "
                        "GROUP BY kind", (month + "-01",)).fetchall()
-    tracked = {r["kind"]: round(r["s"], 2) for r in rows}
+    tracked = {r["kind"]: round(-r["s"] if r["kind"] in biz.CREDIT_KINDS else r["s"], 2) for r in rows}
     subs = cfg.get("subscriptions", [])
     sub_total = sum(s.get("monthly", 0) for s in subs)
     flags = [f"subscription '{s['name']}' (${s['monthly']}/mo) marked not needed — cancel?" for s in subs if not s.get("needed", True)]

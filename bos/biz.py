@@ -748,7 +748,8 @@ def add_portfolio(con, d: dict) -> int:
 # ====================================================================== finance
 
 COST_KINDS = ("platform_fee", "connects", "software", "api", "automation", "refund", "fulfillment", "other_cost")
-TXN_KINDS = ("revenue",) + COST_KINDS
+CREDIT_KINDS = ("credit",)             # money back to you that isn't revenue (e.g. Connects refunded) — offsets cost
+TXN_KINDS = ("revenue",) + COST_KINDS + CREDIT_KINDS
 
 
 def add_txn(con, kind: str, amount: float, service=None, project_id=None, platform=None, memo=None, date=None,
@@ -784,6 +785,8 @@ def finance(con, since: str | None = None, until: str | None = None) -> dict:
         if r["kind"] == "revenue":
             b["revenue"] += r["s"]
             b["orders"] += r["n"]
+        elif r["kind"] in CREDIT_KINDS:
+            b["cost"] -= r["s"]
         else:
             b["cost"] += r["s"]
     for b in by.values():

@@ -29,7 +29,7 @@ Terse never means skipping tests, security, validation, or compliance checks.
 | /outreach | `outreach draft LEAD`, `outreach due`, `outreach show ID`, `outreach send ID` (gate), `outreach mark ID SENT/REPLIED/BOUNCED/NEGATIVE/...` |
 | /clients /fulfill | `intake '{"client":{...},"project":{"service":"n8n","price":99,...}}'`, `projects`, `advance PROJECT` |
 | /portfolio | `portfolio add '{"title":..,"kind":"DEMO","service":..}'`, `portfolio list` |
-| /finance | `txn revenue 99 --service n8n --platform upwork` (fee auto-booked), `txn api 2.5`, `finance [--days 7]`, `recurring [ID ACTIVE/ENDED]` |
+| /finance | `txn revenue 99 --service n8n --platform upwork` (fee auto-booked), `txn api 2.5`, `txn credit 1.65` (refunds to you, e.g. Connects), `finance [--days 7]`, `recurring [ID ACTIVE/ENDED]` |
 | /analytics | `analytics` |
 | /costs /n8n | `costs`, `n8n`, `n8n-record NAME [--count N]` |
 | /audit /optimize | `audit` (never deletes), `optimize [--days 7]` |
