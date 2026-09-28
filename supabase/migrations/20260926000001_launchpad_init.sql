@@ -96,17 +96,18 @@ create index if not exists prospects_status_score_idx on public.prospects (statu
 create table if not exists public.outreach_events (
   id                   uuid primary key default gen_random_uuid(),
   prospect_id          uuid not null references public.prospects(id),
-  step                 smallint check (step between 0 and 3), -- day 0/3/7/14
+  step                 smallint check (step between 0 and 3), -- day 0 / 3 / 10 / 40 (C3)
   event_type           text not null check (event_type in
                          ('drafted','approved','edited','skipped','sent','reply','bounce','unsubscribe','complaint','paused')),
   review_status        text check (review_status in ('pending','approved','skipped','sent')),
   subject              text,
   body                 text,
   scheduled_for        timestamptz,
-  platform             text check (platform in ('instantly','smartlead')),
+  platform             text check (platform in ('gmail','instantly','smartlead')),  -- gmail = owner override 2026-09-27
   platform_message_id  text,
-  classification       text check (classification in
-                         ('interested','question','not_now','not_interested','unsubscribe','out_of_office')),
+  classification       text check (classification in                    -- C4: 14 classes + not_now
+                         ('positive','interested','question','pricing','meeting','objection','not_now','not_interested',
+                          'unsubscribe','wrong_person','referral','out_of_office','automated','spam','unclear')),
   payload              jsonb,
   created_at           timestamptz not null default now()
 );

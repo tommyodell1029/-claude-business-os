@@ -15,7 +15,7 @@
 | 2 Jarvis audit | — | ✅ `JARVIS_AUDIT.md` (NO-GO, 3 patterns borrowed) |
 | 3 External platform audit | — | ✅ `REPOSITORY_INTEGRATION_MATRIX.md` (4 GO, 7 DEFER, 13 NO-GO) |
 | 4 Architecture stabilization | T2 | ✅ Layout, shared library, models config, subagents |
-| 5 Database / auth / config | T2 | ⏳ Schema written and tested locally, **not applied** (Supabase upgrade expected ~Fri 2026-10-02). Additions below. |
+| 5 Database / auth / config | T2 | ✅ Schema applied 2026-09-28 to `archive-jarvis` (sptubmkuyyppqnbbxgfq), alongside the existing Jarvis tables. RLS forced, anon/authenticated denied (verified). Auth for the Command Center comes in T6. |
 | — Voice demo agent | T3, T4 | 🟡 T3 built + tested with scripted calls (69 tests). Live text test waits on ANTHROPIC_API_KEY; phone test = T4. |
 | 9 CRM / leads / research / scoring | T7a, T7b | ⬜ |
 | 10 Outreach / replies | T7c, T7d | ⬜ Gmail-connector sending (owner override); needs full mailing address |
@@ -26,7 +26,7 @@
 | 6 Agent registry, 7 Jobs/workflows | — | Deferred. Minimal versions only (agent config in YAML, GitHub Actions cron). |
 | 13–24 | T5–T9 + new | After first revenue |
 
-## Phase 5 additions (to the unapplied migration, before it is applied)
+## Phase 5 additions (now a NEW migration file; the first one is applied)
 Pipeline stages (§50) on `prospects.status`; the expanded reply classes (§49); `payments`, `proposals` and `appointments` tables; SMS consent records (§48); `feature_flags` and `system_events`. The migration has not been applied anywhere, so editing it now is safe.
 
 ## Conflicts between spec 1 and spec 2 — RESOLVED 2026-09-27 (owner: "do the recommended path")
@@ -52,7 +52,7 @@ C6 still needs the owner's package prices. C8 weekday window kept at 5–6 PM as
 3. Stripe account.
 4. Package prices and the mailing address for cold email.
 5. Keys as environment secrets: `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`; later `GOOGLE_PLACES_API_KEY`, Twilio, Instantly or Smartlead, Resend, Stripe.
-6. Supabase paid upgrade (~Fri 2026-10-02).
+6. ~~Supabase paid upgrade~~ Not needed: owner chose to reuse `archive-jarvis`. Owner copies the project's secret (service role) key into `SUPABASE_SERVICE_ROLE_KEY` before T5.
 
 ## Docs from §116 not yet written
 Written only when the thing they describe exists, so no empty stubs: ARCHITECTURE, AGENTS, AGENT_EVALUATION, AI_MODEL_ROUTING, AI_SECURITY, OBSERVABILITY, INTEGRATIONS, DATABASE (currently `agents/notify/README.md` and `leadgen/README.md`), SECURITY, DEPLOYMENT, OPERATIONS, OFFER_CATALOG (currently `config/offerings.yaml`), COMPLIANCE, TESTING, DISASTER_RECOVERY, BUSINESS_CONTINUITY, OWNER_GUIDE, REVENUE_ENGINE, INCIDENT_RESPONSE, DATA_RETENTION, DEPENDENCY_MANAGEMENT, LOCAL_NODE.
