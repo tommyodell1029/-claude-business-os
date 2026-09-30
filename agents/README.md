@@ -46,4 +46,10 @@ One Pipecat template serves every client. Everything specific to a business come
 | Live text call with the real `small` model (typed caller lines; reports response latency) | `uv run python -m agents.simulate demo "Hi, my water heater is leaking" "Ann, 904 555 0133" "yes"` | `ANTHROPIC_API_KEY` |
 | Real phone call | T4: Twilio number → Pipecat Cloud | Twilio, Deepgram, ElevenLabs keys |
 
+## Deploy (Pipecat Cloud, T4)
+1. Secret set (values come from env; never typed into chat or git): `pipecat cloud secrets set lp-receptionist-secrets ANTHROPIC_API_KEY=... DEEPGRAM_API_KEY=... ELEVENLABS_API_KEY=... TWILIO_ACCOUNT_SID=... TWILIO_AUTH_TOKEN=... DEMO_TWILIO_NUMBER=... DEMO_HANDOFF_NUMBER=... DEMO_OWNER_PHONE=... DEMO_OWNER_EMAIL=... TRANSFER_ACTION_URL=... --region us-east`
+2. `pipecat cloud deploy` from the repo root (reads `pcc-deploy.toml`, builds `Dockerfile` with Pipecat Cloud Build; auth via `PIPECAT_TOKEN` + `PIPECAT_ORG`).
+3. Twilio: create a TwiML Bin from `ops/twilio/demo-inbound.twiml.xml`, then point the demo number's "A call comes in" at it.
+4. Run the 8 calls in `ops/twilio/T4_TEST_CALLS.md`.
+
 For pipeline problems during phone tests, use Pipecat's Whisker debugger (T4).

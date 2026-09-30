@@ -16,7 +16,7 @@
 | 3 External platform audit | — | ✅ `REPOSITORY_INTEGRATION_MATRIX.md` (4 GO, 7 DEFER, 13 NO-GO) |
 | 4 Architecture stabilization | T2 | ✅ Layout, shared library, models config, subagents |
 | 5 Database / auth / config | T2 | ✅ Schema applied 2026-09-28 to new Supabase project `launchpad-local` (arekyykkzlqgphqdegsy). RLS forced, anon/authenticated denied (verified live). Auth for the Command Center comes in T6. |
-| — Voice demo agent | T3, T4 | 🟡 T3 built + tested with scripted calls (69 tests). Live text test waits on ANTHROPIC_API_KEY; phone test = T4. |
+| — Voice demo agent | T3, T4 | 🟡 T3 built + tested (88 tests incl. scripted calls). T4 deploy files ready (see T4 section); deploy, number change and 8 live calls wait on owner OK + keys. |
 | 9 CRM / leads / research / scoring | T7a, T7b | ⬜ |
 | 10 Outreach / replies | T7c, T7d | ⬜ Gmail-connector sending (owner override); needs full mailing address |
 | 8 Command Center (lite, mobile) | T6 + `/admin` | ⬜ |
@@ -25,6 +25,13 @@
 | **→ FIRST_DOLLAR_MODE: pursue the first customer** | | |
 | 6 Agent registry, 7 Jobs/workflows | — | Deferred. Minimal versions only (agent config in YAML, GitHub Actions cron). |
 | 13–24 | T5–T9 + new | After first revenue |
+
+## T4 (Twilio + Pipecat Cloud) — as of 2026-09-30
+- Ready in repo: `Dockerfile` (pinned `dailyco/pipecat-base:0.2.0-py3.11`, uv.lock pins), `.dockerignore`, root `bot.py` shim, `pcc-deploy.toml` (agent `lp-receptionist`, us-east, max 2 agents, 15 min session cap), `ops/twilio/demo-inbound.twiml.xml` (TwiML Bin), `ops/twilio/T4_TEST_CALLS.md` (8-call script + results table).
+- Verified against Pipecat Cloud docs: the CLI authenticates with `PIPECAT_TOKEN` + `PIPECAT_ORG` (the old `PIPECAT_CLOUD_API_KEY` name was wrong). Twilio streams go to `wss://api.pipecat.daily.co/ws/twilio` and are routed by the `_pipecatCloudServiceHost` stream parameter, so the transfer reconnect TwiML now sends it (`PIPECAT_SERVICE_HOST`). Caller/dialed numbers reach the bot only as `from_number` / `to_number` stream parameters, so the TwiML Bin sets them.
+- **Gap confirmed:** Pipecat Cloud runs only `bot()`; custom routes exist only through the per-session Session API (auth required, gone when the session ends). Twilio's `<Dial action>` callback therefore cannot reach `make_transfer_router`. Needs a public host: **owner decision pending** (recommended: `site/` Next.js route `/api/twilio/transfer-status` on Vercel, which the matrix already allows).
+- Open risk: `websocket_auth = "none"` means anyone who learns the service host can start sessions (cost). Capped by `max_agents = 2` and the session cap. Fix later: the same Vercel webhook answers inbound calls, calls Pipecat `/start`, and returns a tokenized stream URL (`websocket_auth = "token"`).
+- Call records are written to the container disk and are lost when the session ends until T5 wires `agents/notify` into `bot.py`.
 
 ## Phase 5 additions (now a NEW migration file; the first one is applied)
 Pipeline stages (§50) on `prospects.status`; the expanded reply classes (§49); `payments`, `proposals` and `appointments` tables; SMS consent records (§48); `feature_flags` and `system_events`. The migration has not been applied anywhere, so editing it now is safe.

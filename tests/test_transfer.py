@@ -65,6 +65,11 @@ class TestTwiMLBuilders(unittest.TestCase):
         self.assertIn('<Parameter name="to_number" value="+19045550000"', twiml)
         self.assertIn('<Parameter name="from_number" value="+19045551111"', twiml)
 
+    def test_reconnect_twiml_routes_to_pipecat_cloud_agent(self):
+        twiml = dial_action_twiml("no-answer", STREAM_URL, service_host="receptionist.lp-org")
+        self.assertIn('<Parameter name="_pipecatCloudServiceHost" value="receptionist.lp-org"', twiml)
+        self.assertNotIn("_pipecatCloudServiceHost", build_reconnect_twiml(STREAM_URL))
+
     def test_hangup_twiml(self):
         self.assertIn("<Hangup", build_hangup_twiml())
 

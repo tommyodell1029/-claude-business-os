@@ -1,0 +1,27 @@
+# Pipecat Cloud deploy config for the voice agent (T4). Run from the repo root:
+#   pipecat cloud deploy        (auth via PIPECAT_TOKEN + PIPECAT_ORG env vars)
+# Secrets are NOT here: they live in the Pipecat Cloud secret set below (see agents/README.md "Deploy").
+agent_name = "lp-receptionist"
+region = "us-east"
+secret_set = "lp-receptionist-secrets"
+agent_profile = "agent-1x"
+
+# Hard ceiling per session (seconds). Calls are capped at max_call_minutes (demo: 8) in code;
+# this is a backstop so a stuck session can never run up cost.
+max_session_duration = 900
+
+# Twilio connects straight to the WebSocket, so it cannot fetch an HMAC token.
+# TODO(owner decision): switch to "token" once the inbound Twilio webhook calls /start (see BUILD_STATUS T4).
+websocket_auth = "none"
+
+[scaling]
+# 0 = no idle cost but a cold start on the first call; 1 = always warm (billed while idle). Owner decides.
+min_agents = 0
+max_agents = 2
+
+[krisp_viva]
+audio_filter = "tel"
+
+[build]
+context_dir = "."
+dockerfile = "Dockerfile"

@@ -1,0 +1,18 @@
+# Keep secrets and non-runtime code out of the Pipecat Cloud build context.
+.env
+.env.*
+*.env
+.git
+.venv
+**/__pycache__
+data/
+exports/
+tests/
+leadgen/
+audit/
+site/
+legacy/
+ops/
+docs/
+supabase/
+node_modules/

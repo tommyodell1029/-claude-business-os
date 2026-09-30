@@ -6,9 +6,13 @@ POSTs the outcome to `action_url`; if nobody answered, that webhook reconnects
 the caller to this same bot in "urgent_message" mode (bot.py start_mode
 handling) instead of just dropping the call.
 
-TRANSFER_ACTION_URL and TRANSFER_STREAM_URL point at the deployed bot's public
-endpoints (T4 deploy step); both are required for TwilioTransferer to be used
-at all — see make_transferer() in bot.py.
+TRANSFER_ACTION_URL is the public URL of the <Dial action> webhook (Pipecat Cloud
+only runs bot() and hosts no custom public HTTP routes, so the webhook lives
+outside the bot — see docs/BUILD_STATUS.md T4). TRANSFER_STREAM_URL is the
+Pipecat Cloud Twilio WebSocket (wss://api.pipecat.daily.co/ws/twilio) and
+PIPECAT_SERVICE_HOST ("<agent>.<org>") routes that stream to our agent.
+TwilioTransferer is used only when TRANSFER_ACTION_URL is set — see
+make_transferer() in bot.py.
 """
 from __future__ import annotations
 
@@ -36,11 +40,14 @@ def build_transfer_twiml(handoff_number: str, action_url: str) -> str:
     return str(resp)
 
 
-def build_reconnect_twiml(stream_url: str, *, to_number: str | None = None, from_number: str | None = None) -> str:
+def build_reconnect_twiml(stream_url: str, *, to_number: str | None = None, from_number: str | None = None,
+                          service_host: str | None = None) -> str:
     """TwiML reconnecting an unanswered transfer to the bot's stream in urgent_message mode."""
     resp = VoiceResponse()
     connect = Connect()
     stream = Stream(url=stream_url)
+    if service_host:  # Pipecat Cloud routes the stream to "<agent>.<org>" by this parameter
+        stream.parameter(name="_pipecatCloudServiceHost", value=service_host)
     stream.parameter(name="mode", value="urgent_message")
     if to_number:
         stream.parameter(name="to_number", value=to_number)
@@ -58,7 +65,7 @@ def build_hangup_twiml() -> str:
 
 
 def dial_action_twiml(dial_call_status: str, stream_url: str, *, to_number: str | None = None,
-                      from_number: str | None = None) -> str:
+                      from_number: str | None = None, service_host: str | None = None) -> str:
     """Decide the response to Twilio's <Dial action> callback from `DialCallStatus`.
 
     Anything but "completed" (no-answer, busy, failed, canceled) means nobody
@@ -66,7 +73,8 @@ def dial_action_twiml(dial_call_status: str, stream_url: str, *, to_number: str 
     """
     if dial_call_status == "completed":
         return build_hangup_twiml()
-    return build_reconnect_twiml(stream_url, to_number=to_number, from_number=from_number)
+    return build_reconnect_twiml(stream_url, to_number=to_number, from_number=from_number,
+                                 service_host=service_host)
 
 
 def verify_twilio_signature(auth_token: str, url: str, params: dict, signature: str | None) -> bool:
@@ -96,7 +104,7 @@ class TwilioTransferer:
         return "initiated"
 
 
-def make_transfer_router(auth_token: str, stream_url: str) -> APIRouter:
+def make_transfer_router(auth_token: str, stream_url: str, service_host: str | None = None) -> APIRouter:
     """FastAPI router for Twilio's <Dial action> webhook. Mount on the bot's public app."""
     router = APIRouter()
 
@@ -107,7 +115,8 @@ def make_transfer_router(auth_token: str, stream_url: str) -> APIRouter:
         if not verify_twilio_signature(auth_token, str(request.url), params, x_twilio_signature):
             raise HTTPException(status_code=403, detail="invalid Twilio signature")
         twiml = dial_action_twiml(params.get("DialCallStatus", ""), stream_url,
-                                  to_number=params.get("Called"), from_number=params.get("Caller"))
+                                  to_number=params.get("Called"), from_number=params.get("Caller"),
+                                  service_host=service_host)
         return Response(content=twiml, media_type="application/xml")
 
     return router
