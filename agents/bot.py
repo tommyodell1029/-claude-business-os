@@ -29,8 +29,9 @@ from lp.text import redact
 
 from . import call_record
 from .client_config import ClientConfig, load, slug_for_number
-from .flow import NoTransfer, ReceptionistFlow, init_state
+from .flow import NoTransfer, ReceptionistFlow, Transferer, init_state
 from .guards import CallTimer, EmergencyWatcher, SilenceHandler, estimate_cost
+from .transfer import TwilioTransferer
 
 load_dotenv(override=True)
 
@@ -40,6 +41,16 @@ def _require(name: str) -> str:
     if not v:
         raise RuntimeError(f"{name} is not set")
     return v
+
+
+def make_transferer() -> Transferer:
+    """Real Twilio transfer when the account creds and public action URL are set, else NoTransfer."""
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    action_url = os.getenv("TRANSFER_ACTION_URL")
+    if account_sid and auth_token and action_url:
+        return TwilioTransferer(account_sid, auth_token, action_url)
+    return NoTransfer()
 
 
 def make_tts(cfg: ClientConfig):
@@ -55,7 +66,7 @@ def make_tts(cfg: ClientConfig):
 async def run_bot(transport: BaseTransport, cfg: ClientConfig, *, call_sid: str | None, caller_id: str | None,
                   handle_sigint: bool, start_mode: str | None = None) -> None:
     started = time.monotonic()
-    flow = ReceptionistFlow(cfg, NoTransfer())  # T4 swaps in the Twilio transferer
+    flow = ReceptionistFlow(cfg, make_transferer())
 
     stt = DeepgramSTTService(api_key=_require("DEEPGRAM_API_KEY"))
     llm = AnthropicLLMService(api_key=_require("ANTHROPIC_API_KEY"),
@@ -78,6 +89,7 @@ async def run_bot(transport: BaseTransport, cfg: ClientConfig, *, call_sid: str 
     fm = FlowManager(llm=llm, context_aggregator=aggregators, worker=worker, transport=transport,
                      global_functions=flow.global_functions())
     init_state(fm.state, cfg)
+    fm.state["call_sid"] = call_sid
     watcher.fm = fm
     timer = CallTimer(flow, fm, runner.cancel, cfg.max_call_minutes)
     silence = SilenceHandler(flow, fm, worker.queue_frames)
