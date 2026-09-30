@@ -24,7 +24,7 @@ from pipecat.transports.base_transport import BaseTransport
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.workers.runner import WorkerRunner
 
-from lp.config import model
+from lp.config import anthropic_api_key, model
 from lp.text import redact
 
 from . import call_record
@@ -69,7 +69,10 @@ async def run_bot(transport: BaseTransport, cfg: ClientConfig, *, call_sid: str 
     flow = ReceptionistFlow(cfg, make_transferer())
 
     stt = DeepgramSTTService(api_key=_require("DEEPGRAM_API_KEY"))
-    llm = AnthropicLLMService(api_key=_require("ANTHROPIC_API_KEY"),
+    api_key = anthropic_api_key()
+    if not api_key:
+        raise RuntimeError("ANTHROPIC_API_KEY (or LP_ANTHROPIC_API_KEY) is not set")
+    llm = AnthropicLLMService(api_key=api_key,
                               settings=AnthropicLLMService.Settings(model=model("small", "voice")))
     tts = make_tts(cfg)
 

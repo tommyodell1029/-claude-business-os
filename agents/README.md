@@ -43,7 +43,7 @@ One Pipecat template serves every client. Everything specific to a business come
 | Level | Command | Needs |
 |---|---|---|
 | Unit and scripted end-to-end calls, run through the real Pipecat pipeline and FlowManager | `uv run python -m unittest discover -s tests` | nothing |
-| Live text call with the real `small` model (typed caller lines; reports response latency) | `uv run python -m agents.simulate demo "Hi, my water heater is leaking" "Ann, 904 555 0133" "yes"` | `ANTHROPIC_API_KEY` |
+| Live text call with the real `small` model (typed caller lines; reports response latency) | `uv run python -m agents.simulate demo "Hi, my water heater is leaking" "Ann, 904 555 0133" "yes"` | `ANTHROPIC_API_KEY` or `LP_ANTHROPIC_API_KEY` |
 | Real phone call | T4: Twilio number → Pipecat Cloud | Twilio, Deepgram, ElevenLabs keys |
 
 ## Deploy (Pipecat Cloud, T4)

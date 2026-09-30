@@ -1,7 +1,7 @@
 """Text-mode call simulator: the real Pipecat pipeline + FlowManager, without phone audio.
 
 - Scripted mode (no keys): the LLM's replies/function calls come from the script. Verifies flow wiring.
-- Live mode (ANTHROPIC_API_KEY set, llm_script=None): the real `small` model answers typed caller lines.
+- Live mode (ANTHROPIC_API_KEY or LP_ANTHROPIC_API_KEY set, llm_script=None): the real `small` model answers typed caller lines.
   Used by the T4 tester's 8 scripted calls and for prompt tuning before a real phone test.
 
     uv run python -m agents.simulate demo "Hi, my water heater is leaking" "Ann" ...
@@ -28,7 +28,7 @@ from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.services.anthropic.llm import AnthropicLLMService
 from pipecat.workers.runner import WorkerRunner
 
-from lp.config import model
+from lp.config import anthropic_api_key, model
 
 from . import call_record
 from .client_config import ClientConfig, load
@@ -94,8 +94,10 @@ async def simulate(cfg: ClientConfig, turns: list[dict], *, transferer: Transfer
     """turns: [{"caller": str|None, "llm": [("say", text) | ("call", name, args), ...]}]. `llm` ignored when live."""
     flow = ReceptionistFlow(cfg, transferer)
     if live:
-        import os
-        llm = AnthropicLLMService(api_key=os.environ["ANTHROPIC_API_KEY"],
+        api_key = anthropic_api_key()
+        if not api_key:
+            raise RuntimeError("ANTHROPIC_API_KEY (or LP_ANTHROPIC_API_KEY) is not set")
+        llm = AnthropicLLMService(api_key=api_key,
                                   settings=AnthropicLLMService.Settings(model=model("small", "voice")))
     else:
         llm = ScriptedLLM()

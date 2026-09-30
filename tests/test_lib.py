@@ -296,6 +296,16 @@ class TestModelsConfig(unittest.TestCase):
                 model("audit", comp)
         self.assertTrue(model("audit", "audit"))
 
+    def test_anthropic_key_fallback(self):
+        from unittest import mock
+        from lp.config import anthropic_api_key
+        with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "", "LP_ANTHROPIC_API_KEY": ""}):
+            self.assertIsNone(anthropic_api_key())
+        with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "", "LP_ANTHROPIC_API_KEY": " sk-lp "}):
+            self.assertEqual(anthropic_api_key(), "sk-lp")
+        with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-main", "LP_ANTHROPIC_API_KEY": "sk-lp"}):
+            self.assertEqual(anthropic_api_key(), "sk-main")
+
     def test_redact_supabase_and_resend(self):
         from lp.text import redact
         s = redact("k=eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.abcdefghijklmnop r=re_ABCDEFGHIJKLMNOPQRSTUV")
