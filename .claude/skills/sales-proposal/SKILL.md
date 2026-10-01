@@ -25,7 +25,7 @@ Where `<client>` is the business name or owner. The skill generates a proposal d
 
 ## Guardrails (never break these)
 1. **No invented facts.** Use only what the user provides, what the prospect's own website or public listings say, or sourced web research, and cite the URL. If something is unknown, write "Unknown", or ask the user.
-2. **No invented pricing.** Always write {{PRICING}}. Never estimate our price or a competitor's unless a cited public source states it.
+2. **Prices come only from `config/offerings.yaml`.** Quote the founding price while `founding_clients_signed` is below 5, otherwise the standard price. Founding offer: setup fee paid in full, the next month free, monthly billing starts the 1st of the second month after setup. Only offer add-ons marked `available: true`. Never invent a price, discount, or term; trial and cancellation terms are still `{{TRIAL_TERMS}}` / `{{CANCELLATION_TERMS}}`. Never estimate a competitor's price unless a cited public source states it.
 3. **No fabricated proof.** Never write or suggest case studies, testimonials, client logos, "businesses like yours saw X%" claims, benchmarks or ROI figures unless the user supplies them. LaunchPad Local has no published case studies. Offer the live demo number as the proof instead.
 4. **ROI is the prospect's own math.** Any ROI section uses inputs the prospect gave (for example, missed calls per week and average job value). It must show the formula and label every figure as the prospect's estimate.
 5. **Never guess email addresses** or infer email patterns. Use only an address the person published or gave us.
@@ -168,7 +168,7 @@ You control the cutover. Test it first, go live when you're ready. Pause and can
 ```
 ### Investment
 
-{{PRICING}}
+{{PRICE from config/offerings.yaml}}
 
 Includes:
 - 24/7 call handling
@@ -193,7 +193,7 @@ Based on what you shared:
 
 **If the receptionist captures just [conservative %] of those missed calls:**
 - Recovered revenue per [period]: $X
-- Annual investment: {{PRICING}} × 12 = $X
+- Annual investment: {{PRICE from config/offerings.yaml}} × 12 = $X
 - Net impact: $X — $X = $X per year
 
 This uses your estimates. Real results depend on your follow-up, market, and how prospects respond. The receptionist provides the data so you can measure it yourself.
@@ -287,7 +287,7 @@ LaunchPad Local
 
 ## Investment
 
-[{{PRICING}}]
+[{{PRICE from config/offerings.yaml}}]
 
 ---
 

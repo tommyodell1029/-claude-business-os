@@ -1,6 +1,6 @@
 # LaunchPad Local — operating manual for Claude Code
 
-AI agency, Jacksonville FL (launchpadlocal.org). Core: **inbound** AI phone receptionists for local businesses. Also: websites for local businesses + add-ons (see `config/offerings.yaml`; prices stay `{{PRICING}}` until owner sets them).
+AI agency, Jacksonville FL (launchpadlocal.org). Core: **inbound** AI phone receptionists for local businesses. Also: websites for local businesses + add-ons. Prices APPROVED 2026-10-01 in `config/offerings.yaml` (founding pricing for first 5 clients, then standard; founding = setup paid, next month free). Only `available: true` items may be sold.
 Specs: takeover spec (T0–T9) + Master Build Specification (revenue-first agency OS, 2026-09-27). Status, phase map and open spec conflicts: `docs/BUILD_STATUS.md`. Revenue path: `docs/FIRST_DOLLAR_PLAN.md`. New repos/platforms: `docs/REPOSITORY_ACQUISITION.md` gate first. This file is the short version. Keep it short.
 
 ## Output mode
@@ -12,7 +12,7 @@ Specs: takeover spec (T0–T9) + Master Build Specification (revenue-first agenc
 ## Layout
 | Path | What |
 |---|---|
-| `config/offerings.yaml` | services + add-ons sold (names, summaries, `{{PRICING}}`) |
+| `config/offerings.yaml` | tiers, founding/standard prices, add-ons + `available` flags (single source of truth for prices) |
 | `.claude/skills/` | sales-* skills (adapted, shared guardrails) + web design skills (motion, modern-web-design, animated components, scroll reveal, lottie). Notices in `THIRD_PARTY_NOTICES.md` |
 | `config/models.yaml` | ALL runtime model IDs. Code reads via `lp.config.model(role, component)` |
 | `lib/lp/` | shared Python: `text` (norm_phone E.164, norm_email, domain_of, redact), `retry`, `config` |
@@ -52,7 +52,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - Cold email via Resend; send without `{{MAILING_ADDRESS}}` + opt-out; send without checking `suppression`; remove an opt-out; exceed the Gmail outreach caps below.
 - **Owner override 2026-09-27:** cold email goes out from the launchpadlocal.org Workspace inbox via the Gmail connector (risk to main-domain reputation explained and accepted). Guardrails: start 5/day, ramp to max 20/day/inbox; send Tue–Thu mornings; stop sequence on any reply/bounce/unsubscribe; pause all sending if bounce >3% or any spam complaint; plain text, no tracking pixels; connector works only in-session, so every batch is approved by owner before send.
 - State anything not in prospect data. "I called you" only if `called_after_hours = true` (owner sets it).
-- Fabricate stats, testimonials, logos, pricing (use `{{PRICING}}`), case studies, or client results.
+- Fabricate stats, testimonials, logos, prices not in `config/offerings.yaml`, case studies, or client results.
 - Drop tables/columns with data, delete working code (move to `/legacy`), or touch DNS MX/SPF/DKIM/DMARC.
 - Merge `takeover` into main or switch voice engines without owner OK.
 

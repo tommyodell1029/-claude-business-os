@@ -13,7 +13,7 @@ description: Research competitor categories (answering services, voicemail, AI v
 
 ## Guardrails (never break these)
 1. **No invented facts.** Use only what the user provides, what the prospect's own website or public listings say, or sourced web research, and cite the URL. If something is unknown, write "Unknown", or ask the user.
-2. **No invented pricing.** Always write {{PRICING}}. Never estimate our price or a competitor's unless a cited public source states it.
+2. **Prices come only from `config/offerings.yaml`.** Quote the founding price while `founding_clients_signed` is below 5, otherwise the standard price. Founding offer: setup fee paid in full, the next month free, monthly billing starts the 1st of the second month after setup. Only offer add-ons marked `available: true`. Never invent a price, discount, or term; trial and cancellation terms are still `{{TRIAL_TERMS}}` / `{{CANCELLATION_TERMS}}`. Never estimate a competitor's price unless a cited public source states it.
 3. **No fabricated proof.** Never write or suggest case studies, testimonials, client logos, "businesses like yours saw X%" claims, benchmarks or ROI figures unless the user supplies them. LaunchPad Local has no published case studies. Offer the live demo number as the proof instead.
 4. **ROI is the prospect's own math.** Any ROI section uses inputs the prospect gave (for example, missed calls per week and average job value). It must show the formula and label every figure as the prospect's estimate.
 5. **Never guess email addresses** or infer email patterns. Use only an address the person published or gave us.
@@ -72,7 +72,7 @@ For each category, provide:
 
 **Market players:** [List 3–5 vendors with public URLs where available]
 
-**Typical pricing:** {{PRICING}} — do not estimate without public source
+**Typical pricing:** {{PRICE from config/offerings.yaml}} — do not estimate without public source
 
 **Strengths:**
 - [Strength 1] — [Source URL or observation]
@@ -112,7 +112,7 @@ Generated: [date]
 Website: [URL]
 Strengths: [3 bullet points with citations]
 Weaknesses: [3 bullet points with citations]
-Pricing: {{PRICING}} OR "See [URL]" if public
+Pricing: {{PRICE from config/offerings.yaml}} OR "See [URL]" if public
 Switching cost: [Low/Med/High]
 
 ### [Vendor 2 Name]
@@ -172,6 +172,6 @@ Evidence: [Where detected on website]
 2. **Competitor strengths first.** If you don't acknowledge what a competitor does well, you lose credibility.
 3. **Focus on LaunchPad real capabilities only:** Answers 24/7, discloses AI + recording, answers only from approved info, transfers emergencies or "person" requests, sends owner text + email summary. No made-up features.
 4. **Local-specific focus.** Don't compare against enterprise features (sophisticated workflows, multi-user teams, API integrations). Competitors in this space don't have those either, and our buyers don't need them.
-5. **No pricing estimates.** {{PRICING}} for us always. For competitors, cite public sources or write "Not public."
+5. **No pricing estimates.** {{PRICE from config/offerings.yaml}} for us always. For competitors, cite public sources or write "Not public."
 6. **Keep it brief.** 150–250 lines per output. Concise battle cards win deals faster than long docs.
 7. **All output to `sales/COMPETITIVE-INTEL.md`.**

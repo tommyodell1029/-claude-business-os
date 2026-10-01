@@ -15,7 +15,7 @@ This playbook gives you word-for-word responses for the 12 objections you'll hea
 
 ## Guardrails (never break these)
 1. **No invented facts.** Use only what the user provides, what the prospect's own website or public listings say, or sourced web research, and cite the URL. If something is unknown, write "Unknown", or ask the user.
-2. **No invented pricing.** Always write {{PRICING}}. Never estimate our price or a competitor's unless a cited public source states it.
+2. **Prices come only from `config/offerings.yaml`.** Quote the founding price while `founding_clients_signed` is below 5, otherwise the standard price. Founding offer: setup fee paid in full, the next month free, monthly billing starts the 1st of the second month after setup. Only offer add-ons marked `available: true`. Never invent a price, discount, or term; trial and cancellation terms are still `{{TRIAL_TERMS}}` / `{{CANCELLATION_TERMS}}`. Never estimate a competitor's price unless a cited public source states it.
 3. **No fabricated proof.** Never write or suggest case studies, testimonials, client logos, "businesses like yours saw X%" claims, benchmarks or ROI figures unless the user supplies them. LaunchPad Local has no published case studies. Offer the live demo number as the proof instead.
 4. **ROI is the prospect's own math.** Any ROI section uses inputs the prospect gave (for example, missed calls per week and average job value). It must show the formula and label every figure as the prospect's estimate.
 5. **Never guess email addresses** or infer email patterns. Use only an address the person published or gave us.
@@ -45,7 +45,7 @@ Where `<industry or objection>` is the prospect's industry (e.g., "plumbing", "d
 **What it really means:** They do not yet see how the value justifies the cost, or they need to confirm budget exists.
 
 **Response (direct):**
-"I understand. {{PRICING}} is real money. Here's what I'd ask you to consider though: if you're missing even five calls a week from service calls or appointment requests, that's a few hundred dollars in lost revenue or rescheduling overhead every month. The AI costs {{PRICING}}. So the math is whether it brings in or saves more than that per month in your situation. Want to call the demo and think it through?"
+"I understand. {{PRICE from config/offerings.yaml}} is real money. Here's what I'd ask you to consider though: if you're missing even five calls a week from service calls or appointment requests, that's a few hundred dollars in lost revenue or rescheduling overhead every month. The AI costs {{PRICE from config/offerings.yaml}}. So the math is whether it brings in or saves more than that per month in your situation. Want to call the demo and think it through?"
 
 **If they push on price:**
 "What if we looked at {{TRIAL_TERMS}} so you can see your real call volume and call types before deciding? Fair?" (Use only trial terms the owner has set. If there are none, offer the demo line instead.)

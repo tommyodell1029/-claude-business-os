@@ -1,6 +1,11 @@
 # Pricing Proposal (draft for owner approval)
 
-**Status:** PROPOSAL. Nothing here is live. `config/offerings.yaml`, proposals and the site keep `{{PRICING}}` until the owner approves a version below.
+**Status:** APPROVED by owner 2026-10-01, with these decisions (now in `config/offerings.yaml`):
+- **First 5 clients (founding):** recommended tiers: Launch $297/mo, Growth $497/mo, Scale $997/mo; setup $497 / $497 / $997.
+- **Founding offer:** setup fee is NOT waived. The month after purchase is free; monthly billing starts on the 1st of the second month after setup (setup Sept 1 → October free → first charge Nov 1). Implemented in `lp.billing.first_recurring_charge`.
+- **Client 6 onward (standard):** Master Spec tiers: $497 / $797 / $1,497 per month; same setup fees and inclusions; no free month.
+- **Add-ons:** sell everything marked "Yes" below now; the rest become sellable when built and tested.
+- Still open: trial and cancellation terms.
 **Date:** 2026-10-01. Market figures come from public pricing pages and pricing round-ups (sources listed at the end). Treat them as ranges, not guarantees.
 
 ## 1. What a call minute costs us (estimate)

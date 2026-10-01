@@ -13,7 +13,7 @@ description: Build an Ideal Customer Profile (ICP) for a target industry among L
 
 ## Guardrails (never break these)
 1. **No invented facts.** Use only what the user provides, what the prospect's own website or public listings say, or sourced web research, and cite the URL. If something is unknown, write "Unknown", or ask the user.
-2. **No invented pricing.** Always write {{PRICING}}. Never estimate our price or a competitor's unless a cited public source states it.
+2. **Prices come only from `config/offerings.yaml`.** Quote the founding price while `founding_clients_signed` is below 5, otherwise the standard price. Founding offer: setup fee paid in full, the next month free, monthly billing starts the 1st of the second month after setup. Only offer add-ons marked `available: true`. Never invent a price, discount, or term; trial and cancellation terms are still `{{TRIAL_TERMS}}` / `{{CANCELLATION_TERMS}}`. Never estimate a competitor's price unless a cited public source states it.
 3. **No fabricated proof.** Never write or suggest case studies, testimonials, client logos, "businesses like yours saw X%" claims, benchmarks or ROI figures unless the user supplies them. LaunchPad Local has no published case studies. Offer the live demo number as the proof instead.
 4. **ROI is the prospect's own math.** Any ROI section uses inputs the prospect gave (for example, missed calls per week and average job value). It must show the formula and label every figure as the prospect's estimate.
 5. **Never guess email addresses** or infer email patterns. Use only an address the person published or gave us.
@@ -97,16 +97,16 @@ Rank the top pain points driving receptionist hiring decisions. These are hypoth
 | **Owner/office mgr overwhelmed** | Critical | Answering phones all day = no time for operations, sales, follow-up, quality. Stress and burnout. | Diminishing returns: growth stalls because founder is chained to phone. | Frees up 10–15 hours/week for higher-value work. |
 | **After-hours calls get nothing** | High | Customer calls at 7 PM, gets voicemail, calls competitor who has answering service. | Lost revenue; competitors gain market share. Particularly painful in emergency services (plumbing, HVAC). | AI takes call anytime. Caller feels served. Owner is notified. Can callback if urgent (emergency transfer option). |
 | **No-callback liability** | High | Owner meant to follow up but forgot. Customer contacted competitor. Relationship lost. | Revenue churn; reputation damage. | AI logs every call + sends summary. Owner can't miss a prospect. |
-| **Hiring/retaining a receptionist** | High | Owner is weighing whether to hire front-desk help. Ask what they would expect to pay; do not state a salary figure unless you cite a source. | Highest fixed cost alternative. Unpredictable availability. | One-time setup + recurring subscription at {{PRICING}}. No payroll tax, benefits, or turnover. |
+| **Hiring/retaining a receptionist** | High | Owner is weighing whether to hire front-desk help. Ask what they would expect to pay; do not state a salary figure unless you cite a source. | Highest fixed cost alternative. Unpredictable availability. | One-time setup + recurring subscription at {{PRICE from config/offerings.yaml}}. No payroll tax, benefits, or turnover. |
 
 #### Dimension 5: Budget and Decision Criteria
 
 For owner-operated local businesses:
 
 - **Revenue proxy:** Unknown from public data, but observable: have a website (someone hired to build it), can run Google Ads (allocate marketing budget), can afford a 1099 contractor. Do not estimate revenue figures.
-- **Price point tolerance:** Willing to pay {{PRICING}} per month if ROI is clear. Decision: "This is cheaper than hiring someone full-time OR losing a customer." Not price-shopping; decision is binary (buy or keep the status quo).
+- **Price point tolerance:** Willing to pay {{PRICE from config/offerings.yaml}} per month if ROI is clear. Decision: "This is cheaper than hiring someone full-time OR losing a customer." Not price-shopping; decision is binary (buy or keep the status quo).
 - **Budget cycle:** No formal budget cycle. Decision happens when pain becomes acute: after missing a big call, after staff turnover, after reading a bad review. Buying happens in days to weeks.
-- **ROI they understand:** The owner's own math: [their calls per day] × [share they miss] × [their average job value], compared with {{PRICING}}. Use only numbers they give you. Owner-operators think in concrete terms, not percentages.
+- **ROI they understand:** The owner's own math: [their calls per day] × [share they miss] × [their average job value], compared with {{PRICE from config/offerings.yaml}}. Use only numbers they give you. Owner-operators think in concrete terms, not percentages.
 - **Budget authority:** Owner or office manager (if present). No committee. No approval from above.
 - **Budget flag signals:** Hiring new staff, expansion, growth in Google reviews/rating, recent equipment investment (van graphics, new tools). Any signal of business growth = likely has budget.
 
@@ -201,7 +201,7 @@ Generated: [date]
 [Title, daily frustrations, what closes them, timeline]
 
 ## Budget and ROI
-[{{PRICING}}, compared only against costs the owner states]
+[{{PRICE from config/offerings.yaml}}, compared only against costs the owner states]
 
 ## Likely Objections and Rebuttals
 [3–5 common objections and how to address with live demo]

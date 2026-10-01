@@ -15,7 +15,7 @@ This guide helps you prepare for a demo call with a local business owner interes
 
 ## Guardrails (never break these)
 1. **No invented facts.** Use only what the user provides, what the prospect's own website or public listings say, or sourced web research, and cite the URL. If something is unknown, write "Unknown", or ask the user.
-2. **No invented pricing.** Always write {{PRICING}}. Never estimate our price or a competitor's unless a cited public source states it.
+2. **Prices come only from `config/offerings.yaml`.** Quote the founding price while `founding_clients_signed` is below 5, otherwise the standard price. Founding offer: setup fee paid in full, the next month free, monthly billing starts the 1st of the second month after setup. Only offer add-ons marked `available: true`. Never invent a price, discount, or term; trial and cancellation terms are still `{{TRIAL_TERMS}}` / `{{CANCELLATION_TERMS}}`. Never estimate a competitor's price unless a cited public source states it.
 3. **No fabricated proof.** Never write or suggest case studies, testimonials, client logos, "businesses like yours saw X%" claims, benchmarks or ROI figures unless the user supplies them. LaunchPad Local has no published case studies. Offer the live demo number as the proof instead.
 4. **ROI is the prospect's own math.** Any ROI section uses inputs the prospect gave (for example, missed calls per week and average job value). It must show the formula and label every figure as the prospect's estimate.
 5. **Never guess email addresses** or infer email patterns. Use only an address the person published or gave us.
@@ -115,7 +115,7 @@ Provide {{DEMO_PHONE}}.
 After they call, they'll have questions:
 - "Is recording legal in Florida?" → Yes, because Florida is all-party-consent. The AI says so at the start.
 - "What if it misunderstands?" → It can transfer to you immediately. You listen in. The call summary is always sent.
-- "How much does it cost?" → {{PRICING}}. 
+- "How much does it cost?" → {{PRICE from config/offerings.yaml}}. 
 - "Can it handle my specific FAQs?" → Yes, you provide them. We update it anytime.
 
 ### Close (1 minute)
@@ -146,7 +146,7 @@ See `OBJECTION-PLAYBOOK.md` for full responses. Quick versions:
 2. **"What if it messes up?"** → It transfers to you immediately on request. You get a full transcript either way.
 3. **"Is it legal?"** → Yes in Florida. The AI says it's recording at the start.
 4. **"I don't get that many calls."** → Even 5 missed calls per month costs you. The AI also handles routine questions so you spend less time on the phone.
-5. **"Too expensive."** → It costs {{PRICING}}. That's less than one full-time employee. Call the demo first, then we talk pricing.
+5. **"Too expensive."** → It costs {{PRICE from config/offerings.yaml}}. That's less than one full-time employee. Call the demo first, then we talk pricing.
 
 ---
 
