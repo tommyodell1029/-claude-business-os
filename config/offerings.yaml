@@ -50,7 +50,7 @@ terms:
   trial: none                     # no trial; founding clients get the month after setup free (see founding_offer)
   refunds: "All sales are final. No refunds on setup fees or monthly fees, including partial months."
   cancellation: "Cancel anytime by emailing {cancellation_email}. Cancellation stops future billing; service continues until the end of the period already paid."
-  cancellation_email: "{{CANCELLATION_EMAIL}}"   # owner to confirm the exact address; then replace this placeholder
+  cancellation_email: "tommy@launchpadlocal.org"   # owner-confirmed 2026-10-01 (LaunchPad Workspace inbox)
   retention: .claude/skills/client-cancellation/SKILL.md
 
 # ---------------------------------------------------------------- services
