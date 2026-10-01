@@ -21,7 +21,7 @@
 | 10 Outreach / replies | T7c, T7d | ⬜ Gmail-connector sending (owner override); needs full mailing address |
 | 8 Command Center (lite, mobile) | T6 + `/admin` | ⬜ |
 | 11 Sales / proposals / appointments | sales skills (done) + appointments config | 🟡 Skills exist, no scheduling yet |
-| 12 Stripe / payments / onboarding | new + T5 | ⬜ Payment Link first, webhooks after |
+| 12 Stripe / payments / onboarding | new + T5 | 🟡 2026-10-01 code built + unit-tested (catalog, checkout, webhook, migration). Sandbox run, Supabase apply, webhook endpoint + Vercel env pending. See `docs/STRIPE.md` + Stripe section below. |
 | **→ FIRST_DOLLAR_MODE: pursue the first customer** | | |
 | 6 Agent registry, 7 Jobs/workflows | — | Deferred. Minimal versions only (agent config in YAML, GitHub Actions cron). |
 | 13–24 | T5–T9 + new | After first revenue |
@@ -37,6 +37,10 @@
 - **2026-10-01 recheck (fresh session): still blocked here.** All other env secrets present and clean; Anthropic key is present as `LP_ANTHROPIC_API_KEY` (code accepts it; it is uploaded to Pipecat as `ANTHROPIC_API_KEY`). Python 98/98. Live check: `TRANSFER_ACTION_URL` = `https://launchpad-site-ten.vercel.app/api/twilio/transfer-status` confirmed exact (correctly signed POST → 200 + reconnect TwiML routed to `lp-receptionist.launchpad-local`; unsigned → 403). But the `PIPECAT_PAT` in this environment is valid and its user still has **zero organizations** (`GET /v1/organizations` → `{"organizations":[]}`; every `/v1/organizations/launchpad-local/*` call → 401). So no secret set and no deploy yet. The earlier "PAT user is a member" note did not hold for the PAT in this environment. Twilio +19044568829 has no voice URL set yet (read back via API); it stays unpointed until the agent is deployed. Text sim (`demo`, hours → area → goodbye): disclosure first, hours and area match `demo.yaml`, LLM latency 1537 / 808 / 858 ms; it also produced one unprompted filler turn and a double goodbye (checkpoint audit item).
 - Open risk: `websocket_auth = "none"` means anyone who learns the service host can start sessions (cost). Capped by `max_agents = 2` and the session cap. Fix later: the same Vercel webhook answers inbound calls, calls Pipecat `/start`, and returns a tokenized stream URL (`websocket_auth = "token"`).
 - Call records are written to the container disk and are lost when the session ends until T5 wires `agents/notify` into `bot.py`.
+
+## Stripe billing — as of 2026-10-01
+- Built: `scripts/stripe_catalog.py` (idempotent, lookup keys `lp_*`), `scripts/new_checkout.py` (setup now, monthly from `lp.billing.first_recurring_charge` via `subscription_data.trial_end`), webhook `site/app/api/stripe/webhook` (signature check, idempotent on event id), migration `20261001000001_stripe_billing.sql` (tested on local Postgres 16). Details: `docs/STRIPE.md`.
+- Not done yet: (a) catalog + checkout never run against the Stripe sandbox (this session's tool policy blocked API calls with the key); (b) Supabase apply of the migration timed out twice through the connector, not applied; (c) no webhook endpoint or `STRIPE_WEBHOOK_SECRET` yet, Vercel env not set; (d) Checkout behavior (setup charged now, first monthly on the expected date) UNVERIFIED until the sandbox end-to-end test in `docs/STRIPE.md` passes.
 
 ## Phase 5 additions (now a NEW migration file; the first one is applied)
 Pipeline stages (§50) on `prospects.status`; the expanded reply classes (§49); `payments`, `proposals` and `appointments` tables; SMS consent records (§48); `feature_flags` and `system_events`. The migration has not been applied anywhere, so editing it now is safe.
@@ -61,7 +65,7 @@ C6 still needs the owner's package prices. C8 weekday window kept at 5–6 PM as
 ## Owner actions blocking revenue (the critical path)
 1. Full CAN-SPAM mailing address (street, city, state, ZIP) or a PO box / virtual mailbox, stored only in the `MAILING_ADDRESS` secret.
 2. Twilio account, local number, start A2P 10DLC registration.
-3. Stripe account.
+3. ~~Stripe account.~~ Sandbox restricted key set. Remaining: see Stripe section below.
 4. Package prices and the mailing address for cold email.
 5. Keys as environment secrets: `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`; later `GOOGLE_PLACES_API_KEY`, Twilio, Instantly or Smartlead, Resend, Stripe.
 6. ~~Supabase paid upgrade~~ Not needed: `launchpad-local` created on the free tier after `archive-jarvis` was retired. Owner copies the project's secret (service role) key into `SUPABASE_SERVICE_ROLE_KEY` before T5.
