@@ -63,7 +63,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - 2026-09-27 scope change (owner): full agency — voice agents + websites + add-ons on our page. Site (T6) gets services + add-ons sections. Client-website delivery workflow = new phase, TBD.
 - Added: 6 sales skills (from ai-sales-team-claude, adapted) + 5 web design skills (from claudedesignskills, unmodified).
 - T3 ✅ voice agent code (agents/, clients/demo.yaml); live tests need keys.
-- T4 🟡 site on Vercel (`launchpad-site-ten.vercel.app`); Pipecat deploy blocked on CLI user token; then TwiML Bin + 8 test calls. Details: `docs/BUILD_STATUS.md` T4.
+- T4 🟡 site on Vercel (`launchpad-site-ten.vercel.app`); transfer route verified live 2026-10-01; Pipecat deploy blocked: `PIPECAT_PAT` user has 0 orgs (needs PAT from the account that owns `launchpad-local`); then TwiML Bin + 8 test calls. Details: `docs/BUILD_STATUS.md` T4.
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
 1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.
