@@ -16,6 +16,7 @@ CLIENTS_DIR = ROOT / "clients"
 DAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 BOOKING_TYPES = ("take_message", "request_time")
 TTS_PROVIDERS = ("elevenlabs", "cartesia")
+LANGUAGES = ("en", "es")
 _HOURS_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$")
 _ENV_RE = re.compile(r"^\$\{([A-Z0-9_]+)\}$")
 _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}$")
@@ -48,12 +49,22 @@ class ClientConfig:
     max_call_minutes: int
     silence_timeout_secs: int
     twilio_number: str | None = None
+    languages: tuple[str, ...] = ("en",)
     raw: dict = field(default_factory=dict, compare=False, repr=False)
 
     @property
     def disclosure(self) -> str:
         # Mandatory (Florida all-party consent). Built in code so no client config can remove it.
         return f"Thanks for calling {self.business_name}, I'm their AI assistant. This call may be recorded."
+
+    @property
+    def bilingual(self) -> bool:
+        return "es" in self.languages
+
+    @property
+    def disclosure_es(self) -> str:
+        # Spanish disclosure, spoken right after the English one for bilingual clients (also built in code).
+        return "Gracias por llamar. Soy su asistente de inteligencia artificial y esta llamada puede ser grabada."
 
 
 def _env(value, required_env: bool):
@@ -150,6 +161,13 @@ def parse(data: dict, slug: str, *, require_env: bool = False) -> ClientConfig:
         errs.append("tts.voice_id is required")
 
     greeting = need_str("greeting")
+    langs = data.get("languages", ["en"])
+    if not isinstance(langs, list) or not langs or "en" not in langs or any(l not in LANGUAGES for l in langs):
+        errs.append(f"languages must be a list containing 'en' and only {LANGUAGES}")
+        langs = ["en"]
+    greeting_es = data.get("greeting_es")
+    if "es" in langs and (not isinstance(greeting_es, str) or not greeting_es.strip()):
+        errs.append("greeting_es is required when languages includes 'es'")
 
     def bounded_int(key: str, lo: int, hi: int) -> int:
         v = data.get(key)
@@ -169,7 +187,7 @@ def parse(data: dict, slug: str, *, require_env: bool = False) -> ClientConfig:
         booking_type=booking_type, owner_phone=contacts["owner_phone"], owner_email=contacts["owner_email"],
         handoff_number=contacts["handoff_number"], emergency_keywords=keywords, tts_provider=tts_provider,
         voice_id=voice_id.strip(), greeting=greeting, max_call_minutes=max_minutes, silence_timeout_secs=silence,
-        twilio_number=contacts["twilio_number"], raw=data,
+        twilio_number=contacts["twilio_number"], languages=tuple(dict.fromkeys(langs)), raw=data,
     )
 
 

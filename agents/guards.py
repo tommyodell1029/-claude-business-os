@@ -17,6 +17,15 @@ WRAP_UP_LINE = ("I'm sorry, I need to wrap up this call now. I've saved what you
                 "and the team will follow up. Goodbye.")
 STILL_THERE_LINE = "Are you still there?"
 SILENCE_END_LINE = "I haven't heard anything, so I'll end the call now. Please call back anytime. Goodbye."
+ES_GUARDS = {
+    WRAP_UP_LINE: "Lo siento, tengo que terminar la llamada. Guardé lo que me dijo y el equipo se comunicará con usted. Adiós.",
+    STILL_THERE_LINE: "¿Sigue ahí?",
+    SILENCE_END_LINE: "No he escuchado nada, así que terminaré la llamada. Puede volver a llamar cuando guste. Adiós.",
+}
+
+
+def _say(flow: ReceptionistFlow, text: str) -> str:
+    return f"{text} {ES_GUARDS[text]}" if flow.cfg.bilingual else text
 
 
 def estimate_cost(duration_sec: float, rates_file: Path = ROOT / "config" / "voice.yaml") -> float | None:
@@ -47,7 +56,7 @@ class CallTimer:
             await asyncio.sleep(self._limit)
             logger.info("max call length reached")
             self._fm.state["end_reason"] = "max_duration"
-            await self._fm.set_node_from_config(self._flow.end_node(WRAP_UP_LINE))
+            await self._fm.set_node_from_config(self._flow.end_node(_say(self._flow, WRAP_UP_LINE)))
             await asyncio.sleep(30)
             await self._cancel()
         except asyncio.CancelledError:
@@ -64,10 +73,10 @@ class SilenceHandler:
     async def on_idle(self, *_):
         self.count += 1
         if self.count == 1:
-            await self._queue([TTSSpeakFrame(STILL_THERE_LINE)])
+            await self._queue([TTSSpeakFrame(_say(self._flow, STILL_THERE_LINE))])
         else:
             self._fm.state["end_reason"] = "silence"
-            await self._fm.set_node_from_config(self._flow.end_node(SILENCE_END_LINE))
+            await self._fm.set_node_from_config(self._flow.end_node(_say(self._flow, SILENCE_END_LINE)))
 
     def reset(self, *_):
         self.count = 0

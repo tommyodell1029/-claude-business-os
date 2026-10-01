@@ -25,7 +25,7 @@ Where `<client>` is the business name or owner. The skill generates a proposal d
 
 ## Guardrails (never break these)
 1. **No invented facts.** Use only what the user provides, what the prospect's own website or public listings say, or sourced web research, and cite the URL. If something is unknown, write "Unknown", or ask the user.
-2. **Prices come only from `config/offerings.yaml`.** Quote the founding price while `founding_clients_signed` is below 5, otherwise the standard price. Founding offer: setup fee paid in full, the next month free, monthly billing starts the 1st of the second month after setup. Only offer add-ons marked `available: true`. Never invent a price, discount, or term; trial and cancellation terms are still `{{TRIAL_TERMS}}` / `{{CANCELLATION_TERMS}}`. Never estimate a competitor's price unless a cited public source states it.
+2. **Prices come only from `config/offerings.yaml`.** Quote the founding price while `founding_clients_signed` is below 5, otherwise the standard price. Founding offer: setup fee paid in full, the next month free, monthly billing starts the 1st of the second month after setup. Only offer add-ons marked `available: true`. Never invent a price, discount, or term; terms come from `config/offerings.yaml` `terms`: month-to-month, no trial, all sales final (no refunds), cancel anytime by email. Never estimate a competitor's price unless a cited public source states it.
 3. **No fabricated proof.** Never write or suggest case studies, testimonials, client logos, "businesses like yours saw X%" claims, benchmarks or ROI figures unless the user supplies them. LaunchPad Local has no published case studies. Offer the live demo number as the proof instead.
 4. **ROI is the prospect's own math.** Any ROI section uses inputs the prospect gave (for example, missed calls per week and average job value). It must show the formula and label every figure as the prospect's estimate.
 5. **Never guess email addresses** or infer email patterns. Use only an address the person published or gave us.
@@ -158,7 +158,7 @@ Every call summary comes to you by text and email. You decide how to follow up.
 
 **Timeline:** {{SETUP_TIMELINE}}
 
-You control the cutover. Test it first, go live when you're ready. Pause and cancellation terms: {{CANCELLATION_TERMS}}.
+You control the cutover. Test it first, go live when you're ready. Month-to-month: cancel anytime by email; billing stops after the period already paid. All sales are final (no refunds).
 ```
 
 ---
@@ -176,7 +176,7 @@ Includes:
 - [Appointment booking if applicable]
 - [Emergency transfer if applicable]
 - Full control over FAQ content
-- Cancellation terms: {{CANCELLATION_TERMS}}
+- Terms: month-to-month, cancel anytime by email, all sales final (no refunds)
 ```
 
 ---

@@ -44,10 +44,14 @@ founding_offer:
   setup_waived: false
   free_months: 1
   recurring_starts: first_of_second_month_after_setup
+# Owner-approved 2026-10-01.
 terms:
   contract: month-to-month
-  trial: "{{TRIAL_TERMS}}"              # not set by owner yet; never invent
-  cancellation: "{{CANCELLATION_TERMS}}"
+  trial: none                     # no trial; founding clients get the month after setup free (see founding_offer)
+  refunds: "All sales are final. No refunds on setup fees or monthly fees, including partial months."
+  cancellation: "Cancel anytime by emailing {cancellation_email}. Cancellation stops future billing; service continues until the end of the period already paid."
+  cancellation_email: "{{CANCELLATION_EMAIL}}"   # owner to confirm the exact address; then replace this placeholder
+  retention: .claude/skills/client-cancellation/SKILL.md
 
 # ---------------------------------------------------------------- services
 services:
@@ -74,7 +78,7 @@ addons:
   bilingual_es:
     name: Spanish/English receptionist
     price: { monthly: 99 }      # included in Scale
-    available: false            # needs bilingual config + tests
+    available: true             # built 2026-10-01 (languages: [en, es]); first real Spanish phone call still to verify
   monthly_report:
     name: Monthly call report and tuning (Launch tier)
     price: { monthly: 49 }      # included in Growth and Scale

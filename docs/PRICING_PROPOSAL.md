@@ -5,7 +5,7 @@
 - **Founding offer:** setup fee is NOT waived. The month after purchase is free; monthly billing starts on the 1st of the second month after setup (setup Sept 1 → October free → first charge Nov 1). Implemented in `lp.billing.first_recurring_charge`.
 - **Client 6 onward (standard):** Master Spec tiers: $497 / $797 / $1,497 per month; same setup fees and inclusions; no free month.
 - **Add-ons:** sell everything marked "Yes" below now; the rest become sellable when built and tested.
-- Still open: trial and cancellation terms.
+- Terms: month-to-month, no trial, all sales final (no refunds), cancel anytime by email; cancellation emails get a retention reply (`client-cancellation` skill).
 **Date:** 2026-10-01. Market figures come from public pricing pages and pricing round-ups (sources listed at the end). Treat them as ranges, not guarantees.
 
 ## 1. What a call minute costs us (estimate)
@@ -42,7 +42,7 @@ These are **estimates** built on stated assumptions. T4 measures real usage per 
 
 ## 3. Receptionist tiers (recommended)
 
-Setup fee covers intake, script and FAQs, voice, number, testing and go-live in under an hour. Month-to-month; terms `{{TRIAL_TERMS}}` / `{{CANCELLATION_TERMS}}` still to be set by the owner.
+Setup fee covers intake, script and FAQs, voice, number, testing and go-live in under an hour. Month-to-month. No trial. All sales final (no refunds). Cancel anytime by email (approved 2026-10-01).
 
 | | **Launch** | **Growth** | **Scale** |
 |---|---|---|---|
@@ -83,7 +83,7 @@ Rule: never sell an add-on as available before it is built and tested. "Coming s
 ## 5. What the owner needs to decide
 1. Tiers: the **recommended** prices ($297 / $497 / $997 plus setup), the **premium** prices ($497 / $797 / $1,497), or the owner's own numbers.
 2. Setup fee amounts, and whether to waive setup for founding clients.
-3. Trial and cancellation terms (`{{TRIAL_TERMS}}`, `{{CANCELLATION_TERMS}}`).
+3. ~~Trial and cancellation terms~~ Decided: no trial, all sales final, cancel anytime by email.
 4. Which add-ons go on the website now. Recommendation: only the ones marked "Yes".
 
 Once approved, Claude updates `config/offerings.yaml`, the `/sales-proposal` skill inputs, and the site's pricing section, and creates matching Stripe Payment Links (owner clicks to create them).

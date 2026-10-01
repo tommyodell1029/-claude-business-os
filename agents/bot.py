@@ -53,6 +53,13 @@ def make_transferer() -> Transferer:
     return NoTransfer()
 
 
+def stt_kwargs(cfg: ClientConfig) -> dict:
+    """Bilingual clients: Deepgram nova-3 multilingual (English/Spanish code-switching)."""
+    if cfg.bilingual:
+        return {"settings": DeepgramSTTService.Settings(model="nova-3", language="multi")}
+    return {}
+
+
 def make_tts(cfg: ClientConfig):
     if cfg.tts_provider == "cartesia":
         from pipecat.services.cartesia.tts import CartesiaTTSService
@@ -68,7 +75,7 @@ async def run_bot(transport: BaseTransport, cfg: ClientConfig, *, call_sid: str 
     started = time.monotonic()
     flow = ReceptionistFlow(cfg, make_transferer())
 
-    stt = DeepgramSTTService(api_key=_require("DEEPGRAM_API_KEY"))
+    stt = DeepgramSTTService(api_key=_require("DEEPGRAM_API_KEY"), **stt_kwargs(cfg))
     api_key = anthropic_api_key()
     if not api_key:
         raise RuntimeError("ANTHROPIC_API_KEY (or LP_ANTHROPIC_API_KEY) is not set")

@@ -26,6 +26,20 @@ NO_ANSWER_LINE = (
     "I wasn't able to reach anyone right now, so I'll take a message and mark it urgent. "
     "What's your name?"
 )
+URGENT_DONE = "Thanks. I've marked this urgent and passed it to the team right away."
+MESSAGE_DONE = "Thanks. I've passed your message to the team, and they'll follow up."
+SPAM_BYE = "Thank you for calling. Goodbye."
+
+# Spanish versions of every fixed line, spoken after the English one on bilingual lines.
+ES = {
+    GOODBYE: "Gracias por llamar. Que tenga un buen día.",
+    HOLD_LINE: "Un momento, por favor. Le estoy comunicando.",
+    NO_ANSWER_LINE: ("No pude comunicarme con nadie en este momento, así que tomaré un mensaje y lo marcaré como urgente. "
+                     "¿Cuál es su nombre?"),
+    URGENT_DONE: "Gracias. Lo marqué como urgente y se lo pasé al equipo de inmediato.",
+    MESSAGE_DONE: "Gracias. Le pasé su mensaje al equipo y se comunicarán con usted.",
+    SPAM_BYE: "Gracias por llamar. Adiós.",
+}
 
 
 class Transferer(Protocol):
@@ -43,7 +57,7 @@ class NoTransfer:
 def matches_emergency(text: str, keywords: list[str]) -> str | None:
     t = (text or "").lower()
     for k in keywords:
-        if re.search(rf"(?<![a-z]){re.escape(k)}(?![a-z])", t):
+        if re.search(rf"(?<!\w){re.escape(k)}(?!\w)", t):
             return k
     return None
 
@@ -79,10 +93,20 @@ class ReceptionistFlow:
             "As soon as the intent is clear, call set_intent. For emergencies call transfer_to_human instead.",
             [self._set_intent_fn()],
             role_message=role_message(self.cfg),
-            pre_actions=[{"type": "tts_say", "text": f"{self.cfg.disclosure} {self.cfg.greeting}"},
+            pre_actions=[{"type": "tts_say", "text": self.opening_line()},
                          {"type": "function", "handler": self._mark_disclosed}],
             respond_immediately=False,
         )
+
+    def t(self, text: str) -> str:
+        """Fixed line in English, followed by Spanish on bilingual lines."""
+        return f"{text} {ES[text]}" if self.cfg.bilingual and text in ES else text
+
+    def opening_line(self) -> str:
+        """English disclosure first (always), then the Spanish disclosure for bilingual clients, then greetings."""
+        if self.cfg.bilingual:
+            return f"{self.cfg.disclosure} {self.cfg.disclosure_es} {self.cfg.greeting} {self.cfg.raw['greeting_es'].strip()}"
+        return f"{self.cfg.disclosure} {self.cfg.greeting}"
 
     def faq_node(self) -> NodeConfig:
         return self._node(
@@ -95,7 +119,7 @@ class ReceptionistFlow:
         )
 
     def collect_node(self, urgent: bool = False) -> NodeConfig:
-        opener = [{"type": "tts_say", "text": NO_ANSWER_LINE}] if urgent else []
+        opener = [{"type": "tts_say", "text": self.t(NO_ANSWER_LINE)}] if urgent else []
         return self._node(
             "collect",
             "Collect, one question at a time: the caller's name, the best callback number, what they need, "
@@ -124,13 +148,14 @@ class ReceptionistFlow:
             [self._correct_fn(), self._confirmed_fn()],
         )
 
-    def end_node(self, text: str = GOODBYE) -> NodeConfig:
+    def end_node(self, text: str | None = None) -> NodeConfig:
+        text = text or self.t(GOODBYE)
         return self._node("end", "The call is ending. Do not say anything else.", [],
                           pre_actions=[{"type": "end_conversation", "text": text}], respond_immediately=False)
 
     def transfer_node(self) -> NodeConfig:
         return self._node("transfer", "You are transferring the caller. Do not say anything else.", [],
-                          pre_actions=[{"type": "tts_say", "text": HOLD_LINE},
+                          pre_actions=[{"type": "tts_say", "text": self.t(HOLD_LINE)},
                                        {"type": "function", "handler": self._do_transfer}],
                           respond_immediately=False)
 
@@ -213,10 +238,8 @@ class ReceptionistFlow:
     async def details_confirmed(self, args: dict, fm: FlowManager):
         fm.state["confirmed"] = True
         fm.state["end_reason"] = "completed"
-        who = "the team"
-        line = (f"Thanks. I've marked this urgent and passed it to {who} right away. "
-                if fm.state.get("urgency") == "urgent" else f"Thanks. I've passed your message to {who}, and they'll follow up. ")
-        return {"status": "ok"}, self.end_node(line + GOODBYE)
+        line = URGENT_DONE if fm.state.get("urgency") == "urgent" else MESSAGE_DONE
+        return {"status": "ok"}, self.end_node(f"{self.t(line)} {self.t(GOODBYE)}")
 
     async def transfer_to_human(self, args: dict, fm: FlowManager):
         reason = args.get("reason", "caller_requested")
@@ -239,7 +262,7 @@ class ReceptionistFlow:
         fm.state["end_reason"] = reason
         if fm.state.get("intent") is None:
             fm.state["intent"] = "spam"
-        return {"status": "ending"}, self.end_node("Thank you for calling. Goodbye.")
+        return {"status": "ending"}, self.end_node(self.t(SPAM_BYE))
 
     async def _mark_disclosed(self, action: dict, fm: FlowManager) -> None:
         fm.state["disclosure_spoken"] = True

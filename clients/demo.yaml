@@ -67,6 +67,10 @@ tts:
   provider: elevenlabs      # elevenlabs | cartesia
   voice_id: 8fwYhwfiWkLjR4FKLHSQ   # ElevenLabs "Elise Hart"
 
+# Languages: [en] or [en, es]. Bilingual lines also play the Spanish disclosure and need greeting_es,
+# and should add Spanish emergency keywords (e.g. inundación, huele a gas, fuga de gas, incendio, chispas, emergencia).
+languages: [en]
+
 # Spoken right after the mandatory disclosure line.
 greeting: "How can I help you today?"
 
