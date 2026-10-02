@@ -64,7 +64,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - Added: 6 sales skills (from ai-sales-team-claude, adapted) + 5 web design skills (from claudedesignskills, unmodified).
 - T3 ✅ voice agent code (agents/, clients/demo.yaml); live tests need keys.
 - Stripe 🟡 billing code built + tested offline (`docs/STRIPE.md`); sandbox run, migration apply, webhook secret + Vercel env pending.
-- T4 🟡 site on Vercel (`launchpad-site-ten.vercel.app`); transfer route verified live 2026-10-01; Pipecat agent `lp-receptionist` deployed + Ready 2026-10-02, but `ANTHROPIC_API_KEY` not yet in its secret set → demo number not pointed yet; then TwiML Bin + 8 test calls. Details: `docs/BUILD_STATUS.md` T4.
+- T4 🟡 site on Vercel (`launchpad-site-ten.vercel.app`); transfer route verified live 2026-10-01; 2026-10-02 Pipecat agent `lp-receptionist` deployed + Ready with all secrets, demo number +19044568829 pointed at TwiML Bin `lp-demo-inbound` (verified via API). Pending: 8 live test calls (`ops/twilio/T4_TEST_CALLS.md`) + Opus checkpoint audit. Details: `docs/BUILD_STATUS.md` T4.
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
 1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.
