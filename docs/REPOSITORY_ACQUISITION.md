@@ -27,3 +27,4 @@ Every external repository, package or platform goes through this checklist **bef
 | 2026-09-27 | freshtechbro/claudedesignskills | GO (partial): 5 web skills. 3D/WebGL skills rejected (performance on local-business sites). |
 | 2026-09-27 | adewaskar/jarvis | NO-GO. 3 patterns borrowed (see `JARVIS_AUDIT.md`). |
 | 2026-09-27 | 21 platform candidates (§18) | See `REPOSITORY_INTEGRATION_MATRIX.md` |
+| 2026-10-02 | androoagi/starnet (v0.12.5, MIT, single maintainer, 3.3 GB) | NO-GO as a replacement or base. It is a local-first desktop app (Windows/macOS) with a pixel-art UI for running personal AI agent teams; it runs on the owner's computer, has no telephony/voice-receptionist, client hosting, or billing for clients, so it fails cloud-first/mobile-first (§8–9) and would duplicate Claude Code. Revisit only as an optional owner-side assistant after first revenue. |
