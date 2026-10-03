@@ -63,6 +63,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - 2026-09-27 scope change (owner): full agency — voice agents + websites + add-ons on our page. Site (T6) gets services + add-ons sections. Client-website delivery workflow = new phase, TBD.
 - Added: 6 sales skills (from ai-sales-team-claude, adapted) + 5 web design skills (from claudedesignskills, unmodified).
 - T3 ✅ voice agent code (agents/, clients/demo.yaml); live tests need keys.
+- T6 🟡 site built 2026-10-03 (landing, /terms, /privacy, /api/lead; prices from offerings.yaml; demo number hidden behind SHOW_DEMO_PHONE); needs Vercel env + redeploy. Details: `docs/BUILD_STATUS.md` T6.
 - Stripe 🟡 billing code built + tested offline (`docs/STRIPE.md`); sandbox run, migration apply, webhook secret + Vercel env pending.
 - T4 🟡 site on Vercel (`launchpad-site-ten.vercel.app`); transfer route verified live 2026-10-01; 2026-10-02 Pipecat agent `lp-receptionist` deployed + Ready with all secrets, demo number +19044568829 pointed at TwiML Bin `lp-demo-inbound` (verified via API). Pending: 8 live test calls (`ops/twilio/T4_TEST_CALLS.md`) + Opus checkpoint audit. Details: `docs/BUILD_STATUS.md` T4.
 - T5 🟡 `agents/notify/` (Supabase + Resend + flagged SMS), `scripts/new_client.py`, `ops/onboarding.md` built + tested offline, Supabase smoke insert OK 2026-10-03; Pipecat secrets + redeploy + live call pending (`docs/BUILD_STATUS.md` T5).

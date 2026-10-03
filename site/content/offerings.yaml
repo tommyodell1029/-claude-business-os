@@ -1,0 +1,97 @@
+# What LaunchPad Local sells. APPROVED by owner 2026-10-01 (see docs/PRICING_PROPOSAL.md for rationale + sources).
+# Site, proposals and sales skills read prices from here. Never quote a price that is not in this file.
+# Only items with available: true may be offered or shown as purchasable.
+
+currency: USD
+
+# ---------------------------------------------------------------- receptionist tiers
+# Founding pricing applies to the first 5 paying receptionist clients; from client #6 the standard pricing applies.
+pricing_phase:
+  founding_client_limit: 5
+  founding_clients_signed: 0      # update when each founding client pays setup
+
+tiers:
+  launch:
+    name: Launch
+    included_minutes: 300
+    overage_per_min: 0.25
+    features: [answering_24_7, faqs, messages, text_email_summaries, emergency_transfer]
+    locations: 1
+    founding: { setup: 497, monthly: 297 }
+    standard: { setup: 497, monthly: 497 }
+  growth:
+    name: Growth
+    included_minutes: 800
+    overage_per_min: 0.25
+    features: [answering_24_7, faqs, messages, text_email_summaries, emergency_transfer, appointment_time_requests, monthly_report_tuning]
+    locations: 1
+    founding: { setup: 497, monthly: 497 }
+    standard: { setup: 497, monthly: 797 }
+  scale:
+    name: Scale
+    included_minutes: 2000
+    overage_per_min: 0.20
+    features: [answering_24_7, faqs, messages, text_email_summaries, emergency_transfer, appointment_time_requests, monthly_report_tuning, bilingual_es]
+    locations: 3
+    founding: { setup: 997, monthly: 997 }
+    standard: { setup: 997, monthly: 1497 }
+
+# Founding clients: setup fee is charged in full (not waived). The first month after purchase is free;
+# recurring billing starts on the 1st of the SECOND calendar month after the setup payment.
+# Example: setup paid Sept 1 (or any day in September) -> no charge in October -> first monthly charge Nov 1.
+# Code: lp.billing.first_recurring_charge(setup_date). Standard clients: recurring starts 1 month after setup.
+founding_offer:
+  setup_waived: false
+  free_months: 1
+  recurring_starts: first_of_second_month_after_setup
+# Owner-approved 2026-10-01.
+terms:
+  contract: month-to-month
+  trial: none                     # no trial; founding clients get the month after setup free (see founding_offer)
+  refunds: "All sales are final. No refunds on setup fees or monthly fees, including partial months."
+  cancellation: "Cancel anytime by emailing {cancellation_email}. Cancellation stops future billing; service continues until the end of the period already paid."
+  cancellation_email: "tommy@launchpadlocal.org"   # owner-confirmed 2026-10-01 (LaunchPad Workspace inbox)
+  retention: .claude/skills/client-cancellation/SKILL.md
+
+# ---------------------------------------------------------------- services
+services:
+  voice_receptionist:
+    name: AI Phone Receptionist
+    summary: Inbound AI receptionist that answers calls 24/7, answers FAQs from approved info, takes messages or appointment requests, transfers emergencies, and texts and emails the owner a summary.
+    available: true
+  website:
+    name: Websites for Local Businesses
+    summary: Fast, mobile-first marketing website with a contact form and click-to-call, built and hosted for the client.
+    price: { build: 1497, build_with_growth_or_scale: 997, hosting_maintenance_monthly: 49 }
+    available: false            # client-website delivery workflow not built yet (phase after T6)
+
+# ---------------------------------------------------------------- add-ons
+addons:
+  gbp_setup:
+    name: Google Business Profile setup and cleanup
+    price: { one_time: 199 }
+    available: true             # manual service
+  extra_number:
+    name: Extra phone number or location
+    price: { monthly: 99 }
+    available: true             # one client YAML per number
+  bilingual_es:
+    name: Spanish/English receptionist
+    price: { monthly: 99 }      # included in Scale
+    available: true             # built 2026-10-01 (languages: [en, es]); first real Spanish phone call still to verify
+  monthly_report:
+    name: Monthly call report and tuning (Launch tier)
+    price: { monthly: 49 }      # included in Growth and Scale
+    available: false            # after weekly audit job (T8)
+  calendar_booking:
+    name: Calendar booking integration
+    price: { setup: 199, monthly: 49 }
+    available: false            # not built
+  chat_widget:
+    name: Website chat widget (same approved FAQs)
+    price: { monthly: 79 }
+    available: false            # not built
+  missed_call_textback:
+    name: Missed-call text-back
+    price: { monthly: 49 }      # plus carrier registration pass-through
+    available: false            # needs A2P 10DLC + caller consent (decision C2)
