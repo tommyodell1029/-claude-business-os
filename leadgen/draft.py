@@ -37,11 +37,20 @@ def _has(p: dict, sig: str) -> bool:
     return bool(((p.get("signals") or {}).get(sig) or {}).get("value"))
 
 
-def compose(p: dict, address: str, sender: str = "LaunchPad Local") -> tuple[str, str]:
+def _service_phrase(p: dict) -> str:
+    """'24/7 service' or 'emergency service', whichever the evidence on their site actually says."""
+    ev = ((p.get("signals") or {}).get("mentions_24_7") or {}).get("evidence") or ""
+    if re.search(r"24\s*/\s*7|24[- ]hours?|24\s*hr|around the clock", ev, re.I):
+        return "24/7 service"
+    return "emergency service"
+
+
+def compose(p: dict, address: str, sender: str = "Tommy\nLaunchPad Local") -> tuple[str, str]:
     """(subject, body). Uses only facts in the prospect row; 'I called you' only if called_after_hours is true."""
     name = p["name"]
     industry = _INDUSTRY.get(p.get("industry") or "", p.get("industry") or "local service")
-    where = f" in {p['city']}" if p.get("city") else ""
+    city = p.get("city") or ""
+    where = f" in {city}" if city and city.lower() not in name.lower() else ""
     lines = ["Hi there,", ""]
     if p.get("called_after_hours") is True:
         lines += [f"I called {name} after hours recently, and that is why I'm writing.", ""]
@@ -49,13 +58,13 @@ def compose(p: dict, address: str, sender: str = "LaunchPad Local") -> tuple[str
     if p.get("rating") is not None and p.get("review_count"):
         facts.append(f"{name} has {p['rating']} stars across {p['review_count']} Google reviews")
     if _has(p, "mentions_24_7"):
-        facts.append("your website mentions 24/7 or emergency service")
+        facts.append(f"your website mentions {_service_phrase(p)}")
     if facts:
         lines += [("I noticed that " + " and that ".join(facts) + "."), ""]
     lines += [
         f"I run LaunchPad Local, a Jacksonville company that sets up AI phone receptionists for local {industry} businesses. "
         "The receptionist answers inbound calls, tells the caller it is an AI assistant and that the call may be recorded, "
-        "takes their details, and texts and emails you a summary after each call.",
+        "takes their details, and emails you a summary after each call.",
         "",
         f"Would it be useful to see how it could handle calls for {name}{where}? Reply and I will send the details. No obligation.",
         "",

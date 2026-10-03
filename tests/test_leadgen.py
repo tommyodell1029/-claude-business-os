@@ -291,9 +291,17 @@ class DraftTests(unittest.TestCase):
         _, b = draft.compose(prospect(1, rating=None, review_count=None, signals={}), ADDR)
         self.assertNotIn("stars", b)
         self.assertNotIn("24/7", b)
-        _, b = draft.compose(prospect(1, signals={"mentions_24_7": {"value": True}}), ADDR)
+        _, b = draft.compose(prospect(1, signals={"mentions_24_7": {"value": True, "evidence": "Open 24/7 for you"}}), ADDR)
         self.assertIn("4.8 stars across 120 Google reviews", b)
-        self.assertIn("24/7", b)
+        self.assertIn("mentions 24/7 service", b)
+        _, b = draft.compose(prospect(1, signals={"mentions_24_7": {"value": True, "evidence": "fast emergency repair"}}), ADDR)
+        self.assertIn("mentions emergency service", b)
+        self.assertNotIn("24/7", b)
+
+    def test_no_text_summary_promise(self):
+        # Owner SMS is off until A2P 10DLC is approved, so drafts must not promise texts.
+        _, b = draft.compose(prospect(1), ADDR)
+        self.assertNotIn("text", b.lower().replace("context", ""))
 
     def test_no_guaranteed_outcomes(self):
         _, b = draft.compose(prospect(1), ADDR)
