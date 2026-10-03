@@ -1,13 +1,14 @@
 # agents/notify: post-call handler
 
-This handler runs in-process at the end of every call. It replaces all n8n logic. The handler itself is built in phase T5.
+This handler runs in-process at the end of every call (`agents/bot.py` calls `notify.handle_async(record, cfg)`). It replaces all n8n logic. Code: `handler.py` (steps), `supabase_rest.py`, `messages.py` (alert text), `http.py` (stdlib HTTP, no extra dependencies).
 
-## Order of operations (each step retries; a failure in one never blocks the others)
-1. Insert a row into `calls`. This must succeed. It is idempotent on `call_sid`.
-2. Send the owner an SMS through Twilio. Urgent calls start with `URGENT`. This step is skipped until A2P 10DLC is approved, and `calls.sms_status` records the result.
-3. Send the owner an email through Resend with the full summary and transcript. `calls.email_status` records the result.
+## Order of operations (each step retries 3x on 5xx/429/network errors; a failure in one never blocks the others)
+1. Insert a row into `calls` (env `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`). Idempotent on `call_sid`. If the client's row is missing from `clients`, it is created (never overwritten) and the insert retried. If the insert still fails, `bot.py` keeps the record in `data/calls/` on the container disk.
+2. Email the client owner through Resend (env `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, recipient = the client's `owner_email`). Skipped, and logged, when `NOTIFY_FROM_EMAIL` is unset. Resend is for these transactional alerts only, never cold email. Plain text, short, no transcript. The `Idempotency-Key` header prevents a double send on retry.
+3. SMS through Twilio, OFF unless `NOTIFY_SMS_ENABLED=1` (A2P 10DLC is not approved yet). Sender is `TWILIO_SMS_FROM`, else the client's Twilio number. Urgent calls start with `URGENT`. SMS never contains the transcript or any call details; it points to the email.
+4. Best effort: write the outcomes to `calls.email_status` and `calls.sms_status`.
 
-Failures are logged with secrets removed by `lp.text.redact`.
+Every log line goes through `lp.text.redact`. The handler never raises into the call teardown.
 
 ## Schema
 Source of truth: `supabase/migrations/20260926000001_launchpad_init.sql`.

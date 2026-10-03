@@ -27,7 +27,7 @@ from pipecat.workers.runner import WorkerRunner
 from lp.config import anthropic_api_key, model, tts_model
 from lp.text import redact
 
-from . import call_record
+from . import call_record, notify
 from .client_config import ClientConfig, load, slug_for_number
 from .flow import NoTransfer, ReceptionistFlow, Transferer, init_state
 from .guards import CallTimer, EmergencyWatcher, SilenceHandler, estimate_cost
@@ -127,10 +127,12 @@ async def run_bot(transport: BaseTransport, cfg: ClientConfig, *, call_sid: str 
                                    messages=context.get_messages(), duration_sec=duration,
                                    est_cost=estimate_cost(duration))
         try:
-            path = call_record.write_local(record)  # T5: replaced by agents.notify.handle(record)
-            logger.info(f"call record saved {path.name} duration={record['duration_sec']}s est_cost={record['est_cost']}")
+            result = await notify.handle_async(record, cfg)
+            logger.info(f"call record handled duration={record['duration_sec']}s est_cost={record['est_cost']} db={result['db']}")
+            if result["db"] == "failed":  # keep the record rather than lose it (container disk, chmod 600)
+                call_record.write_local(record)
         except Exception as e:  # never crash teardown on a record failure
-            logger.error(redact(f"failed to save call record: {e}"))
+            logger.error(redact(f"post-call handler failed: {e}"))
         await runner.cancel()
 
     await runner.run()
