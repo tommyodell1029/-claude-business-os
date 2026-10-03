@@ -67,6 +67,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - Stripe 🟡 billing code built + tested offline (`docs/STRIPE.md`); sandbox run, migration apply, webhook secret + Vercel env pending.
 - T4 🟡 site on Vercel (`launchpad-site-ten.vercel.app`); transfer route verified live 2026-10-01; 2026-10-02 Pipecat agent `lp-receptionist` deployed + Ready with all secrets, demo number +19044568829 pointed at TwiML Bin `lp-demo-inbound` (verified via API). Pending: 8 live test calls (`ops/twilio/T4_TEST_CALLS.md`) + Opus checkpoint audit. Details: `docs/BUILD_STATUS.md` T4.
 - T5 🟡 `agents/notify/` (Supabase + Resend + flagged SMS), `scripts/new_client.py`, `ops/onboarding.md` built + tested offline, Supabase smoke insert OK 2026-10-03; Pipecat secrets + redeploy + live call pending (`docs/BUILD_STATUS.md` T5).
+- T7-lite 🟡 `leadgen/` (Places source → robots-safe research → score → 5 drafts, never sends) built + tested offline 2026-10-03; live run status in `docs/BUILD_STATUS.md` T7.
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
 1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.
