@@ -1,0 +1,30 @@
+# Lead-gen settings. Prices are NOT here (they live in config/offerings.yaml).
+places:
+  endpoint: https://places.googleapis.com/v1/places:searchText
+  # Tight field mask: only what the prospects table stores. Keep it minimal (cost).
+  field_mask: places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.regularOpeningHours,places.businessStatus
+  page_size: 20
+  max_api_calls_per_run: 12      # hard cap on Text Search requests per run (cost control)
+  max_prospects_per_run: 60
+  location: Jacksonville, FL
+  verticals:                     # sales-icp home-service verticals
+    plumbing: plumber
+    hvac: HVAC contractor
+    electrical: electrician
+    roofing: roofer
+    pest_control: pest control
+    garage_door: garage door repair
+    locksmith: locksmith
+research:
+  delay_secs: 2.0                # polite delay between requests to the same host
+  timeout_secs: 10
+  max_bytes: 400000
+  user_agent: "LaunchPadLocalBot/1.0 (+https://launchpadlocal.org)"
+  extra_page_keywords: [contact, about]   # at most ONE of these pages is fetched per site
+score:
+  threshold: 40                  # below -> status below_threshold
+draft:
+  top_n: 5
+  platform: gmail
+  step: 0
+  sender_name: LaunchPad Local
