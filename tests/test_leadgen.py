@@ -321,3 +321,23 @@ class NoSendTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ImportTests(unittest.TestCase):
+    def test_rows_dedupe_by_domain_and_never_take_email(self):
+        from leadgen import import_prospects as ip
+        seed = {"source": "web_search", "rows": [
+            {"name": "A", "website": "https://www.a.test/", "industry": "plumbing", "city": "Jacksonville", "email": "x@a.test"},
+            {"name": "A again", "website": "https://a.test/about"}, {"name": "No site"}, {"website": "https://b.test"}]}
+        rows = ip.to_rows(seed)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["place_id"], "web:a.test")
+        self.assertNotIn("email", rows[0])
+        self.assertEqual(rows[0]["source"], "web_search")
+
+    def test_seed_file_is_valid(self):
+        from leadgen import import_prospects as ip
+        seed = json.loads((ROOT / "leadgen/seed/web_search_2026-10-03.json").read_text())
+        rows = ip.to_rows(seed)
+        self.assertGreaterEqual(len(rows), 50)
+        self.assertTrue(all(r["place_id"].startswith("web:") for r in rows))

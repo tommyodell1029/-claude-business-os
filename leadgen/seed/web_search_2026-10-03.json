@@ -1,0 +1,399 @@
+{
+ "source": "web_search",
+ "date": "2026-10-03",
+ "note": "Names and websites from public web search results; nothing else asserted. National chains and directory sites excluded.",
+ "rows": [
+  {
+   "name": "Turner Plumbing",
+   "website": "https://www.turnerplumbingco.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "Premier Plumbing",
+   "website": "https://wearepremierplumbing.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "Sweeney Plumbing & Electric",
+   "website": "https://sweeneyjax.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "Aldridge & Sons Plumbing",
+   "website": "https://aldridgesonsplumbing.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "American Plumbing Contractors Inc",
+   "website": "https://americanplumbingcontractors.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "Sunshine State Plumbing",
+   "website": "https://sunshinestateplumbing.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "Kingdom Based Plumbing",
+   "website": "https://kingdombasedplumbing.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "B & G Plumbing",
+   "website": "https://bandgplumbing.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "Pure Flo Plumbing",
+   "website": "https://purefloplumbingjax.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville FL emergency plumber"
+  },
+  {
+   "name": "Elite AC",
+   "website": "https://eliteacllc.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Willman Air",
+   "website": "https://www.willmanair.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Cool R Us A/C & Heating",
+   "website": "https://www.coolrusnfl.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Thigpen HVAC",
+   "website": "https://thigpenhvac.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Get Cool Jax",
+   "website": "https://www.getcooljax.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Palms Air Conditioning and Heating",
+   "website": "https://www.palmsair.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Florida Air Flow Heating & Air",
+   "website": "https://floridaairflow.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Ideal Conditions Heating & Air Conditioning",
+   "website": "https://idealconditionsjax.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Air to Air Inc",
+   "website": "https://airtoairinc.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "Epic HVAC Service",
+   "website": "https://www.epichvacservice.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "HVAC air conditioning repair Jacksonville FL local company"
+  },
+  {
+   "name": "American Electric of Jacksonville",
+   "website": "https://www.americanelectricofjacksonville.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "electrician Jacksonville FL licensed electrical contractor residential"
+  },
+  {
+   "name": "Empire Electric Inc.",
+   "website": "https://www.empireelec.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "electrician Jacksonville FL licensed electrical contractor residential"
+  },
+  {
+   "name": "All Service Electric",
+   "website": "https://asejax.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "electrician Jacksonville FL licensed electrical contractor residential"
+  },
+  {
+   "name": "Jacksonville Electrician (electricianjacksonvilleflorida.com)",
+   "website": "https://electricianjacksonvilleflorida.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "electrician Jacksonville FL licensed electrical contractor residential"
+  },
+  {
+   "name": "Electrician Jacksonville FL (electricianjacksonvillefl.com)",
+   "website": "https://electricianjacksonvillefl.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "electrician Jacksonville FL licensed electrical contractor residential"
+  },
+  {
+   "name": "Pure Power Electrical",
+   "website": "https://gotpurepower.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "electrician Jacksonville FL licensed electrical contractor residential"
+  },
+  {
+   "name": "Heritage Roofing of North Florida",
+   "website": "https://www.heritagenfl.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "Top Gun Roofing",
+   "website": "https://topgunroofingjax.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "K&D Roofing",
+   "website": "https://www.kanddroofing.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "The Roofing Company Inc.",
+   "website": "https://theroofingcompanyfl.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "Elo Roofing",
+   "website": "https://eloroofing.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "J&M Roofing",
+   "website": "https://www.jandmroofing.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "Ron Russell Roofing",
+   "website": "https://www.ronrussellroofing.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "Roof It Forward",
+   "website": "https://www.roofitforward.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "Valor Roofing",
+   "website": "https://www.valorroofingco.com/",
+   "industry": "roofing",
+   "city": "Jacksonville",
+   "source_query": "roofing company Jacksonville FL roof repair local roofer"
+  },
+  {
+   "name": "Bug Out",
+   "website": "https://florida.bugoutservice.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "Safari Termite & Pest Control",
+   "website": "https://www.safaritermitepestcontrol.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "Knock Out Pest Control",
+   "website": "https://knockoutpestcontroljacksonville.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "PestBear",
+   "website": "https://www.pestbear.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "Royal Pest Services",
+   "website": "https://royalpestservices.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "Lindsey Pest Services",
+   "website": "https://www.lindseypest.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "Mission Pest",
+   "website": "https://www.mission-pest.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "Bug-Man Pest Service",
+   "website": "https://myfloridabugman.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "pest control Jacksonville FL local exterminator"
+  },
+  {
+   "name": "Jacksonville Garage Door",
+   "website": "https://jaxflgaragedoor.com/",
+   "industry": "garage_door",
+   "city": "Jacksonville",
+   "source_query": "garage door repair Jacksonville FL local company"
+  },
+  {
+   "name": "Florida Garage Doors",
+   "website": "https://www.floridagaragedoors.net/",
+   "industry": "garage_door",
+   "city": "Jacksonville",
+   "source_query": "garage door repair Jacksonville FL local company"
+  },
+  {
+   "name": "Burdens Overhead Doors",
+   "website": "https://burdensdoorsjax.com/",
+   "industry": "garage_door",
+   "city": "Jacksonville",
+   "source_query": "garage door repair Jacksonville FL local company"
+  },
+  {
+   "name": "ABC Garage Doors",
+   "website": "https://www.abcgaragedoors904.com/",
+   "industry": "garage_door",
+   "city": "Jacksonville",
+   "source_query": "garage door repair Jacksonville FL local company"
+  },
+  {
+   "name": "ASAP Garage",
+   "website": "https://www.asapgaragefl.com/",
+   "industry": "garage_door",
+   "city": "Jacksonville",
+   "source_query": "garage door repair Jacksonville FL local company"
+  },
+  {
+   "name": "D & D Garage Doors",
+   "website": "https://www.danddgaragedoors.com/",
+   "industry": "garage_door",
+   "city": "Jacksonville",
+   "source_query": "garage door repair Jacksonville FL local company"
+  },
+  {
+   "name": "Jax Locksmith Shop",
+   "website": "https://www.jaxlocksmithshop.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  },
+  {
+   "name": "Jax Door & Lock",
+   "website": "https://jaxdoornlock.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  },
+  {
+   "name": "24/7 Locksmith Jacksonville",
+   "website": "https://247locksmithjacksonville.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  },
+  {
+   "name": "Local Locksmith Jacksonville",
+   "website": "https://locallocksmithjacksonville.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  },
+  {
+   "name": "ABI Locksmith",
+   "website": "https://abilocksmith.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  },
+  {
+   "name": "J & J Locksmith",
+   "website": "https://www.jandjlocksmith.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  },
+  {
+   "name": "Jacksonville Lock Master",
+   "website": "https://jacksonvillelockmaster.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  },
+  {
+   "name": "Dedge's Locksmith and Security",
+   "website": "https://www.dedges.com/",
+   "industry": "locksmith",
+   "city": "Jacksonville",
+   "source_query": "locksmith Jacksonville FL 24 hour local locksmith"
+  }
+ ]
+}
