@@ -23,6 +23,11 @@ def model(role: str, component: str) -> str:
     return cfg["models"][role]
 
 
+def tts_model(provider: str) -> str | None:
+    """Return the TTS model ID for a voice provider from config/models.yaml, or None to use the provider default."""
+    return (_models().get("tts") or {}).get(provider)
+
+
 # The Claude Code cloud environment may withhold ANTHROPIC_* variables from sessions, so the owner can
 # store the runtime key as LP_ANTHROPIC_API_KEY instead. ANTHROPIC_API_KEY wins when both are set.
 ANTHROPIC_KEY_VARS = ("ANTHROPIC_API_KEY", "LP_ANTHROPIC_API_KEY")

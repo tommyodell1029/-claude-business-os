@@ -65,7 +65,8 @@ emergency_keywords:
 
 tts:
   provider: elevenlabs      # elevenlabs | cartesia
-  voice_id: 8fwYhwfiWkLjR4FKLHSQ   # ElevenLabs "Elise Hart"
+  voice_id: uYXf8XasLslADfZ2MB4u   # ElevenLabs "Hope - Your conversational bestie" (owner pick 2026-10-03)
+  speed: 0.95                      # optional, 0.7-1.2; slightly slower reads as more natural on the phone
 
 # Languages: [en] or [en, es]. Bilingual lines also play the Spanish disclosure and need greeting_es,
 # and should add Spanish emergency keywords (e.g. inundación, huele a gas, fuga de gas, incendio, chispas, emergencia).

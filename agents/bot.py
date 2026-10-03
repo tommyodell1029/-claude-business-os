@@ -24,7 +24,7 @@ from pipecat.transports.base_transport import BaseTransport
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.workers.runner import WorkerRunner
 
-from lp.config import anthropic_api_key, model
+from lp.config import anthropic_api_key, model, tts_model
 from lp.text import redact
 
 from . import call_record
@@ -66,8 +66,11 @@ def make_tts(cfg: ClientConfig):
         return CartesiaTTSService(api_key=_require("CARTESIA_API_KEY"),
                                   settings=CartesiaTTSService.Settings(voice=cfg.voice_id))
     from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
+    extra = {"speed": cfg.voice_speed} if cfg.voice_speed is not None else {}
+    if model_id := tts_model("elevenlabs"):
+        extra["model"] = model_id
     return ElevenLabsTTSService(api_key=_require("ELEVENLABS_API_KEY"),
-                                settings=ElevenLabsTTSService.Settings(voice=cfg.voice_id))
+                                settings=ElevenLabsTTSService.Settings(voice=cfg.voice_id, **extra))
 
 
 async def run_bot(transport: BaseTransport, cfg: ClientConfig, *, call_sid: str | None, caller_id: str | None,

@@ -81,6 +81,8 @@ class TestConfig(WithEnv):
             cfg_with(faqs=[{"q": "x", "a": "{{ inject }}"}]),
             cfg_with(booking_method={"type": "calendar_magic"}),
             cfg_with(tts={"provider": "robot", "voice_id": "x"}),
+            cfg_with(tts={"provider": "elevenlabs", "voice_id": "x", "speed": 2}),
+            cfg_with(tts={"provider": "elevenlabs", "voice_id": "x", "speed": "fast"}),
             cfg_with(max_call_minutes=90),
             cfg_with(timezone="Mars/Olympus"),
             cfg_with(handoff_number="12345"),
@@ -88,6 +90,21 @@ class TestConfig(WithEnv):
         for d in bad:
             with self.assertRaises(ConfigError, msg=str(d)[:80]):
                 parse(d, "demo")
+
+    def test_voice_speed_and_tts_model(self):
+        from agents.bot import make_tts
+        from lp.config import tts_model
+        c = load("demo")
+        self.assertEqual(c.voice_speed, 0.95)
+        self.assertIsNone(parse(cfg_with(tts={"provider": "elevenlabs", "voice_id": "x"}), "demo").voice_speed)
+        self.assertEqual(tts_model("elevenlabs"), "eleven_turbo_v2_5")
+        self.assertIsNone(tts_model("nope"))
+        from unittest import mock
+        with mock.patch.dict(os.environ, {"ELEVENLABS_API_KEY": "test-key"}):
+            tts = make_tts(c)
+        self.assertEqual(tts._settings.model, "eleven_turbo_v2_5")
+        self.assertEqual(tts._settings.speed, 0.95)
+        self.assertEqual(tts._settings.voice, c.voice_id)
 
     def test_slug_for_number(self):
         with tempfile.TemporaryDirectory() as tmp:

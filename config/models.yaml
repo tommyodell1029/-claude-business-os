@@ -8,6 +8,10 @@ models:
   # Never used inside a live call or a per-prospect loop.
   audit: claude-opus-5-5
 
+# Text-to-speech model per provider (voice agent). Turbo sounds more natural than Flash for a little more latency.
+tts:
+  elevenlabs: eleven_turbo_v2_5
+
 # Which roles each component may use. Enforced by lp.config.model(role, component=...).
 allowed:
   voice: [small]

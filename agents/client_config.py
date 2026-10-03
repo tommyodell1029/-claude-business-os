@@ -49,6 +49,7 @@ class ClientConfig:
     max_call_minutes: int
     silence_timeout_secs: int
     twilio_number: str | None = None
+    voice_speed: float | None = None  # TTS speaking rate; None = provider default
     languages: tuple[str, ...] = ("en",)
     raw: dict = field(default_factory=dict, compare=False, repr=False)
 
@@ -159,6 +160,10 @@ def parse(data: dict, slug: str, *, require_env: bool = False) -> ClientConfig:
         errs.append(f"tts.provider must be one of {TTS_PROVIDERS}")
     if not isinstance(voice_id, str) or not voice_id.strip():
         errs.append("tts.voice_id is required")
+    voice_speed = tts.get("speed") if isinstance(tts, dict) else None
+    if voice_speed is not None and (isinstance(voice_speed, bool) or not isinstance(voice_speed, (int, float))
+                                    or not 0.7 <= voice_speed <= 1.2):
+        errs.append("tts.speed must be a number between 0.7 and 1.2")
 
     greeting = need_str("greeting")
     langs = data.get("languages", ["en"])
@@ -187,7 +192,8 @@ def parse(data: dict, slug: str, *, require_env: bool = False) -> ClientConfig:
         booking_type=booking_type, owner_phone=contacts["owner_phone"], owner_email=contacts["owner_email"],
         handoff_number=contacts["handoff_number"], emergency_keywords=keywords, tts_provider=tts_provider,
         voice_id=voice_id.strip(), greeting=greeting, max_call_minutes=max_minutes, silence_timeout_secs=silence,
-        twilio_number=contacts["twilio_number"], languages=tuple(dict.fromkeys(langs)), raw=data,
+        twilio_number=contacts["twilio_number"], voice_speed=float(voice_speed) if voice_speed is not None else None,
+        languages=tuple(dict.fromkeys(langs)), raw=data,
     )
 
 
