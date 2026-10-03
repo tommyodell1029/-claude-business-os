@@ -88,6 +88,8 @@ _EMAIL = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A
 _JUNK_TLDS = ("png", "jpg", "jpeg", "gif", "svg", "webp", "css", "js")
 _JUNK_DOMAINS = ("example.com", "domain.com", "email.com", "sentry.io", "wixpress.com", "sentry-next.wixpress.com", "godaddy.com", "squarespace.com")
 _JUNK_LOCAL = ("your", "name", "email", "user", "username", "test")
+# Inboxes that are never a sales contact (hiring, privacy, bounce handlers). Shared with draft.py.
+ROLE_BLOCK = re.compile(r"^(jobs?|careers?|hr|resumes?|recruit\w*|hiring|no-?reply|do-?not-?reply|privacy|abuse|webmaster|postmaster|legal|billing|accounts?payable|ap)$")
 
 
 def find_emails(page_html: str) -> list[str]:
@@ -101,7 +103,7 @@ def find_emails(page_html: str) -> list[str]:
         if not e or e in out:
             continue
         local, _, dom = e.partition("@")
-        if dom.rsplit(".", 1)[-1] in _JUNK_TLDS or dom in _JUNK_DOMAINS or local in _JUNK_LOCAL:
+        if dom.rsplit(".", 1)[-1] in _JUNK_TLDS or dom in _JUNK_DOMAINS or local in _JUNK_LOCAL or ROLE_BLOCK.match(local):
             continue
         out.append(e)
     return out

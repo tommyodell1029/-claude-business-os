@@ -341,3 +341,11 @@ class ImportTests(unittest.TestCase):
         rows = ip.to_rows(seed)
         self.assertGreaterEqual(len(rows), 50)
         self.assertTrue(all(r["place_id"].startswith("web:") for r in rows))
+
+
+class RoleAddressTests(unittest.TestCase):
+    def test_role_inboxes_never_found_or_drafted(self):
+        self.assertEqual(research.find_emails("jobs@a.test careers@a.test HR@a.test noreply@a.test info@a.test"), ["info@a.test"])
+        store = FakeStore([prospect(1, email="jobs@biz1.test"), prospect(2)])
+        out = draft.draft_top(store, {"MAILING_ADDRESS": ADDR}, CFG)
+        self.assertEqual([o["business"] for o in out], ["Biz 2"])

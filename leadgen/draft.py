@@ -14,6 +14,7 @@ import re
 from . import ROOT  # noqa: F401
 from lp.text import norm_email
 from .db import Store
+from .research import ROLE_BLOCK
 from .source import load_config, log
 
 OPT_OUT = "If you'd rather not hear from me, just reply \"unsubscribe\" and I will not email you again."
@@ -86,7 +87,7 @@ def draft_top(store: Store, env, cfg: dict, top_n: int | None = None) -> list[di
         if len(out) >= top_n:
             break
         email = norm_email(p.get("email"))
-        if not email or email in used or not p.get("email_source_url"):
+        if not email or email in used or not p.get("email_source_url") or ROLE_BLOCK.match(email.split("@")[0]):
             continue
         if store.is_suppressed(email):
             log(f"draft: skipped suppressed prospect {p['id']}")
