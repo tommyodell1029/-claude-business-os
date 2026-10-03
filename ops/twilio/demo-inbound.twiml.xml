@@ -4,10 +4,12 @@
   "A call comes in" to this bin. Replace AGENT.ORG with "lp-receptionist.<PIPECAT_ORG>" (same value as
   the PIPECAT_SERVICE_HOST secret). {{To}} / {{From}} are filled in by Twilio per call; the bot needs them
   to pick the client config and to record the caller's number (Pipecat reads to_number / from_number).
+  The host must match the agent region (pcc-deploy.toml region = us-east). The bare api.pipecat.daily.co
+  host routes to us-west and Pipecat closes the stream (Twilio error 31921), so the call drops after one ring.
 -->
 <Response>
   <Connect>
-    <Stream url="wss://api.pipecat.daily.co/ws/twilio">
+    <Stream url="wss://us-east.api.pipecat.daily.co/ws/twilio">
       <Parameter name="_pipecatCloudServiceHost" value="AGENT.ORG"/>
       <Parameter name="to_number" value="{{To}}"/>
       <Parameter name="from_number" value="{{From}}"/>

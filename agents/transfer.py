@@ -9,7 +9,7 @@ handling) instead of just dropping the call.
 TRANSFER_ACTION_URL is the public URL of the <Dial action> webhook (Pipecat Cloud
 only runs bot() and hosts no custom public HTTP routes, so the webhook lives
 outside the bot — see docs/BUILD_STATUS.md T4). TRANSFER_STREAM_URL is the
-Pipecat Cloud Twilio WebSocket (wss://api.pipecat.daily.co/ws/twilio) and
+Pipecat Cloud Twilio WebSocket (wss://us-east.api.pipecat.daily.co/ws/twilio) and
 PIPECAT_SERVICE_HOST ("<agent>.<org>") routes that stream to our agent.
 TwilioTransferer is used only when TRANSFER_ACTION_URL is set — see
 make_transferer() in bot.py.
