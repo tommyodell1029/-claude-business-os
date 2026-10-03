@@ -17,4 +17,5 @@ allowed:
   voice: [small]
   notify: [small]
   leadgen: [small]
+  jarvis: [small]
   audit: [audit, small]
