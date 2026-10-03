@@ -64,7 +64,7 @@
 **B. Vercel settings** (vercel.com, project **launchpad-site**, **Settings**, then **Environment Variables**; add each one for Production, then redeploy)
 - Required, new: `JARVIS_OWNER_EMAIL` (your own email), `SUPABASE_ANON_KEY` (from A5), `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`.
 - Required, already set for the site: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Check that they are present.
-- Set later: `JARVIS_VOICE_ID` (the designed Jarvis voice; until then the stock voice is used).
+- Required, new: `JARVIS_VOICE_ID` = `euOF59BzPog7CSdGw7jW` (the designed Jarvis voice; if it is missing, the stock voice is used).
 - Optional: `JARVIS_ALLOWED_ORIGINS` (for example `https://launchpad-site-ten.vercel.app,https://launchpadlocal.org`; when unset, only the site's own address is allowed), `JARVIS_ADDRESS` (how Jarvis addresses you; default "sir"), and for diagnostics `TWILIO_ACCOUNT_SID`, `DEMO_TWILIO_NUMBER`, `PIPECAT_API_KEY`. `RESEND_API_KEY` and `TWILIO_AUTH_TOKEN` are already set. If the Resend key can only send, the domain check reports "unavailable".
 - Not needed: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. The browser never talks to Supabase.
 
