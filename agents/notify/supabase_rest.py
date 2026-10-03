@@ -43,3 +43,12 @@ class Supabase:
 
     def client_exists(self, slug: str) -> bool:
         return bool(self._rest("GET", f"clients?slug=eq.{quote(slug, safe='')}&select=slug", "return=representation"))
+
+    def unnotified_leads(self, created_before_iso: str, limit: int = 50) -> list[dict]:
+        """Website leads nobody has been alerted about yet (older than the cutoff, so the site route had its chance)."""
+        q = (f"site_leads?notified_at=is.null&created_at=lt.{quote(created_before_iso, safe='')}"
+             f"&order=created_at.asc&limit={int(limit)}&select=id,name,email,phone,business,message,created_at")
+        return self._rest("GET", q, "return=representation")
+
+    def update_lead(self, lead_id: str, fields: dict) -> None:
+        self._rest("PATCH", f"site_leads?id=eq.{quote(lead_id, safe='')}", "return=minimal", fields)

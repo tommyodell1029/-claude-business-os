@@ -49,3 +49,25 @@ def sms_body(record: dict, business_name: str) -> str:
     urgent = record.get("urgency") == "urgent"
     return (f"{'URGENT: ' if urgent else ''}New call for {business_name} from {_caller(record)}. "
             "Details are in your email.")
+
+
+def _one_line(s: str | None, limit: int) -> str:
+    return " ".join((s or "").split())[:limit]
+
+
+def lead_subject(lead: dict) -> str:
+    """Same wording as the site route's alert (site/lib/leadAlert.ts)."""
+    biz = _one_line(lead.get("business"), 60)
+    return f"New lead: {_one_line(lead.get('name'), 60)}{f' ({biz})' if biz else ''}"
+
+
+def lead_body(lead: dict) -> str:
+    return "\n".join([
+        "A new lead came in through the launchpadlocal.org contact form.", "",
+        f"Name: {_one_line(lead.get('name'), 100)}",
+        f"Business: {_one_line(lead.get('business'), 150) or 'not given'}",
+        f"Email: {lead.get('email') or 'not given'}",
+        f"Phone: {lead.get('phone') or 'not given'}", "",
+        "Message:", lead.get("message") or "(none)", "",
+        "They agreed to be contacted about this request. Reply promptly.",
+    ])

@@ -109,9 +109,21 @@ export function leadsDb(url: string, serviceKey: string, fetchImpl: typeof fetch
       const m = /\/(\d+)$/.exec(r.headers.get("content-range") ?? "");
       return m ? Number(m[1]) : 0;
     },
-    async insert(row: Record<string, unknown>): Promise<void> {
-      const r = await fetchImpl(base, { method: "POST", headers: { ...headers, prefer: "return=minimal" }, body: JSON.stringify(row) });
+    /** Inserts the lead and returns its id (null if the response had none). */
+    async insert(row: Record<string, unknown>): Promise<string | null> {
+      const r = await fetchImpl(base, { method: "POST", headers: { ...headers, prefer: "return=representation" }, body: JSON.stringify(row) });
       if (!r.ok) throw new Error(`supabase insert site_leads ${r.status}`);
+      const rows = (await r.json().catch(() => [])) as { id?: string }[];
+      return rows[0]?.id ?? null;
+    },
+    /** Best effort: remember that the owner was alerted so the Python sweep skips this lead. */
+    async markNotified(id: string, status: string): Promise<void> {
+      const r = await fetchImpl(`${base}?id=eq.${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { ...headers, prefer: "return=minimal" },
+        body: JSON.stringify({ notified_at: status === "sent" ? new Date().toISOString() : null, email_status: status }),
+      });
+      if (!r.ok) throw new Error(`supabase update site_leads ${r.status}`);
     },
   };
 }

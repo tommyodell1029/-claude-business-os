@@ -9,6 +9,6 @@ Next.js app for launchpadlocal.org. Marketing site (`/`, `/terms`, `/privacy`), 
 
 Env (Vercel project settings, never in git): `TWILIO_AUTH_TOKEN`, `TRANSFER_ACTION_URL` (this route's exact public URL), `TRANSFER_STREAM_URL`, `PIPECAT_SERVICE_HOST`.
 
-Env for the site: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `IP_HASH_SALT` (lead form); `MAILING_ADDRESS` (footer); `SHOW_DEMO_PHONE` + `DEMO_PHONE` (demo block, off by default). Prices come from `config/offerings.yaml` via `npm run build` (copied to `content/offerings.yaml`).
+Env for the site: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `IP_HASH_SALT` (lead form); `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, `LEAD_ALERT_EMAIL` (owner email on each new lead); `MAILING_ADDRESS` (footer); `SHOW_DEMO_PHONE` + `DEMO_PHONE` (demo block, off by default). Prices come from `config/offerings.yaml` via `npm run build` (copied to `content/offerings.yaml`).
 
 Checks: `npm ci && npm run lint && npm test && npm run typecheck && npm run build`.

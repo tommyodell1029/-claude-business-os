@@ -57,11 +57,13 @@ test("leadsDb sends service key server-side and parses count", async () => {
   const calls: { url: string; init: RequestInit }[] = [];
   const f = (async (url: string, init: RequestInit) => {
     calls.push({ url, init });
-    return new Response("[]", { status: 200, headers: { "content-range": "0-0/4" } });
+    return new Response('[{"id":"lead-1"}]', { status: 200, headers: { "content-range": "0-0/4" } });
   }) as unknown as typeof fetch;
   const db = leadsDb("https://x.supabase.co/", "KEY", f);
   assert.equal(await db.recentCount("abc", "2026-01-01T00:00:00.000Z"), 4);
-  await db.insert({ name: "a" });
+  assert.equal(await db.insert({ name: "a" }), "lead-1");
+  await db.markNotified("lead-1", "sent");
+  assert.match(calls[2].url, /id=eq\.lead-1/);
   assert.match(calls[0].url, /ip_hash=eq\.abc/);
   assert.equal((calls[1].init.headers as Record<string, string>).apikey, "KEY");
 });

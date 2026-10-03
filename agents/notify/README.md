@@ -10,6 +10,9 @@ This handler runs in-process at the end of every call (`agents/bot.py` calls `no
 
 Every log line goes through `lp.text.redact`. The handler never raises into the call teardown.
 
+## Website lead alerts
+The site's `/api/lead` route inserts the lead into `site_leads`, then emails the owner through Resend right away (`site/lib/leadAlert.ts`) and sets `notified_at` / `email_status`. `leads.py` is the safety net: `uv run python -m agents.notify.leads` re-sends any lead older than 5 minutes that still has `notified_at` null (Resend down, env missing). Both use the Resend `Idempotency-Key` `lead-alert-<id>`, so a lead is never emailed twice. Env (Vercel for the route, session or cron for the sweep): `RESEND_API_KEY`, `NOTIFY_FROM_EMAIL`, `LEAD_ALERT_EMAIL` (recipient), plus Supabase for the sweep. The alert is a transactional email to the owner, never cold email. No scheduler runs the sweep yet; run it by hand or from a session until one exists.
+
 ## Schema
 Source of truth: `supabase/migrations/20260926000001_launchpad_init.sql`.
 Row-level security is on for every table and there are no policies, so the anon and authenticated roles can read and write nothing. Only server code using the service-role key can access these tables.
@@ -49,7 +52,7 @@ Row-level security is on for every table and there are no policies, so the anon 
 One row per unit of spend: `category` is one of `call`, `places`, `email_platform`, `llm`, `sms`, `email_alert` or `audit`. Each row has `client_slug` (nullable), `units`, `amount_usd`, `meta` (jsonb) and `created_at`. The weekly audit reads this table.
 
 ### site_leads
-Written by the website's `/api/lead` route: `name`, `email`, `phone`, `business`, `message`, `consent` (must be true), `consent_text` (the exact checkbox wording), `ip_hash` (a salted SHA-256, never the raw IP), `user_agent` and `created_at`. Each lead needs at least an email or a phone number.
+Written by the website's `/api/lead` route: `name`, `email`, `phone`, `business`, `message`, `consent` (must be true), `consent_text` (the exact checkbox wording), `ip_hash` (a salted SHA-256, never the raw IP), `user_agent`, `notified_at` and `email_status` (set when the owner is alerted) and `created_at`. Each lead needs at least an email or a phone number.
 
 ### audits
 Written by the weekly audit job: `week_start`, `model`, `calls_sampled`, `emails_sampled`, `pass_rate`, `findings` (jsonb), `costs` (jsonb), `report` and `created_at`.

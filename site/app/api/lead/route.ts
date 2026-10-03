@@ -1,5 +1,6 @@
 // Contact form intake. Validates, requires explicit consent, rate-limits, hashes the IP, and inserts into
 // Supabase `site_leads` with the service role key. The key lives only in this server route.
+import { sendLeadAlert } from "../../../lib/leadAlert.ts";
 import { CONSENT_TEXT, DB_HOURLY_LIMIT, clientIp, hashIp, leadsDb, makeLimiter, validateLead } from "../../../lib/lead.ts";
 
 export const runtime = "nodejs";
@@ -46,13 +47,16 @@ export async function POST(req: Request): Promise<Response> {
     if ((await db.recentCount(ipHash, since)) >= DB_HOURLY_LIMIT) {
       return json({ ok: false, error: "Too many requests. Please try again later." }, 429, { "retry-after": "3600" });
     }
-    await db.insert({
+    const leadId = await db.insert({
       ...v.lead,
       consent: true,
       consent_text: CONSENT_TEXT,
       ip_hash: ipHash,
       user_agent: (req.headers.get("user-agent") ?? "").slice(0, 300) || null,
     });
+    // Alert the owner. Never fails the visitor's request; agents/notify/leads.py re-sends anything still un-notified.
+    const status = await sendLeadAlert(v.lead, leadId, process.env);
+    if (leadId) await db.markNotified(leadId, status).catch((e) => console.error(`lead: ${(e as Error).message}`));
   } catch (e) {
     console.error(`lead: ${(e as Error).message}`); // status only, no form data
     return json({ ok: false, error: "Something went wrong. Please try again or email us." }, 500);
