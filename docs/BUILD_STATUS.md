@@ -60,7 +60,7 @@
 
 ## T7-lite lead gen: as of 2026-10-03
 - Built + tested offline (fakes for Places, HTTP, Supabase): `leadgen/source.py`, `research.py`, `score.py`, `draft.py`, `db.py`, `config.yaml`, `tests/test_leadgen.py`. Formula and rules: `leadgen/README.md`. Nothing sends email.
-- Live run: NOT RUN YET. Places API (New) returned 403 SERVICE_DISABLED on every try so far (still polling). Counts: DATA UNAVAILABLE.
+- Live run: BLOCKED 2026-10-03. Places API (New) returned 403 SERVICE_DISABLED ("not used in project 582090915272") on all 15 tries over ~15 min. Owner: enable Places API (New) for that project (and check the key's API restrictions), then run `source`, `research`, `score`, `draft` in order. Prospects sourced / researched / scored / drafted: DATA UNAVAILABLE (steps did not run). Gmail drafts: not created (no live drafts exist to mirror).
 
 ## Stripe billing — as of 2026-10-01
 - Built: `scripts/stripe_catalog.py` (idempotent, lookup keys `lp_*`), `scripts/new_checkout.py` (setup now, monthly from `lp.billing.first_recurring_charge` via `subscription_data.trial_end`), webhook `site/app/api/stripe/webhook` (signature check, idempotent on event id), migration `20261001000001_stripe_billing.sql` (tested on local Postgres 16). Details: `docs/STRIPE.md`.
