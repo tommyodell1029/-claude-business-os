@@ -34,6 +34,8 @@ Call the new number from your own phone and check each of these:
 - After hanging up: a row appears in Supabase `calls` for the client slug (`disclosure_spoken = true`), and the owner email arrives.
 Fix the YAML and redeploy if anything is off. Do not go live with a failed check.
 
+Deliverability: call reports come from `calls@notify.launchpadlocal.org`, a new sending domain. During the test call, ask the client to find the report email, mark it **Not spam** if needed, and add the address to their contacts. Do this before go-live so real call reports reach their inbox.
+
 ## 7. Billing date (5 min)
 ```
 uv run python -c "import sys; sys.path.insert(0,'lib'); from datetime import date; from lp.billing import first_recurring_charge as f; print(f(date.today(), founding=True))"

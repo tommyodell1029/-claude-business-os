@@ -14,7 +14,7 @@ from loguru import logger
 
 from lp.text import norm_email, redact
 
-from .handler import Notifier
+from .handler import Notifier, sender_fields
 from .http import call
 from .messages import lead_body, lead_subject
 
@@ -27,7 +27,7 @@ def send_lead_email(n: Notifier, lead: dict) -> str:
     if not (key and sender and to):
         logger.info("lead alert skipped: RESEND_API_KEY, NOTIFY_FROM_EMAIL or a valid LEAD_ALERT_EMAIL not set")
         return "skipped"
-    payload = {"from": sender, "to": [to], "subject": lead_subject(lead), "text": lead_body(lead)}
+    payload = sender_fields(n.env, sender) | {"to": [to], "subject": lead_subject(lead), "text": lead_body(lead)}
     headers = {"Authorization": f"Bearer {key}", "Idempotency-Key": f"lead-alert-{lead['id']}"}
     n._retry("lead-email", lambda: call(n.http, "resend", "POST", "https://api.resend.com/emails", headers, payload))
     return "sent"

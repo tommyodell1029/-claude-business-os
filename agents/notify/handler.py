@@ -40,6 +40,15 @@ def _sanitize(record: dict) -> dict:
     return r
 
 
+def sender_fields(env, sender: str) -> dict:
+    """From with a display name (a bare address looks like bulk mail to spam filters) plus optional Reply-To."""
+    out = {"from": sender if "<" in sender else f"LaunchPad Local <{sender}>"}
+    reply_to = norm_email(env.get("NOTIFY_REPLY_TO"))
+    if reply_to:
+        out["reply_to"] = reply_to
+    return out
+
+
 class Notifier:
     def __init__(self, env: Mapping[str, str] | None = None, http: Http = urllib_http,
                  sleep: Callable[[float], None] = time.sleep):
@@ -82,8 +91,8 @@ class Notifier:
         if not to:
             logger.info(f"notify email skipped: no valid owner_email for client {cfg.slug}")
             return "skipped"
-        payload = {"from": sender, "to": [to], "subject": email_subject(record, cfg.business_name),
-                   "text": email_body(record, cfg.business_name, cfg.timezone)}
+        payload = sender_fields(self.env, sender) | {"to": [to], "subject": email_subject(record, cfg.business_name),
+                                                     "text": email_body(record, cfg.business_name, cfg.timezone)}
         headers = {"Authorization": f"Bearer {key}"}
         if record.get("call_sid"):
             headers["Idempotency-Key"] = f"call-alert-{record['call_sid']}"  # a retry can never double-send

@@ -1,5 +1,5 @@
 // Owner alert for a new website lead, sent through Resend (transactional, one email per lead; never cold email).
-// Env: RESEND_API_KEY, NOTIFY_FROM_EMAIL, LEAD_ALERT_EMAIL (recipient). Missing any of them -> "skipped".
+// Env: RESEND_API_KEY, NOTIFY_FROM_EMAIL, LEAD_ALERT_EMAIL (recipient), optional NOTIFY_REPLY_TO. Missing any of them -> "skipped".
 import type { LeadInput } from "./lead.ts";
 
 const oneLine = (s: string, max: number): string => s.replace(/\s+/g, " ").trim().slice(0, max);
@@ -34,6 +34,9 @@ export async function sendLeadAlert(
     return "skipped";
   }
   const { subject, text } = leadEmail(lead);
+  // Display name: a bare address looks like bulk mail to spam filters. Reply-To is optional.
+  const sender = from.includes("<") ? from : `LaunchPad Local <${from}>`;
+  const replyTo = env.NOTIFY_REPLY_TO?.trim();
   try {
     const r = await fetchImpl("https://api.resend.com/emails", {
       method: "POST",
@@ -43,7 +46,7 @@ export async function sendLeadAlert(
         // Same key the Python sweep uses, so a lead is never emailed twice.
         ...(leadId ? { "idempotency-key": `lead-alert-${leadId}` } : {}),
       },
-      body: JSON.stringify({ from, to: [to], subject, text }),
+      body: JSON.stringify({ from: sender, to: [to], subject, text, ...(replyTo ? { reply_to: replyTo } : {}) }),
       signal: AbortSignal.timeout(5000),
     });
     if (!r.ok) {

@@ -78,7 +78,7 @@ class TestHandler(unittest.TestCase):
         mail = http.to("resend.com")[0]
         self.assertEqual(mail["headers"]["Idempotency-Key"], "call-alert-CA123")
         body = json.loads(mail["body"])
-        self.assertEqual((body["from"], body["to"]), ("alerts@example.test", ["boss@example.test"]))
+        self.assertEqual((body["from"], body["to"]), ("LaunchPad Local <alerts@example.test>", ["boss@example.test"]))
         self.assertNotIn("99887", body["text"])  # transcript is not emailed
 
     def test_legacy_jwt_key_also_sent_as_bearer(self):
@@ -254,3 +254,11 @@ class TestNewClient(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SenderFieldsTests(unittest.TestCase):
+    def test_display_name_and_reply_to(self):
+        from agents.notify.handler import sender_fields
+        self.assertEqual(sender_fields({}, "calls@notify.example.com"), {"from": "LaunchPad Local <calls@notify.example.com>"})
+        self.assertEqual(sender_fields({}, "X <a@b.com>")["from"], "X <a@b.com>")
+        self.assertEqual(sender_fields({"NOTIFY_REPLY_TO": "Tommy@Example.com"}, "a@b.com")["reply_to"], "tommy@example.com")
