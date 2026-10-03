@@ -56,7 +56,7 @@ const FEATURE_LABELS: Record<string, string> = {
   answering_24_7: "Answers every call, 24/7",
   faqs: "Answers questions from info you approve",
   messages: "Takes messages",
-  text_email_summaries: "Text and email summary after each call",
+  text_email_summaries: "Email summary after each call", // texts are off until A2P 10DLC approval
   emergency_transfer: "Emergency calls transferred to your phone",
   appointment_time_requests: "Collects appointment time requests",
   monthly_report_tuning: "Monthly call report and tuning",

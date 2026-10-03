@@ -36,7 +36,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How do I find out who called?",
-    a: "After each call we text and email you a short summary with the caller's name, number and what they need.",
+    a: "After each call we email you a short summary with the caller's name, number and what they need.",
   },
   {
     q: "What if we go over our included minutes?",
@@ -67,7 +67,7 @@ export default function Home() {
         <div className="wrap hero-grid">
           <div>
             <p className="badge"><span className="dot" aria-hidden="true" /> Always on, nights and weekends included</p>
-            <h1>Never miss a customer call again.</h1>
+            <h1>Stop sending customer calls to voicemail.</h1>
             <p className="lede">
               LaunchPad Local gives Jacksonville home-service and other local businesses an AI phone receptionist. It answers every
               call, answers common questions, takes messages, sends real emergencies to your phone, and texts you a summary.
@@ -91,7 +91,7 @@ export default function Home() {
                 <li>Calls answered 24/7, not sent to voicemail</li>
                 <li>Answers only from info you approve</li>
                 <li>Emergencies transferred to your phone</li>
-                <li>Text and email summary after every call</li>
+                <li>Email summary after every call</li>
               </ul>
             </aside>
           )}
@@ -106,7 +106,7 @@ export default function Home() {
             <article><h3>Answers like a front desk</h3><p>Greets callers, tells them your hours and service area, and answers the questions you have approved.</p></article>
             <article><h3>Takes the message for you</h3><p>Collects the caller&apos;s name, number and what they need, and reads the number back to be sure it is right.</p></article>
             <article><h3>Knows when to hand off</h3><p>Emergency calls are transferred to your phone. Wrong numbers and sales calls are ended politely.</p></article>
-            <article><h3>Keeps you in the loop</h3><p>A short text and email lands on your phone after each call, so you can call back in one tap.</p></article>
+            <article><h3>Keeps you in the loop</h3><p>A short email summary lands in your inbox after each call, so you know who to call back.</p></article>
           </div>
         </div>
       </section>
