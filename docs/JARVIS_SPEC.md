@@ -1,6 +1,6 @@
 # Jarvis: owner assistant spec
 
-**Status:** approved by the owner 2026-10-03. Phase J1 in progress.
+**Status:** approved by the owner 2026-10-03. Phase J1 built 2026-10-03 (code, tests, migration applied). Not live yet: it needs the Vercel settings and Supabase sign-in settings below, then a redeploy. Web push notifications moved to J2.
 **What it is:** a private voice assistant for the LaunchPad Local owner, modeled on J.A.R.V.I.S. from the Iron Man films. It is not client-facing and is separate from the client voice receptionist (`agents/`).
 **Not related to** `adewaskar/jarvis` (NO-GO as a base, see `JARVIS_AUDIT.md`). This is our own build on our existing stack. Three security patterns from that audit are reused: an origin allow-list, read-only by default with a write gate, and sanitizing anything displayed.
 
@@ -42,3 +42,34 @@
 - Never sends, spends, deletes or changes anything without the owner's confirmation.
 - Never bypasses CLAUDE.md rules: outreach caps and days, suppression, no outbound calls, no DNS changes, no invented numbers.
 - Owner only. No client or prospect ever talks to Jarvis.
+
+## J1 as built (2026-10-03)
+- **Page:** `/jarvis` (installable on the iPhone home screen). Full-screen HUD: six live tiles (calls today, urgent today, website leads in 7 days, drafts awaiting approval, replies in 7 days, system health), the arc-reactor orb (2D canvas, no WebGL, still under reduced motion), push-to-talk (hold, or tap to start and tap to stop), a typing box, and the transcript of both sides. Any value that cannot be read shows DATA UNAVAILABLE.
+- **Sign-in:** the owner enters his email; only `JARVIS_OWNER_EMAIL` is ever passed to Supabase. The email has a link and a 6-digit code. The code works inside the installed app (an iPhone home-screen app cannot receive a link opened in Safari). The session is kept in secure HttpOnly cookies. Every `/api/jarvis/*` route re-checks the session and the owner email on the server, and refuses requests from other sites.
+- **Voice:** the phone records one clip per press and sends it to our server, which sends it to Deepgram. Replies are spoken by ElevenLabs through our server. The browser never holds a key. Until `JARVIS_VOICE_ID` is set, Jarvis uses the stock ElevenLabs voice "George" and logs that it is doing so.
+- **Brain:** Claude, with the model taken from `config/models.yaml` (role `small`, component `jarvis`). The persona is in `site/lib/jarvis/persona.ts`. Read tools: briefing, calls, website leads, prospects, outreach events, clients, saved notes, diagnostics. Write tools: approve or skip an outreach draft, save a note. A write only creates a pending action; it runs after the owner says "yes" or taps Confirm, for that exact action, within two minutes. Approving a draft does not send it. Every proposed action and its outcome is logged in `jarvis_actions`.
+- **Diagnostics:** database, last call saved, website, Resend domains, Pipecat agent and Twilio demo number. A check without its key reports "unavailable". The Pipecat check has not yet been tested against the live account.
+- **Not in J1:** web push notifications (moved to J2), calendar (the briefing says "data unavailable"), and Gmail drafts.
+- **Measured 2026-10-03 (local server, live APIs):** ElevenLabs sent its first audio after 0.3 s; Deepgram transcribed a test clip word for word in 0.55 s. The Claude step was not run live because this session had no Anthropic key; it is covered by tests with a fake API.
+
+## Owner setup for J1 (on the iPhone, about 15 minutes)
+**A. Supabase sign-in settings** (supabase.com, sign in, open project **launchpad-local**)
+1. Tap the menu, then **Authentication**, then **URL Configuration**.
+2. Set **Site URL** to `https://launchpad-site-ten.vercel.app` (change it to `https://launchpadlocal.org` once the site moves there).
+3. Under **Redirect URLs**, tap **Add URL**, enter `https://launchpad-site-ten.vercel.app/jarvis`, and save. Add `https://launchpadlocal.org/jarvis` too when the domain moves.
+4. Go to **Authentication**, then **Emails** (email templates), then **Magic Link**. Add this line to the message body: `Your code: {{ .Token }}`. Save.
+5. Go to **Project Settings**, then **API Keys**. Copy the **anon** (or **publishable**) key; you need it for step B. Never copy the service_role or secret key into anything new.
+6. After you have signed in to Jarvis once, go to **Authentication**, then **Sign In / Providers**, and turn off **Allow new users to sign up**. Jarvis refuses anyone except you either way; this simply stops strangers from creating accounts at all.
+
+**B. Vercel settings** (vercel.com, project **launchpad-site**, **Settings**, then **Environment Variables**; add each one for Production, then redeploy)
+- Required, new: `JARVIS_OWNER_EMAIL` (your own email), `SUPABASE_ANON_KEY` (from A5), `ANTHROPIC_API_KEY`, `DEEPGRAM_API_KEY`, `ELEVENLABS_API_KEY`.
+- Required, already set for the site: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Check that they are present.
+- Set later: `JARVIS_VOICE_ID` (the designed Jarvis voice; until then the stock voice is used).
+- Optional: `JARVIS_ALLOWED_ORIGINS` (for example `https://launchpad-site-ten.vercel.app,https://launchpadlocal.org`; when unset, only the site's own address is allowed), `JARVIS_ADDRESS` (how Jarvis addresses you; default "sir"), and for diagnostics `TWILIO_ACCOUNT_SID`, `DEMO_TWILIO_NUMBER`, `PIPECAT_API_KEY`. `RESEND_API_KEY` and `TWILIO_AUTH_TOKEN` are already set. If the Resend key can only send, the domain check reports "unavailable".
+- Not needed: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. The browser never talks to Supabase.
+
+**C. Install on the iPhone**
+1. In Safari, open `https://launchpad-site-ten.vercel.app/jarvis`.
+2. Tap **Share**, then **Add to Home Screen**, then **Add**.
+3. Open **Jarvis** from the home screen. Enter your email, tap **Send sign-in email**, and type the 6-digit code from the email.
+4. Hold **Hold to talk** and allow the microphone when asked. Try "Brief me".
