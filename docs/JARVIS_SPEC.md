@@ -9,7 +9,7 @@
 |---|---|
 | Computer | Dell all-in-one (Windows), arriving end of October 2026 |
 | Autonomy | Reads freely. Anything that sends, spends or changes something asks first ("Shall I send it, sir?") and waits for a spoken or tapped yes. |
-| Voice | A newly designed calm, dry, British male butler voice (ElevenLabs Voice Design). Never a clone of a real actor. |
+| Voice | A newly designed calm, dry, British male butler voice (ElevenLabs Voice Design). Never a clone of a real actor. Owner picked preview 2 on 2026-10-03: saved as "Jarvis (LaunchPad owner assistant)", voice ID `euOF59BzPog7CSdGw7jW` (set as `JARVIS_VOICE_ID`). |
 | Timing | Start now on the phone (J1). Add the desktop app with the "Jarvis" wake word when the computer arrives (J2). |
 
 ## Movie behaviors and what we build
