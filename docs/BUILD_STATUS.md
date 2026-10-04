@@ -77,6 +77,9 @@
 - Plan dry-run on live data: Tue 10-06 → 0 new (cap 5, 5 approved drafts); follow-ups for Tuesday's sends fall due Fri 10-09 → first planned Tue 10-13.
 - Open: classification uses keywords only until `ANTHROPIC_API_KEY` / `LP_ANTHROPIC_API_KEY` is in the session; runs use snapshot mode until `SUPABASE_SERVICE_ROLE_KEY` is in the session.
 
+## Checkpoint audit voice client-ready: 2026-10-04 (orchestrator, Opus)
+- **Pass.** `/api/twilio/inbound` validates X-Twilio-Signature against the exact `TWILIO_INBOUND_URL` before anything else (403 otherwise), gets a one-time session token from Pipecat `/start` with the public key server-side, and on any Pipecat failure plays a polite line and hangs up (no crash, no leak). Transfer reconnect uses a fresh token the same way. `websocket_auth = "token"` set in `pcc-deploy.toml`, not deployed. Cut-over order in `ops/twilio/CUTOVER.md` avoids any window where calls fail; rollback documented. Tests: Python OK, site 84/84, typecheck + lint clean.
+
 ## Domain: 2026-10-04
 - Owner pointed launchpadlocal.org at Vercel (website records only). Verified: apex 308 → `https://www.launchpadlocal.org`; `/`, `/terms`, `/privacy`, `/jarvis` 200; `/api/jarvis/me` 401 without a session; footer shows the mailing address. MX unchanged (Google). Stripe webhook endpoints keep the `launchpad-site-ten.vercel.app` URL because Stripe does not follow redirects. Supabase Auth needs `https://www.launchpadlocal.org/jarvis` added as a redirect URL for magic links (the 6-digit code works either way).
 
