@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  ROLLBACK ONLY since the token cut-over (ops/twilio/CUTOVER.md): this bin works only while the agent runs
+  websocket_auth = "none". The live path is the site webhook /api/twilio/inbound.
   TwiML Bin for the demo number (T4). Paste into Twilio Console > TwiML Bins, then set the demo number's
   "A call comes in" to this bin. Replace AGENT.ORG with "lp-receptionist.<PIPECAT_ORG>" (same value as
   the PIPECAT_SERVICE_HOST secret). {{To}} / {{From}} are filled in by Twilio per call; the bot needs them

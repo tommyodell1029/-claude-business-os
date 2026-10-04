@@ -33,28 +33,37 @@ from lp.config import anthropic_api_key, model
 from . import call_record
 from .client_config import ClientConfig, load
 from .flow import ReceptionistFlow, Transferer, init_state
+from .guards import ToolTurnFilter
 
 
 class ScriptedLLM(AnthropicLLMService):
-    """Stands in for Claude: each inference consumes the next scripted action. No network calls."""
+    """Stands in for Claude: each inference consumes the next scripted action. No network calls.
+
+    Actions: ("say", text) | ("call", name, args) | ("say_call", text, name, args). "say_call" is what the real
+    model sometimes does: stream a sentence and a tool call in the same response. Frames are pushed in the
+    same order as AnthropicLLMService (response start, text, function calls, response end).
+    """
 
     def __init__(self):
         super().__init__(api_key="scripted-no-network", settings=AnthropicLLMService.Settings(model="scripted"))
         self.actions: list[tuple] = []
         self.inferences = 0
+        self.seen: list[list[dict]] = []  # context messages at each inference (node task prompts included)
 
     async def _process_context(self, context: LLMContext):
         self.inferences += 1
+        self.seen.append(list(context.get_messages()))
         if not self.actions:
             return
         act = self.actions.pop(0)
-        if act[0] == "call":
-            await self.run_function_calls([FunctionCallFromLLM(function_name=act[1], tool_call_id=f"t{self.inferences}",
-                                                               arguments=act[2], context=context)])
-        else:
-            await self.push_frame(LLMFullResponseStartFrame())
+        await self.push_frame(LLMFullResponseStartFrame())
+        if act[0] in ("say", "say_call"):
             await self.push_frame(LLMTextFrame(act[1]))
-            await self.push_frame(LLMFullResponseEndFrame())
+        if act[0] in ("call", "say_call"):
+            name, args = act[-2], act[-1]
+            await self.run_function_calls([FunctionCallFromLLM(function_name=name, tool_call_id=f"t{self.inferences}",
+                                                               arguments=args, context=context)])
+        await self.push_frame(LLMFullResponseEndFrame())
 
 
 class SpokenCollector(FrameProcessor):
@@ -87,6 +96,7 @@ class SimResult:
     record: dict[str, Any]
     ended: bool
     latencies_ms: list[float] = field(default_factory=list)
+    prompts: list[list[dict]] = field(default_factory=list)  # scripted mode: context seen at each inference
 
 
 async def simulate(cfg: ClientConfig, turns: list[dict], *, transferer: Transferer | None = None,
@@ -104,7 +114,7 @@ async def simulate(cfg: ClientConfig, turns: list[dict], *, transferer: Transfer
     context = LLMContext()
     aggregators = LLMContextAggregatorPair(context)
     collector = SpokenCollector()
-    worker = PipelineWorker(Pipeline([aggregators.user(), llm, collector, aggregators.assistant()]),
+    worker = PipelineWorker(Pipeline([aggregators.user(), llm, ToolTurnFilter(), collector, aggregators.assistant()]),
                             params=PipelineParams(), cancel_on_idle_timeout=False)
     runner = WorkerRunner(handle_sigint=False)
     await runner.add_workers(worker)
@@ -140,7 +150,8 @@ async def simulate(cfg: ClientConfig, turns: list[dict], *, transferer: Transfer
     await asyncio.gather(runner.run(), drive())
     record = call_record.build(fm.state, call_sid="SIMULATED", caller_id=None, messages=context.get_messages(),
                                duration_sec=time.monotonic() - started, est_cost=None)
-    return SimResult(collector.spoken, dict(fm.state), record, collector.ended.is_set(), latencies)
+    return SimResult(collector.spoken, dict(fm.state), record, collector.ended.is_set(), latencies,
+                     getattr(llm, "seen", []))
 
 
 def main(argv: list[str]) -> None:

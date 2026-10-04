@@ -31,18 +31,34 @@ export function hangupTwiml(): string {
   return `${XML_HEAD}<Response><Hangup /></Response>`;
 }
 
+/** Spoken message then hang up. Used when the voice agent can't be reached, so callers never hit a dead line. */
+export function sayHangupTwiml(text: string): string {
+  return `${XML_HEAD}<Response><Say>${xmlText(text)}</Say><Hangup /></Response>`;
+}
+
+function xmlText(v: string): string {
+  return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+type StreamOpts = { toNumber?: string; fromNumber?: string; serviceHost?: string; mode?: string };
+
+/** <Connect><Stream> to the voice agent. Parameter names match the TwiML Bin (the bot reads to_number/from_number). */
+export function streamTwiml(streamUrl: string, opts: StreamOpts = {}): string {
+  const params: [string, string][] = [];
+  if (opts.serviceHost) params.push(["_pipecatCloudServiceHost", opts.serviceHost]);
+  if (opts.mode) params.push(["mode", opts.mode]);
+  if (opts.toNumber) params.push(["to_number", opts.toNumber]);
+  if (opts.fromNumber) params.push(["from_number", opts.fromNumber]);
+  const inner = params.map(([n, v]) => `<Parameter name="${xmlAttr(n)}" value="${xmlAttr(v)}" />`).join("");
+  return `${XML_HEAD}<Response><Connect><Stream url="${xmlAttr(streamUrl)}">${inner}</Stream></Connect></Response>`;
+}
+
 /** Reconnect an unanswered transfer to the voice agent's stream in urgent_message mode. */
 export function reconnectTwiml(
   streamUrl: string,
   opts: { toNumber?: string; fromNumber?: string; serviceHost?: string } = {},
 ): string {
-  const params: [string, string][] = [];
-  if (opts.serviceHost) params.push(["_pipecatCloudServiceHost", opts.serviceHost]);
-  params.push(["mode", "urgent_message"]);
-  if (opts.toNumber) params.push(["to_number", opts.toNumber]);
-  if (opts.fromNumber) params.push(["from_number", opts.fromNumber]);
-  const inner = params.map(([n, v]) => `<Parameter name="${xmlAttr(n)}" value="${xmlAttr(v)}" />`).join("");
-  return `${XML_HEAD}<Response><Connect><Stream url="${xmlAttr(streamUrl)}">${inner}</Stream></Connect></Response>`;
+  return streamTwiml(streamUrl, { ...opts, mode: "urgent_message" });
 }
 
 /** <Dial action> outcome: "completed" means a human answered, so hang up; anything else reconnects. */

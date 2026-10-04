@@ -7,7 +7,10 @@ from pathlib import Path
 import yaml
 from loguru import logger
 from pipecat.flows import FlowManager
-from pipecat.frames.frames import Frame, TranscriptionFrame, TTSSpeakFrame
+from pipecat.frames.frames import (
+    CancelFrame, EndFrame, Frame, FunctionCallsStartedFrame, InterruptionFrame,
+    LLMFullResponseEndFrame, LLMFullResponseStartFrame, LLMTextFrame, TranscriptionFrame, TTSSpeakFrame,
+)
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
 from . import ROOT
@@ -99,4 +102,49 @@ class EmergencyWatcher(FrameProcessor):
                 result, node = await self._flow.transfer_to_human({"reason": "emergency", "details": frame.text}, self.fm)
                 if node is not None:
                     asyncio.create_task(self.fm.set_node_from_config(node))
+        await self.push_frame(frame, direction)
+
+
+class ToolTurnFilter(FrameProcessor):
+    """Sits between the LLM and TTS. Holds the model's text until its response ends; if that same response
+    also called a function, the text is dropped.
+
+    Why: after any function call the flow always speaks next (the new node's reply, its fixed line, or the
+    model's follow-up to the result). Text streamed before the tool call ("Sure, I can help with that",
+    "You're welcome, goodbye!") would otherwise be an extra unprompted line or a second goodbye.
+    Cost: TTS starts at the end of each (short) model reply instead of after its first sentence.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._buf: list[LLMTextFrame] = []
+        self._in_response = False
+        self._tool_called = False
+        self.dropped: list[str] = []
+
+    async def process_frame(self, frame: Frame, direction: FrameDirection):
+        await super().process_frame(frame, direction)
+        if direction != FrameDirection.DOWNSTREAM:
+            await self.push_frame(frame, direction)
+            return
+        # FunctionCallsStartedFrame is a system frame: it can arrive before this response's start frame, so the
+        # flag is only cleared once a response ends, never when one starts.
+        if isinstance(frame, LLMFullResponseStartFrame):
+            self._buf, self._in_response = [], True
+        elif isinstance(frame, FunctionCallsStartedFrame):
+            self._tool_called = True
+        elif isinstance(frame, LLMTextFrame) and self._in_response:
+            self._buf.append(frame)
+            return
+        elif isinstance(frame, LLMFullResponseEndFrame):
+            buf, tool_called = self._buf, self._tool_called
+            self._buf, self._in_response, self._tool_called = [], False, False
+            if tool_called and buf:
+                self.dropped.append("".join(f.text for f in buf))
+                logger.debug(f"dropped pre-tool text: {self.dropped[-1]!r}")
+            else:
+                for f in buf:
+                    await self.push_frame(f, direction)
+        elif isinstance(frame, (InterruptionFrame, EndFrame, CancelFrame)):
+            self._buf, self._in_response, self._tool_called = [], False, False
         await self.push_frame(frame, direction)

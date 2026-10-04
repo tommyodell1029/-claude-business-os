@@ -10,9 +10,11 @@ agent_profile = "agent-1x"
 # this is a backstop so a stuck session can never run up cost.
 max_session_duration = 900
 
-# Twilio connects straight to the WebSocket, so it cannot fetch an HMAC token.
-# TODO(owner decision): switch to "token" once the inbound Twilio webhook calls /start (see BUILD_STATUS T4).
-websocket_auth = "none"
+# Only callers that got a one-time token from Pipecat /start can open a session. Twilio can't call /start itself,
+# so the number's "A call comes in" webhook (site /api/twilio/inbound) does it and returns the tokenized stream URL.
+# Deploy this together with the Twilio number change (ops/twilio/CUTOVER.md): the TwiML Bin stops working under "token".
+# Rollback: set "none", redeploy, point the number back at TwiML Bin lp-demo-inbound.
+websocket_auth = "token"
 
 [scaling]
 # 0 = no idle cost but a cold start on the first call; 1 = always warm (billed while idle). Owner decides.

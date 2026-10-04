@@ -29,6 +29,12 @@ NO_ANSWER_LINE = (
 URGENT_DONE = "Thanks. I've marked this urgent and passed it to the team right away."
 MESSAGE_DONE = "Thanks. I've passed your message to the team, and they'll follow up."
 SPAM_BYE = "Thank you for calling. Goodbye."
+NOT_COVERED_LINE = ("I'm sorry, I don't have that information. I can take a message for the team so they can "
+                    "follow up with you. Would you like me to do that?")
+# Natural-language times are fine; the team confirms real appointments. Shared by collect/request_time/confirm.
+TIME_RULE = ("Accept natural times exactly as the caller says them, like \"tomorrow morning\", \"after 3 on Friday\", "
+             "or \"anytime\"; never ask for an exact time or date, and don't convert it. Do not promise that the time "
+             "is available; say the team will confirm.")
 
 # Spanish versions of every fixed line, spoken after the English one on bilingual lines.
 ES = {
@@ -39,6 +45,8 @@ ES = {
     URGENT_DONE: "Gracias. Lo marqué como urgente y se lo pasé al equipo de inmediato.",
     MESSAGE_DONE: "Gracias. Le pasé su mensaje al equipo y se comunicarán con usted.",
     SPAM_BYE: "Gracias por llamar. Adiós.",
+    NOT_COVERED_LINE: ("Lo siento, no tengo esa información. Puedo tomar un mensaje para el equipo para que se "
+                       "comuniquen con usted. ¿Le gustaría que lo haga?"),
 }
 
 
@@ -90,8 +98,9 @@ class ReceptionistFlow:
             "triage",
             "You just greeted the caller. Listen to why they are calling and identify their intent: "
             "a new job or appointment, a question, an existing customer, an emergency, or spam/sales. "
-            "As soon as the intent is clear, call set_intent. For emergencies call transfer_to_human instead.",
-            [self._set_intent_fn()],
+            "As soon as the intent is clear, call set_intent. For emergencies call transfer_to_human instead. "
+            "If they ask something the business facts don't answer, call question_not_covered.",
+            [self._set_intent_fn(), self._not_covered_fn()],
             role_message=role_message(self.cfg),
             pre_actions=[{"type": "tts_say", "text": self.opening_line()},
                          {"type": "function", "handler": self._mark_disclosed}],
@@ -108,14 +117,21 @@ class ReceptionistFlow:
             return f"{self.cfg.disclosure} {self.cfg.disclosure_es} {self.cfg.greeting} {self.cfg.raw['greeting_es'].strip()}"
         return f"{self.cfg.disclosure} {self.cfg.greeting}"
 
-    def faq_node(self) -> NodeConfig:
+    def faq_node(self, not_covered: bool = False) -> NodeConfig:
+        # not_covered: the caller just asked something the config doesn't answer. Speak the fixed line (no LLM
+        # wording, so it can't guess) and wait for their answer.
+        extra = ({"pre_actions": [{"type": "tts_say", "text": self.t(NOT_COVERED_LINE)}], "respond_immediately": False}
+                 if not_covered else {})
         return self._node(
             "faq",
             "Answer the caller's questions using ONLY the business facts in your instructions. "
-            "If a question is not covered, say you're not sure and offer to take a message. "
+            "If the business facts don't answer a question, or it asks about a price or cost, do not answer it: "
+            "call question_not_covered. "
             "If they want service, a callback, or a message taken, call needs_followup. "
-            "If they have no more questions and need nothing else, call questions_done.",
-            [self._needs_followup_fn(), self._questions_done_fn()],
+            "If they have no more questions and need nothing else, call questions_done. "
+            "Never say goodbye yourself; questions_done says it.",
+            [self._needs_followup_fn(), self._questions_done_fn(), self._not_covered_fn()],
+            **extra,
         )
 
     def collect_node(self, urgent: bool = False) -> NodeConfig:
@@ -125,6 +141,7 @@ class ReceptionistFlow:
             "Collect, one question at a time: the caller's name, the best callback number, what they need, "
             "the service address or area if relevant, how urgent it is, and the best time to reach them. "
             "If they're calling from the number they want a callback on, you may confirm that instead of asking. "
+            f"For the best time: {TIME_RULE} "
             "When you have them, call save_caller_details.",
             [self._save_details_fn()],
             pre_actions=opener,
@@ -134,8 +151,8 @@ class ReceptionistFlow:
     def request_time_node(self) -> NodeConfig:
         return self._node(
             "request_time",
-            "Ask what day and time would work best for an appointment. Make clear the team will confirm; "
-            "do not promise that the time is available. Then call save_preferred_time.",
+            "Ask what day and time would work best for an appointment. "
+            f"{TIME_RULE} Then call save_preferred_time.",
             [self._save_time_fn()],
         )
 
@@ -143,8 +160,9 @@ class ReceptionistFlow:
         return self._node(
             "confirm",
             "Read the details back to the caller briefly: name, callback number digit by digit, what they need, "
-            "and the best time. Ask if that's correct. If something is wrong, call correct_detail. "
-            "When they confirm, call details_confirmed.",
+            "and the best time in the caller's own words (for example \"tomorrow morning\"), adding that the team "
+            "will confirm. Ask if that's correct. If something is wrong, call correct_detail. "
+            "When they confirm, call details_confirmed. Never say goodbye yourself; details_confirmed says it.",
             [self._correct_fn(), self._confirmed_fn()],
         )
 
@@ -193,6 +211,13 @@ class ReceptionistFlow:
         if intent == "question":
             return {"status": "ok"}, self.faq_node()
         return {"status": "ok"}, self.collect_node()
+
+    async def question_not_covered(self, args: dict, fm: FlowManager):
+        if args.get("topic"):
+            fm.state["caller"]["unanswered_question"] = str(args["topic"]).strip()[:200]
+        if fm.state.get("intent") is None:
+            fm.state["intent"] = "question"
+        return {"status": "offered_message"}, self.faq_node(not_covered=True)
 
     async def needs_followup(self, args: dict, fm: FlowManager):
         return {"status": "ok"}, self.collect_node()
@@ -286,6 +311,14 @@ class ReceptionistFlow:
                         "summary": {"type": "string", "description": "One sentence in the caller's words"}},
             required=["intent"], handler=self.set_intent)
 
+    def _not_covered_fn(self):
+        return FlowsFunctionSchema(
+            name="question_not_covered",
+            description="The caller asked something the business facts don't answer (including any price or cost). "
+                        "Speaks a fixed line saying you don't have that information and offering to take a message.",
+            properties={"topic": {"type": "string", "description": "A few words on what they asked"}},
+            required=[], handler=self.question_not_covered)
+
     def _needs_followup_fn(self):
         return FlowsFunctionSchema(name="needs_followup", description="Caller wants service, a callback, or a message taken.",
                                    properties={}, required=[], handler=self.needs_followup)
@@ -299,12 +332,15 @@ class ReceptionistFlow:
         return FlowsFunctionSchema(
             name="save_caller_details", description="Save the caller's details once collected.",
             properties={"name": s, "callback_number": s, "need": s, "address": s,
-                        "urgency": {"type": "string", "enum": list(URGENCY)}, "best_time": s},
+                        "urgency": {"type": "string", "enum": list(URGENCY)},
+                        "best_time": {"type": "string", "description": "In the caller's words, e.g. 'tomorrow morning'"}},
             required=["name", "callback_number", "need", "urgency"], handler=self.save_caller_details)
 
     def _save_time_fn(self):
         return FlowsFunctionSchema(name="save_preferred_time", description="Save the caller's preferred appointment time.",
-                                   properties={"preferred_time": {"type": "string"}}, required=["preferred_time"],
+                                   properties={"preferred_time": {"type": "string", "description":
+                                                                  "In the caller's words, e.g. 'Tuesday morning'"}},
+                                   required=["preferred_time"],
                                    handler=self.save_preferred_time)
 
     def _correct_fn(self):
@@ -331,4 +367,6 @@ def summary_line(state: dict[str, Any]) -> str:
         parts.append(f"prefers {c['preferred_time']}")
     elif c.get("best_time"):
         parts.append(f"best time {c['best_time']}")
+    if c.get("unanswered_question"):
+        parts.append(f"asked (not in our info): {c['unanswered_question']}")
     return "; ".join(parts)

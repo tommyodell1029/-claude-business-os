@@ -30,7 +30,7 @@ from lp.text import redact
 from . import call_record, notify
 from .client_config import ClientConfig, load, slug_for_number
 from .flow import NoTransfer, ReceptionistFlow, Transferer, init_state
-from .guards import CallTimer, EmergencyWatcher, SilenceHandler, estimate_cost
+from .guards import CallTimer, EmergencyWatcher, SilenceHandler, ToolTurnFilter, estimate_cost
 from .transfer import TwilioTransferer
 
 load_dotenv(override=True)
@@ -93,7 +93,8 @@ async def run_bot(transport: BaseTransport, cfg: ClientConfig, *, call_sid: str 
     user_agg, assistant_agg = aggregators.user(), aggregators.assistant()
     watcher = EmergencyWatcher(flow, cfg.emergency_keywords)
 
-    pipeline = Pipeline([transport.input(), stt, watcher, user_agg, llm, tts, transport.output(), assistant_agg])
+    pipeline = Pipeline([transport.input(), stt, watcher, user_agg, llm, ToolTurnFilter(), tts,
+                         transport.output(), assistant_agg])
     worker = PipelineWorker(pipeline, params=PipelineParams(
         enable_metrics=True, enable_usage_metrics=True, audio_in_sample_rate=8000, audio_out_sample_rate=8000))
     runner = WorkerRunner(handle_sigint=handle_sigint)
