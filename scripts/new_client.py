@@ -48,6 +48,9 @@ def build(answers: dict, *, defaults: dict) -> tuple[dict, dict[str, str]]:
     for k in ("business_name", "industry", "timezone", "hours", "services", "service_area", "faqs"):
         if k in a:
             data[k] = a[k]
+    for k in ("address", "never_say"):  # public business address; never_say is saved for the owner/voice agent to honor
+        if a.get(k):
+            data[k] = a[k]
     data["booking_method"] = a.get("booking_method") or {"type": a.get("booking_type", "take_message")}
     secrets: dict[str, str] = {}
     for key, norm, suffix in _CONTACTS:

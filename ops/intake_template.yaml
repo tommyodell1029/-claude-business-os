@@ -1,3 +1,4 @@
+# Manual fallback only. The normal path is the web form (scripts/new_intake_link.py -> /onboard/<token> -> scripts/onboard_client.py).
 # Client intake answers. Copy to data/intake/<slug>.yaml (data/ is gitignored; it holds owner contact details, never commit it), fill in, then:
 #   uv run python scripts/new_client.py data/intake/<slug>.yaml --dry-run
 # Keys match clients/<slug>.yaml. Everything the caller will hear must come from the owner. Never invent it.
@@ -26,6 +27,8 @@ faqs:
     a: The owner's real answer goes here.
 booking_type: take_message      # take_message | request_time
 emergency_keywords: [flooding, burst pipe, gas smell]
+address: "1 Main St, Jacksonville FL"   # optional, saved in the YAML
+never_say: []                   # optional list; saved in the YAML, not yet enforced by the voice agent
 greeting: "How can I help you today?"
 # Optional: tts {provider, voice_id, speed}, languages [en, es] + greeting_es, max_call_minutes, silence_timeout_secs.
 # Omitted values default to the demo agent's voice and limits.
