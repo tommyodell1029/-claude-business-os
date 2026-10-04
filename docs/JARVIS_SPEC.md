@@ -1,6 +1,6 @@
 # Jarvis: owner assistant spec
 
-**Status:** approved by the owner 2026-10-03. Phase J1 built 2026-10-03 (code, tests, migration applied). Not live yet: it needs the Vercel settings and Supabase sign-in settings below, then a redeploy. Web push notifications moved to J2.
+**Status:** approved by the owner 2026-10-03. Phase J1 live and owner-verified on the iPhone 2026-10-04 (sign-in, tiles, voice in and out, briefing, diagnostics, and a confirmed note). Web push notifications moved to J2. J2 starts when the Dell arrives.
 **What it is:** a private voice assistant for the LaunchPad Local owner, modeled on J.A.R.V.I.S. from the Iron Man films. It is not client-facing and is separate from the client voice receptionist (`agents/`).
 **Not related to** `adewaskar/jarvis` (NO-GO as a base, see `JARVIS_AUDIT.md`). This is our own build on our existing stack. Three security patterns from that audit are reused: an origin allow-list, read-only by default with a write gate, and sanitizing anything displayed.
 
