@@ -70,7 +70,7 @@ export default function Home() {
             <h1>Stop sending customer calls to voicemail.</h1>
             <p className="lede">
               LaunchPad Local gives Jacksonville home-service and other local businesses an AI phone receptionist. It answers every
-              call, answers common questions, takes messages, sends real emergencies to your phone, and texts you a summary.
+              call, answers common questions, takes messages, sends real emergencies to your phone, and emails you a summary.
             </p>
             <div className="cta">
               <a className="btn" href="#contact">Talk to us</a>

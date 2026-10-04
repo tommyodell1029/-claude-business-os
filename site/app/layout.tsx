@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "LaunchPad Local | AI phone receptionist for Jacksonville businesses", template: "%s | LaunchPad Local" },
   description:
-    "An AI phone receptionist that answers every call for Jacksonville local service businesses, takes messages, transfers emergencies and texts you a summary.",
+    "An AI phone receptionist that answers every call for Jacksonville local service businesses, takes messages, transfers emergencies and emails you a summary.",
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
