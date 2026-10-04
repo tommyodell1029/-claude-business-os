@@ -1,0 +1,161 @@
+{
+ "source": "web_search",
+ "date": "2026-10-04",
+ "note": "Names and websites from public web search results; nothing else asserted. National chains, franchises and directory sites excluded. Emails are found only by research.py on each business's own site.",
+ "rows": [
+  {
+   "name": "Betros Plumbing",
+   "website": "https://betrosplumbing.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville contact"
+  },
+  {
+   "name": "PV Plumbing & HVAC",
+   "website": "https://pvplumbingservices.com/",
+   "industry": "plumbing",
+   "city": "Jacksonville",
+   "source_query": "family owned plumbing company Jacksonville contact"
+  },
+  {
+   "name": "Estes Heating & Air Conditioning",
+   "website": "https://airbyestes.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Estes Heating Air Conditioning Jacksonville website"
+  },
+  {
+   "name": "Airflow Designs",
+   "website": "https://www.airflowdesigns.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL family owned HVAC company air conditioning repair"
+  },
+  {
+   "name": "Donovan Air, Electric & Plumbing",
+   "website": "https://www.donovanac.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL AC repair company family owned"
+  },
+  {
+   "name": "Mighty Air",
+   "website": "https://www.mightyairinc.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL AC repair company family owned"
+  },
+  {
+   "name": "Tropic Aire of North Florida",
+   "website": "https://www.tropicaire.net/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL AC repair company family owned"
+  },
+  {
+   "name": "Weather Engineers",
+   "website": "https://weatherengineers.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL AC repair company family owned"
+  },
+  {
+   "name": "Bold City Heating & Air",
+   "website": "https://boldcityac.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL AC repair company family owned"
+  },
+  {
+   "name": "All-Seasons Heating & Air",
+   "website": "https://www.allseasonsjax.com/",
+   "industry": "hvac",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL AC repair company family owned"
+  },
+  {
+   "name": "Bolt Electric",
+   "website": "https://boltelectricnfl.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL electrician locally owned panel upgrades"
+  },
+  {
+   "name": "Current Electrical Contractors",
+   "website": "https://currentelectrical-jax.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL residential electrician locally owned"
+  },
+  {
+   "name": "Cortes Electric",
+   "website": "https://cortesec.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL electrician locally owned panel upgrades"
+  },
+  {
+   "name": "David Gray Electrical Services",
+   "website": "https://www.davidgrayonline.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL electrician locally owned panel upgrades"
+  },
+  {
+   "name": "Sunshine Sparks Electric",
+   "website": "https://www.sunshinesparkselectric.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL electrician locally owned panel upgrades"
+  },
+  {
+   "name": "Jax Power Pro Electric",
+   "website": "https://jaxpowerproelectric.com/",
+   "industry": "electrical",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL electrician locally owned panel upgrades"
+  },
+  {
+   "name": "Trad's Pest Control",
+   "website": "https://www.tradspestcontrol.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL pest control family owned company"
+  },
+  {
+   "name": "Kingfish Pest Control",
+   "website": "https://www.kingfishpest.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL pest control family owned company"
+  },
+  {
+   "name": "Bug PRO Florida",
+   "website": "https://bugproflorida.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL pest control family owned company"
+  },
+  {
+   "name": "Gray Pest Control",
+   "website": "https://graypestcontrol.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL pest control family owned company"
+  },
+  {
+   "name": "Russell Pest Solutions",
+   "website": "https://russellpestsolutions.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL pest control family owned company"
+  },
+  {
+   "name": "Remedy Pest Solutions",
+   "website": "https://remedypestsolutionsllc.com/",
+   "industry": "pest_control",
+   "city": "Jacksonville",
+   "source_query": "Jacksonville FL pest control family owned company"
+  }
+ ]
+}

@@ -27,4 +27,25 @@ draft:
   top_n: 5
   platform: gmail
   step: 0
-  sender_name: LaunchPad Local
+  sender_name: "Tommy\nLaunchPad Local"   # signature block above the mailing address (owner can change it)
+sequence:
+  platform: gmail
+  # C3 cadence: day 0, 3, 10, 40. Each gap counts from the previous ACTUAL send (sent event), not the plan.
+  gaps_days: [3, 7, 30]          # step 1 = sent0 + 3, step 2 = sent1 + 7, step 3 = sent2 + 30
+  requeue_not_now_days: 90
+  redraft_skipped: false         # a first-touch the owner skipped is never re-planned automatically
+sending:
+  timezone: America/New_York
+  send_days: [tue, wed, thu]     # CLAUDE.md: Tue-Thu mornings only
+  window_start: "08:00"
+  window_end: "12:00"
+  send_time: "09:00"             # scheduled_for on planned drafts
+  ramp_start: 2026-10-06         # first send day; week 1 = this week
+  ramp_per_day: [5, 10, 15, 20]  # week 1, 2, 3, 4+ (CLAUDE.md: start 5/day, ramp to max 20/day/inbox)
+  hard_max_per_day: 20           # never raised above this, whatever the ramp says
+  pause_bounce_rate: 0.03        # pause everything if bounces / sends over the window is above this
+  bounce_window_days: 30
+  complaints_acknowledged: []    # outreach_events ids of complaints the owner reviewed; any other complaint pauses all sending
+  topup_send_days: 3             # keep enough eligible new prospects for this many upcoming send days
+replies:
+  owner_flag_classes: [positive, interested, question, pricing, meeting]

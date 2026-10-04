@@ -69,6 +69,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - T5 🟡 `agents/notify/` (Supabase + Resend + flagged SMS), `scripts/new_client.py`, `ops/onboarding.md` built + tested offline, Supabase smoke insert OK 2026-10-03; Pipecat secrets + redeploy + live call pending (`docs/BUILD_STATUS.md` T5).
 - Jarvis (owner-only voice assistant, `docs/JARVIS_SPEC.md`): J1 ✅ live at `/jarvis`, Opus audit passed 2026-10-04, owner signed in on iPhone 2026-10-04. J2 Windows desktop + wake word + web push when the owner's Dell arrives.
 - T7-lite 🟡 `leadgen/` (Places source → robots-safe research → score → 5 drafts, never sends) built + tested offline 2026-10-03; live run status in `docs/BUILD_STATUS.md` T7.
+- T7 outreach engine 🟡 built 2026-10-04: `leadgen/sequence.py` · `plan_day.py` · `gmail_sync.py` · `topup.py` + runbook `/outreach-daily` (sync → owner replies → plan → owner approves → Gmail drafts; never sends). First live run Tue 2026-10-06 after the owner sends the 5 approved emails.
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
 1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.

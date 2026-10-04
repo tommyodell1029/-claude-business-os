@@ -128,7 +128,7 @@ def _link_to(home_html: str, base: str, keywords: list[str]) -> str | None:
 
 
 _SIGNALS = {
-    "mentions_24_7": re.compile(r"24\s*/\s*7|24[- ]hours?|24\s*hr|around the clock|emergency (?:service|repair|calls?)", re.I),
+    "mentions_24_7": re.compile(r"24\s*/\s*7|(?<!within )(?<!in )24[- ]hours?(?: a day|\s+(?:\w+\s+)?(?:emergency|service|repair))|24\s*hr|around the clock|emergency (?:service|repair|calls?)", re.I),
     "has_online_booking": re.compile(r"book (?:online|now|an appointment|a service)|schedule (?:online|service|an appointment|now)|online (?:booking|scheduling)|request (?:an? )?(?:appointment|service|quote)|calendly\.com|servicetitan|housecallpro|jobber", re.I),
     "mentions_after_hours_text": re.compile(r"after[- ]hours|text us|text (?:message|us at)|sms", re.I),
 }
@@ -136,7 +136,8 @@ _SIGNALS = {
 
 def detect_signals(page_text: str, url: str) -> dict:
     """Simple signals, each with the literal evidence snippet and source URL. Only true signals carry evidence."""
-    plain = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(page_text)))
+    visible = re.sub(r"(?is)<(script|style|noscript)\b.*?</\1\s*>", " ", page_text)   # code is not site copy
+    plain = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(visible)))
     sig = {"has_website": {"value": True, "url": url}}
     for name, rx in _SIGNALS.items():
         m = rx.search(plain)

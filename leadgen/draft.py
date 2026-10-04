@@ -40,7 +40,7 @@ def _has(p: dict, sig: str) -> bool:
 def _service_phrase(p: dict) -> str:
     """'24/7 service' or 'emergency service', whichever the evidence on their site actually says."""
     ev = ((p.get("signals") or {}).get("mentions_24_7") or {}).get("evidence") or ""
-    if re.search(r"24\s*/\s*7|24[- ]hours?|24\s*hr|around the clock", ev, re.I):
+    if re.search(r"24\s*/\s*7|(?<!within )(?<!in )24[- ]hours?(?: a day|\s+(?:\w+\s+)?(?:emergency|service|repair))|24\s*hr|around the clock", ev, re.I):
         return "24/7 service"
     return "emergency service"
 
