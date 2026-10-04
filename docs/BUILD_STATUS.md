@@ -16,12 +16,12 @@
 | 3 External platform audit | — | ✅ `REPOSITORY_INTEGRATION_MATRIX.md` (4 GO, 7 DEFER, 13 NO-GO) |
 | 4 Architecture stabilization | T2 | ✅ Layout, shared library, models config, subagents |
 | 5 Database / auth / config | T2 | ✅ Schema applied 2026-09-28 to new Supabase project `launchpad-local` (arekyykkzlqgphqdegsy). RLS forced, anon/authenticated denied (verified live). Auth for the Command Center comes in T6. |
-| — Voice demo agent | T3, T4 | 🟡 T3 built + tested (88 tests incl. scripted calls). T4 deploy files ready (see T4 section); deploy, number change and 8 live calls wait on owner OK + keys. |
-| 9 CRM / leads / research / scoring | T7a, T7b | ⬜ |
-| 10 Outreach / replies | T7c, T7d | ⬜ Gmail-connector sending (owner override); needs full mailing address |
-| 8 Command Center (lite, mobile) | T6 + `/admin` | ⬜ |
+| — Voice demo agent | T3, T4, T5 | 🟡 Live on +19044568829 with call saving + email reports (deployed 2026-10-03). Client-ready fixes + token-locked connection in progress; test calls 2–8 pending. |
+| 9 CRM / leads / research / scoring | T7a, T7b | ✅ 2026-10-04 web-search seed + robots-safe research + scoring; top-up in `/outreach-daily`. |
+| 10 Outreach / replies | T7c, T7d | ✅ 2026-10-04 sequence, daily planner, Gmail sync, reply sorting, suppression, `/outreach-daily`. First 5 sends Tue 2026-10-06. |
+| 8 Command Center (lite, mobile) | T6 + `/admin` | ✅ Covered by Jarvis J1 (`/jarvis`): live tiles, briefing, draft approve/skip. |
 | 11 Sales / proposals / appointments | sales skills (done) + appointments config | 🟡 Skills exist, no scheduling yet |
-| 12 Stripe / payments / onboarding | new + T5 | 🟢 2026-10-04 LIVE: live catalog applied, live webhook enabled. Sandbox end-to-end passed. No live checkout made yet. See `docs/STRIPE.md` + Stripe section below. |
+| 12 Stripe / payments / onboarding | new + T5 | 🟢 2026-10-04 LIVE (+ fast onboarding: intake links, `onboard_client.py`, usage report): live catalog applied, live webhook enabled. Sandbox end-to-end passed. No live checkout made yet. See `docs/STRIPE.md` + Stripe section below. |
 | **→ FIRST_DOLLAR_MODE: pursue the first customer** | | |
 | 6 Agent registry, 7 Jobs/workflows | — | Deferred. Minimal versions only (agent config in YAML, GitHub Actions cron). |
 | 13–24 | T5–T9 + new | After first revenue |
