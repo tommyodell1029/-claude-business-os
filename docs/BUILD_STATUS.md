@@ -77,6 +77,9 @@
 - Plan dry-run on live data: Tue 10-06 → 0 new (cap 5, 5 approved drafts); follow-ups for Tuesday's sends fall due Fri 10-09 → first planned Tue 10-13.
 - Open: classification uses keywords only until `ANTHROPIC_API_KEY` / `LP_ANTHROPIC_API_KEY` is in the session; runs use snapshot mode until `SUPABASE_SERVICE_ROLE_KEY` is in the session.
 
+## Domain: 2026-10-04
+- Owner pointed launchpadlocal.org at Vercel (website records only). Verified: apex 308 → `https://www.launchpadlocal.org`; `/`, `/terms`, `/privacy`, `/jarvis` 200; `/api/jarvis/me` 401 without a session; footer shows the mailing address. MX unchanged (Google). Stripe webhook endpoints keep the `launchpad-site-ten.vercel.app` URL because Stripe does not follow redirects. Supabase Auth needs `https://www.launchpadlocal.org/jarvis` added as a redirect URL for magic links (the 6-digit code works either way).
+
 ## Checkpoint audit onboarding + outreach engine: 2026-10-04 (orchestrator, Opus)
 - **Onboarding: pass.** Intake token stored as sha256 only, 14-day expiry, single-use atomic claim, per-IP and per-token rate limits, same-origin check, honeypot, consent text fixed server-side, service key server-only, no form data in logs. `onboard_client.py` writes `${SLUG}_OWNER_*` placeholders (no PII in git); `--buy-number` is a dry run unless `--apply` and an interactive y/N. Migrations live: `client_intakes` (RLS forced), `clients.tier`, `client_usage_monthly` (security_invoker, revoked from anon/authenticated).
 - **Outreach engine: pass.** Tue–Thu only, ramp 5/10/15/20 with a hard 20/day cap counting sent + open drafts, pause on bounce >3% (30 days) or any unacknowledged complaint, stop on reply/bounce/unsubscribe/complaint, opt-outs to permanent suppression, reply text treated as data. `/outreach-daily` never calls send/reply/forward; drafts only after explicit owner approval. `paused` event type migration live.
