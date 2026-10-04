@@ -171,6 +171,12 @@ class TestHttpHelpers(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             sb.load_key({})
 
+    def test_live_key_only_with_live_flag(self):
+        env = {"STRIPE_SECRET_KEY": "rk_test_abc", "STRIPE_LIVE_SECRET_KEY": "rk_live_xyz"}
+        self.assertEqual(sb.load_key(env), "rk_test_abc")                 # day-to-day: sandbox
+        self.assertEqual(sb.load_key(env, live=True), "rk_live_xyz")      # --live: live key
+        self.assertEqual(sb.load_key({"STRIPE_SECRET_KEY": "rk_test_abc"}, live=True), "rk_test_abc")
+
 
 if __name__ == "__main__":
     unittest.main()

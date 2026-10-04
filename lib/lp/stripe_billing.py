@@ -279,12 +279,15 @@ def form_encode(data: dict, prefix: str = "") -> list[tuple[str, str]]:
     return out
 
 
-def load_key(env: dict = os.environ) -> str:
-    raw = env.get("STRIPE_SECRET_KEY", "").strip()
+def load_key(env: dict = os.environ, *, live: bool = False) -> str:
+    """Sandbox key from STRIPE_SECRET_KEY. With live=True (--live), STRIPE_LIVE_SECRET_KEY wins when set,
+    so the sandbox key can stay in place for day-to-day work."""
+    name = "STRIPE_LIVE_SECRET_KEY" if live and env.get("STRIPE_LIVE_SECRET_KEY", "").strip() else "STRIPE_SECRET_KEY"
+    raw = env.get(name, "").strip()
     if not raw:
-        raise RuntimeError("STRIPE_SECRET_KEY is not set")
+        raise RuntimeError(f"{name} is not set")
     if raw.startswith("<") and raw.endswith(">"):
-        print("warning: STRIPE_SECRET_KEY is wrapped in <...>; stripped in-process. Fix the stored value.",
+        print(f"warning: {name} is wrapped in <...>; stripped in-process. Fix the stored value.",
               file=sys.stderr)
         raw = raw[1:-1].strip()
     return raw
@@ -306,7 +309,7 @@ class StripeError(RuntimeError):
 
 class StripeClient:
     def __init__(self, key: str | None = None, *, allow_live: bool = False, timeout: float = 30):
-        self.key = key or load_key()
+        self.key = key or load_key(live=allow_live)
         self.mode = key_mode(self.key)
         if self.mode == "live" and not allow_live:
             raise RuntimeError("live Stripe key refused: pass --live only during go-live (docs/STRIPE.md)")

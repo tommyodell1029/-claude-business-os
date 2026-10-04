@@ -86,12 +86,12 @@ dashboard steps above do not need it. No refund permission.
 
 1. Finish the sandbox end-to-end test below.
 2. In Stripe live mode, create a restricted key with the same permissions as the sandbox key (`rk_live_...`).
-   Store it as `STRIPE_SECRET_KEY` in the session environment for the go-live session only.
+   Store it as `STRIPE_LIVE_SECRET_KEY` in the session environment. Scripts use it only when `--live` is passed;
+   without `--live` they keep using the sandbox `STRIPE_SECRET_KEY`.
 3. `uv run python scripts/stripe_catalog.py --live --dry-run`, review, then `uv run python scripts/stripe_catalog.py --live`.
 4. In live mode, add the webhook endpoint (same URL and events). Put its new `whsec_...` into Vercel
    `STRIPE_WEBHOOK_SECRET` (Production, Sensitive) and redeploy.
 5. Make each real checkout with `scripts/new_checkout.py ... --live`.
-6. After go-live, switch the session key back to the sandbox key for day-to-day work.
 
 ## Sandbox end-to-end test
 
