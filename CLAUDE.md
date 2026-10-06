@@ -72,7 +72,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - Jarvis (owner-only voice assistant, `docs/JARVIS_SPEC.md`): J1 ✅ live at `/jarvis`, Opus audit passed 2026-10-04, owner signed in on iPhone 2026-10-04. J2 Windows desktop + wake word + web push when the owner's Dell arrives.
 - T7-lite 🟡 `leadgen/` (Places source → robots-safe research → score → 5 drafts, never sends) built + tested offline 2026-10-03; live run status in `docs/BUILD_STATUS.md` T7.
 - T7 outreach engine 🟡 built 2026-10-04: `leadgen/sequence.py` · `plan_day.py` · `gmail_sync.py` · `topup.py` + runbook `/outreach-daily` (sync → owner replies → plan → owner approves → Gmail drafts; never sends). First live run Tue 2026-10-06 after the owner sends the 5 approved emails.
-- T7 lead bot repair 2026-10-06: Places diagnosed (403 = billing not enabled on the Google Cloud project; code correct), discovery fallback, decision-maker + verified-email enrichment (Hunter/Apollo via connector or API key), conversion scoring, HOT/GOOD/RESEARCH/REJECTED tiers; first touches only to verified decision-makers. `docs/BUILD_STATUS.md` T7.
+- T7 lead bot repair 2026-10-06: Places diagnosed (403 = billing not enabled) and fixed 2026-10-06 (owner enabled billing; `google-places-test` READY), discovery fallback, decision-maker + verified-email enrichment (Hunter/Apollo via connector or API key), conversion scoring, HOT/GOOD/RESEARCH/REJECTED tiers; first touches only to verified decision-makers. `docs/BUILD_STATUS.md` T7.
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
 1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.
