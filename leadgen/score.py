@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 
 from . import ROOT  # noqa: F401
 from .db import Store
@@ -25,6 +26,22 @@ SENTENCE = {   # pain point wording, used for personalization ("I noticed ...").
     "no_lead_capture": "I didn't see a contact or request form on the website",
     "multiple_locations": "you serve customers from more than one location",
 }
+# A business that advertises 24/7 (site or Google hours) says someone answers at night: "I didn't see a way for calls to
+# be answered after hours" would contradict it. Same points, but the wording only states what they advertise.
+SENTENCE_24_7 = "you advertise 24/7 service, which means every late-night call has to be picked up by someone"
+
+
+ROUND_THE_CLOCK = re.compile(r"24\s*/\s*7|(?<!within )(?<!in )24[- ]hours?(?: a day|\s+(?:\w+\s+)?(?:emergency|service|repair))"
+                             r"|24\s*hr|around the clock", re.I)   # not "within 24 hours"
+
+
+def advertises_24_7(p: dict) -> bool:
+    """True only on explicit 24/7 wording (site evidence) or Google 'Open 24 hours'; 'Emergency Repairs' alone is not."""
+    sigs = p.get("signals") or {}
+    ev = (sigs.get("mentions_24_7") or {}).get("evidence") or ""
+    hours = p.get("hours") if isinstance(p.get("hours"), dict) else {}
+    return (_v(sigs, "mentions_24_7") is True and bool(ROUND_THE_CLOCK.search(ev))) or \
+        any("open 24 hours" in str(h).lower() for h in hours.get("weekdayDescriptions") or [])
 
 
 def _v(sigs: dict, name: str):
@@ -85,7 +102,11 @@ def opportunity(p: dict, cfg: dict) -> tuple[int, list[dict]]:
         if g not in best or w["points"] > best[g][0]:
             best[g] = (w["points"], sig)
     counted = {sig for _, sig in best.values()}
-    pains = [{"signal": s, "points": weights[s]["points"], "evidence": hits[s], **({"sentence": SENTENCE[s]} if s in SENTENCE else {})}
+    sentences = dict(SENTENCE)
+    if advertises_24_7(p):
+        sentences["missed_call_risk"] = SENTENCE_24_7
+        sentences.pop("no_after_hours_response")
+    pains = [{"signal": s, "points": weights[s]["points"], "evidence": hits[s], **({"sentence": sentences[s]} if s in sentences else {})}
              for s in hits if s in counted]
     pains.sort(key=lambda x: -x["points"])
     return min(100, sum(x["points"] for x in pains)), pains

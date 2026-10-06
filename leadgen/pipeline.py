@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from agents.notify.http import Http
-from .contacts import classify_email, is_generic
+from .contacts import classify_email, is_free_mail, is_generic
 from .discovery import discover
 from .draft import personal_angle
 from .enrich import Budget, enrich, providers_from_env
@@ -32,6 +32,14 @@ def process(p: dict, crawler: Crawler, cfg: dict, providers: dict, budget: Budge
     row = {**p, **site}
     trail.append({"at": _now(), "step": "researched",
                   "detail": f"{len(people)} named people, {len(emails)} addresses on site" if row.get("website") else "no website"})
+    # An address on someone else's domain (web designer, directory) is not the business's; keep only own-domain or
+    # free-mail addresses as the lead's email. Off-domain ones stay available for name matching and Hunter checks.
+    em, dom = (row.get("email") or ""), (row.get("domain") or "")
+    if em and dom and not is_free_mail(em) and not (em.split("@")[-1] == dom or em.split("@")[-1].endswith("." + dom)):
+        trail.append({"at": _now(), "step": "researched", "detail": f"ignored off-domain address on site: {em}"})
+        row.pop("email", None)
+        row.pop("email_source_url", None)
+        row["status"] = "no_email"
     sc, pains = opportunity(row, cfg)
     row.update({"score": sc, "pain_points": pains})
     if row.get("email"):

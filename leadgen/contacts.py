@@ -42,7 +42,9 @@ _TITLE_WORDS = (r"(?i:co-?owner|owner|proprietor|co-?founder|founder|president|c
                 r"sales manager|director of sales)")
 _STOP_FIRST = {"Our", "The", "Meet", "About", "Contact", "Call", "Free", "Your", "We", "Get", "Learn", "Read", "View",
                "Home", "Service", "Services", "Request", "Schedule", "Jacksonville", "North", "South", "East", "West",
-               "Florida", "Family", "Owned", "Locally", "Customer", "Best", "Top", "Licensed", "Insured"}
+               "Florida", "Family", "Owned", "Locally", "Customer", "Best", "Top", "Licensed", "Insured",
+               "Independent", "Agent", "Franchise", "Franchisee", "Business", "Company", "Team", "Office", "General",
+               "Local", "Owner", "Operator", "Each", "Every", "Proud", "Veteran", "Woman", "Women", "Certified"}
 # "John Smith, Owner" / "John Smith - President" / "John Smith | Founder"
 _T = "(" + _TITLE_WORDS + ")"
 _P1 = re.compile(_NAME + r"[ \t]*(?:,|-|–|—|\||:|\()[ \t]*(?:the[ \t]+)?(?:our[ \t]+)?" + _T + r"\b")

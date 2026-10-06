@@ -67,8 +67,25 @@ def _plain_row(r: dict, source: str) -> dict | None:
     row = {"place_id": f"web:{dom}" if dom else f"tel:{norm_phone(r.get('phone'))}", "name": name,
            "industry": (r.get("industry") or "").strip() or None, "city": (r.get("city") or "").strip() or None,
            "address": (r.get("address") or "").strip() or None, "phone": norm_phone(r.get("phone")),
-           "website": site or None, "domain": dom, "source": source, "discovery_sources": [source]}
+           "website": site or None, "domain": dom, "source": source, "discovery_sources": [source],
+           "rating": r.get("rating") or None, "review_count": r.get("review_count") or None}
     return {k: v for k, v in row.items() if v is not None}
+
+
+_LOCATION_PAGE = re.compile(r"/(?:locations?/|[a-z-]*(?:jacksonville|jax|st-augustine|orange-park|ponte-vedra|fernandina)[a-z-]*/?$)", re.I)
+
+
+def franchise_location(website: str | None) -> bool:
+    """A Places website that is a city page on a brand domain (myvoda.com/jacksonville-st-augustine/) is a franchise
+    location: its inboxes belong to the national brand, so it is skipped before any research is spent on it."""
+    if not website:
+        return False
+    from urllib.parse import urlparse
+    u = urlparse(website)
+    host = (u.hostname or "").lower().removeprefix("www.")
+    regional_sub = host.count(".") >= 2 and re.search(r"florida|jacksonville|jax|st-?augustine|orange-?park|ponte-?vedra",
+                                                      host.split(".")[0])
+    return bool(_LOCATION_PAGE.search(u.path or "") or regional_sub)
 
 
 def from_places(http: Http, key: str, cfg: dict, industries: list[str], locations: list[str], limit: int) -> list[dict]:
@@ -83,6 +100,8 @@ def from_places(http: Http, key: str, cfg: dict, industries: list[str], location
                 return out
             for place in data.get("places", []):
                 r = to_row(place, ind)
+                if r and franchise_location(r.get("website")):
+                    continue
                 if r:
                     r["domain"] = domain_of(r.get("website")) if r.get("website") else None
                     r["discovery_sources"] = ["google_places_api"]

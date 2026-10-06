@@ -15,6 +15,7 @@ from . import ROOT  # noqa: F401
 from lp.text import norm_email
 from .db import Store
 from .research import ROLE_BLOCK
+from .score import ROUND_THE_CLOCK, SENTENCE_24_7
 from .source import load_config, log
 
 OPT_OUT = "If you'd rather not hear from me, just reply \"unsubscribe\" and I will not email you again."
@@ -40,7 +41,7 @@ def _has(p: dict, sig: str) -> bool:
 def _service_phrase(p: dict) -> str:
     """'24/7 service' or 'emergency service', whichever the evidence on their site actually says."""
     ev = ((p.get("signals") or {}).get("mentions_24_7") or {}).get("evidence") or ""
-    if re.search(r"24\s*/\s*7|(?<!within )(?<!in )24[- ]hours?(?: a day|\s+(?:\w+\s+)?(?:emergency|service|repair))|24\s*hr|around the clock", ev, re.I):
+    if ROUND_THE_CLOCK.search(ev):
         return "24/7 service"
     return "emergency service"
 
@@ -59,7 +60,9 @@ def personal_angle(p: dict) -> str | None:
     # missed_call_risk already says "no after-hours answering"; don't repeat it with the answering sentence
     if len(picked) == 2 and "after hours" in picked[0] and "after-hours" in picked[1]:
         picked = picked[:1]
-    return "Looking at your website, " + " and ".join(picked) + "."
+    # 24/7 can come from the Google listing rather than the site: don't attribute it to the website
+    lead = "From what I could see, " if picked[0] == SENTENCE_24_7 else "Looking at your website, "
+    return lead + " and ".join(picked) + "."
 
 
 def greeting(p: dict) -> str:

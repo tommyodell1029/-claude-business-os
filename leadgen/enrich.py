@@ -181,10 +181,13 @@ def enrich(p: dict, site_people: list[dict], site_emails: list[tuple[str, str]],
     if "hunter" in order and hunter and domain and budget.take(f"hunter domain-search {domain}"):
         try:
             data = hunter.domain_search(domain)
-            usage.append({"provider": "hunter", "call": "domain-search"})
-            hp = hunter_people(data)
-            cands += hp
-            log.append(f"hunter domain-search: {len(hp)} named contacts")
+            if data is None:             # results file has no lookup for this domain: say so, never imply a search
+                log.append("hunter: not looked up for this domain")
+            else:
+                usage.append({"provider": "hunter", "call": "domain-search"})
+                hp = hunter_people(data)
+                cands += hp
+                log.append(f"hunter domain-search: {len(hp)} named contacts")
         except ProviderError as e:
             log.append(f"hunter failed: {e}")
     ranked = rank_candidates(cands)

@@ -129,6 +129,13 @@ class DiscoveryTests(unittest.TestCase):
                                  providers=["places"], industries=["plumbing"], locations=["Jacksonville, FL"], limit=5)
         self.assertEqual(res["rows"][0]["domain"], "acmeplumb.test")
 
+    def test_franchise_location_pages_skipped(self):
+        self.assertTrue(discovery.franchise_location("https://myvoda.com/jacksonville-st-augustine/?utm_source=google"))
+        self.assertTrue(discovery.franchise_location("https://brand.com/locations/fl-32256"))
+        self.assertTrue(discovery.franchise_location("https://north-florida.pauldavis.com/?utm_source=gbp"))
+        self.assertFalse(discovery.franchise_location("https://www.andersonrestoration.com/"))
+        self.assertFalse(discovery.franchise_location("https://acme.test/services/water-damage"))
+
     def test_duplicate_within_run_by_phone(self):
         d = discovery.Dedupe()
         self.assertTrue(d.add({"place_id": "a", "phone": "+19045550100", "name": "A", "city": "Jax"}))
@@ -142,6 +149,10 @@ class DecisionMakerTests(unittest.TestCase):
     def test_owner_ranked_first_marketing_excluded(self):
         ranked = contacts.rank_candidates(contacts.extract_people(self.PAGE, "https://x.test/about"))
         self.assertEqual([c["name"] for c in ranked], ["John Smith", "Dave Miller"])
+
+    def test_marketing_phrases_are_not_people(self):
+        page = "<p>Independent Agent, Owner</p><p>Locally Owned, Owner operated</p><p>Each Franchise Owner</p>"
+        self.assertEqual(contacts.extract_people(page, "https://x.test/"), [])
 
     def test_title_priority(self):
         cands = [{"name": "Ann Ops", "title": "Operations Manager", "confidence": 0.9},
@@ -268,6 +279,23 @@ class ScoringTests(unittest.TestCase):
     def test_unknown_signals_never_scored(self):
         self.assertEqual(score.score_prospect({"industry": "legal", "signals": {}}, CFG), 10)  # high_ticket only
 
+    def test_24_7_business_angle_never_says_no_after_hours_answer(self):
+        plain = {"industry": "plumbing", "phone": "+19045550100", "signals": sigs(after_hours_answering=False)}
+        site_247 = {**plain, "signals": {**sigs(after_hours_answering=False),
+                                         "mentions_24_7": {"value": True, "evidence": "We Offer 24/7 Emergency Plumbing"}}}
+        emergency_only = {**plain, "signals": {**sigs(after_hours_answering=False),
+                                               "mentions_24_7": {"value": True, "evidence": "Emergency Repairs Service Areas"}}}
+        self.assertNotIn("24/7", draft.personal_angle({"pain_points": score.opportunity(emergency_only, CFG)[1]}))
+        google_247 = {**plain, "hours": {"weekdayDescriptions": ["Monday: Open 24 hours"]}}
+        self.assertIn("answered after hours", draft.personal_angle({"pain_points": score.opportunity(plain, CFG)[1]}))
+        for p in (site_247, google_247):
+            sc, pains = score.opportunity(p, CFG)
+            angle = draft.personal_angle({"pain_points": pains})
+            self.assertIn("advertise 24/7", angle)
+            self.assertNotIn("after hours", angle)
+            self.assertNotIn("after-hours", angle)
+            self.assertEqual(sc, score.opportunity(plain, CFG)[0])     # same points, only the wording changes
+
 
 class PipelineTests(unittest.TestCase):
     PAGES = {"https://acme.test/": '<html><meta name="viewport" content="width=device-width"><a href="tel:9045550100">Call</a>'
@@ -288,8 +316,14 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(steps[-1], "ready_for_approval")
         subject, body = draft.compose(row, "1 Test Way, Jacksonville, FL 32202")
         self.assertTrue(body.startswith("Hi John,"))
-        self.assertIn("answered after hours", body)
+        self.assertIn("advertise 24/7", body)               # the site says 24/7: never "no after-hours answer"
+        self.assertNotIn("answered after hours", body)
         self.assertNotIn("text", body.lower().replace("context", ""))
+
+    def test_off_domain_site_email_not_kept(self):
+        pages = {"https://acme.test/": "<p>Website by akent@webagency.test</p>"}
+        row = pipeline.process(lead(), crawler(pages), CFG, {}, enrich.Budget(0), set())
+        self.assertIsNone(row.get("email"))
 
     def test_suppressed_lead_cannot_reenter(self):
         h = FakeHunter(OWNER, verify={"john@acme.test": {"status": "valid"}})
