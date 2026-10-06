@@ -84,7 +84,7 @@ def compose(p: dict, address: str, sender: str = "Tommy\nLaunchPad Local") -> tu
         lines += [f"I called {name} after hours recently, and that is why I'm writing.", ""]
     facts = []
     if p.get("rating") is not None and p.get("review_count"):
-        facts.append(f"{name} has {p['rating']} stars across {p['review_count']} Google reviews")
+        facts.append(f"{name} has {p['rating']} stars across {int(p['review_count']):,} Google reviews")
     if _has(p, "mentions_24_7"):
         facts.append(f"your website mentions {_service_phrase(p)}")
     if facts:
@@ -92,6 +92,11 @@ def compose(p: dict, address: str, sender: str = "Tommy\nLaunchPad Local") -> tu
     angle = p.get("personalized_angle") or personal_angle(p)
     if angle and facts:                  # the line above already mentions the website
         angle = angle.replace("Looking at your website, ", "From what I could see, ", 1)
+    if angle and _has(p, "mentions_24_7") and _service_phrase(p) == "24/7 service":   # 24/7 already said above
+        angle = angle.replace("From what I could see, " + SENTENCE_24_7 + " and ",
+                              "That means every late-night call has to be picked up by someone, and ", 1)
+        angle = angle.replace("From what I could see, " + SENTENCE_24_7 + ".",
+                              "That means every late-night call has to be picked up by someone.", 1)
     if angle:
         lines += [angle, ""]
     lines += [

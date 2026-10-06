@@ -316,7 +316,8 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(steps[-1], "ready_for_approval")
         subject, body = draft.compose(row, "1 Test Way, Jacksonville, FL 32202")
         self.assertTrue(body.startswith("Hi John,"))
-        self.assertIn("advertise 24/7", body)               # the site says 24/7: never "no after-hours answer"
+        self.assertEqual(body.count("24/7"), 1)             # said once, in the facts line
+        self.assertIn("every late-night call has to be picked up", body)
         self.assertNotIn("answered after hours", body)
         self.assertNotIn("text", body.lower().replace("context", ""))
 
