@@ -19,7 +19,7 @@ Specs: takeover spec (T0–T9) + Master Build Specification (revenue-first agenc
 | `agents/` | Pipecat voice agent — ONE template, config from `clients/<slug>.yaml` |
 | `agents/notify/` | post-call handler: Supabase → Twilio SMS → Resend. Schema doc in README |
 | `clients/` | one YAML per client; `demo.yaml` powers the website demo number |
-| `leadgen/` | Places sourcing → research → score → personalize → send → replies. Schema doc in README |
+| `leadgen/` | `python -m leadgen` CLI: discover (Places → seed → CSV fallback) → research → qualify → decision-maker → verified email → score/tier → planner → owner-approved Gmail drafts. Schema doc in README |
 | `audit/` | weekly quality/compliance audit (only place the `audit` model is allowed) |
 | `site/` | Next.js marketing site + `/api/lead` + password-protected `/admin/review` |
 | `ops/` | onboarding, client intake, outreach templates |
@@ -48,7 +48,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - n8n or any third-party automation tool. All post-call logic in `agents/notify/`.
 - Outbound calling features. Lead gen never places calls.
 - Voice agent: skip disclosure line ("...I'm their AI assistant. This call may be recorded." — FL all-party consent); invent prices, availability, or promises; answer outside client config.
-- Scrape Google Maps HTML (Places API only); guess or generate email addresses; ignore robots.txt.
+- Scrape Google Maps HTML (Places API only); construct email addresses ourselves; send a first touch to any address an independent verifier has not marked deliverable (owner 2026-10-06: provider-found decision-maker emails allowed only when verified); ignore robots.txt or bypass bot protection.
 - Cold email via Resend; send without `{{MAILING_ADDRESS}}` + opt-out; send without checking `suppression`; remove an opt-out; exceed the Gmail outreach caps below.
 - **Owner override 2026-09-27:** cold email goes out from the launchpadlocal.org Workspace inbox via the Gmail connector (risk to main-domain reputation explained and accepted). Guardrails: start 5/day, ramp to max 20/day/inbox; send Tue–Thu mornings; stop sequence on any reply/bounce/unsubscribe; pause all sending if bounce >3% or any spam complaint; plain text, no tracking pixels; connector works only in-session, so every batch is approved by owner before send.
 - State anything not in prospect data. "I called you" only if `called_after_hours = true` (owner sets it).
@@ -72,6 +72,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - Jarvis (owner-only voice assistant, `docs/JARVIS_SPEC.md`): J1 ✅ live at `/jarvis`, Opus audit passed 2026-10-04, owner signed in on iPhone 2026-10-04. J2 Windows desktop + wake word + web push when the owner's Dell arrives.
 - T7-lite 🟡 `leadgen/` (Places source → robots-safe research → score → 5 drafts, never sends) built + tested offline 2026-10-03; live run status in `docs/BUILD_STATUS.md` T7.
 - T7 outreach engine 🟡 built 2026-10-04: `leadgen/sequence.py` · `plan_day.py` · `gmail_sync.py` · `topup.py` + runbook `/outreach-daily` (sync → owner replies → plan → owner approves → Gmail drafts; never sends). First live run Tue 2026-10-06 after the owner sends the 5 approved emails.
+- T7 lead bot repair 2026-10-06: Places diagnosed (403 = billing not enabled on the Google Cloud project; code correct), discovery fallback, decision-maker + verified-email enrichment (Hunter/Apollo via connector or API key), conversion scoring, HOT/GOOD/RESEARCH/REJECTED tiers; first touches only to verified decision-makers. `docs/BUILD_STATUS.md` T7.
 
 ## Merged from old CLAUDE.md (freelance Business OS) — conflicts, target spec won
 1. Scope: Fiverr/Upwork freelance ops → LaunchPad Local receptionist agency. Old app moved to `legacy/bos-freelance-ops/`.

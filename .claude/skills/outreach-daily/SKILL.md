@@ -55,8 +55,16 @@ For each item in `owner_actions`: business, sender, class, the reply text (quote
 ### Step 3b: Prospect top-up (only when `shortfall` > 0)
 1. Web search for local, owner-operated home-service businesses (plumbing, HVAC, electrical, roofing, pest control, garage door, locksmith) in Jacksonville, Orange Park, St. Augustine, Fernandina Beach and Ponte Vedra. Keep only the business's own website from results. Exclude national chains, franchises and directories. Never take an email from search results.
 2. Write `leadgen/seed/web_search_<YYYY-MM-DD>.json` in the format of the earlier seed files (name, website, industry, city, source_query).
-3. `uv run python -m leadgen.topup leadgen/seed/web_search_<date>.json [--snapshot S --sql-out topup.sql]` (robots.txt honored; emails only from the business's own pages; role inboxes never eligible). Apply the SQL, then re-run Step 3.
-4. Report counts only (new rows, emails found, eligible now). Commit the seed file on the working branch.
+3. Run the lead pipeline on the seed (discovery falls back from Google Places automatically):
+   `uv run python -m leadgen scout --source places,seed --seed leadgen/seed/web_search_<date>.json --limit 10 [--snapshot S --sql-out scout.sql]`.
+   Do a `--dry-run` first and show the owner the per-business view. Robots.txt is honored; emails are never constructed.
+4. Decision-maker emails (cost control: only for businesses the dry run marks qualified, at most `enrichment.max_per_run`):
+   with the Hunter connector run `Domain-Search` per qualified domain, then `Email-Verifier` on the chosen decision-maker's
+   address (never on generic inboxes). Save the raw results as `results.json` in the shape documented in `leadgen/enrich.py`
+   (`ResultsFile`) and re-run step 3 with `--results results.json`. Report the Hunter credits used.
+   Only `email_verification_status = verified` leads reach `ready_for_approval`; the planner ignores everything else.
+   Apply the SQL with the Supabase connector (small statements; long jsonb updates can time out), then re-run Step 3.
+5. Report counts only (new rows, ready for approval, needs enrichment, pending). Commit the seed file on the working branch.
 
 ## Step 4: Show the batch and wait
 For every draft in the plan output, show: recipient, business, step (first touch or follow-up N), subject, and the **full body** (read it from the `drafted` row). Then ask: "Approve all, approve some (list them), edit, or skip?" **Wait.** Do nothing more until the owner answers in this session.

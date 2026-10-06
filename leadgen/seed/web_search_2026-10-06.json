@@ -1,0 +1,15 @@
+{
+ "source": "web_search",
+ "date": "2026-10-06",
+ "note": "Names, websites and phones from public web search results (2026-10-06); nothing else asserted. Franchise brands on shared national domains excluded. Ron Russell Roofing is included on purpose: it already exists and must be skipped as a duplicate.",
+ "rows": [
+  {"name": "Bold City Heating & Air", "website": "https://boldcityac.com/", "industry": "hvac", "city": "Jacksonville", "phone": "(904) 966-4405", "source_query": "locally owned HVAC company Jacksonville FL owner"},
+  {"name": "Air McCall Heating & Air Conditioning", "website": "https://www.airmccall.com/", "industry": "hvac", "city": "Jacksonville", "phone": "(904) 288-6110", "source_query": "locally owned HVAC company Jacksonville FL owner"},
+  {"name": "J&W Heating and Air + Plumbing", "website": "https://www.jandwheatingandair.com/", "industry": "hvac", "city": "Jacksonville", "phone": "(904) 595-9644", "source_query": "locally owned HVAC company Jacksonville FL owner"},
+  {"name": "Palms Air Conditioning and Heating", "website": "https://www.palmsair.com/", "industry": "hvac", "city": "Jacksonville", "phone": "(904) 209-7783", "source_query": "locally owned HVAC company Jacksonville FL owner"},
+  {"name": "Buehler Air Conditioning & Plumbing", "website": "https://www.buehlerair.com/", "industry": "hvac", "city": "Jacksonville Beach", "phone": "(904) 906-4204", "source_query": "locally owned HVAC company Jacksonville FL owner"},
+  {"name": "Brelbay Roofing", "website": "https://brelbayroofing.com/", "industry": "roofing", "city": "Jacksonville", "phone": "(904) 419-8390", "source_query": "independent roofing contractor Jacksonville FL owner operated"},
+  {"name": "ABBA Property Solutions", "industry": "restoration", "city": "Jacksonville", "phone": "(904) 631-6264", "source_query": "water damage restoration company Jacksonville FL family owned"},
+  {"name": "Ron Russell Roofing", "website": "https://www.ronrussellroofing.com/", "industry": "roofing", "city": "Jacksonville", "source_query": "independent roofing contractor Jacksonville FL owner operated"}
+ ]
+}

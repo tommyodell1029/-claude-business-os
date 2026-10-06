@@ -6,8 +6,9 @@ Rules (CLAUDE.md Gmail override + leadgen/config.yaml `sending`):
   open (pending/approved, not yet sent) drafts count against the cap.
 - Pause everything (one `paused` event, nothing drafted) if bounces / sends over the last 30 days is above 3%, or if
   any complaint exists that the owner has not acknowledged in config.
-- Follow-ups that are due go first, then new first touches: email found on the business's own site, not a role
-  inbox, not suppressed, score >= threshold, no earlier first-touch draft.
+- Follow-ups that are due go first, then new first touches: a decision-maker's professional email that an
+  independent verifier confirmed (enrichment_status ready_for_approval), never a generic inbox, not suppressed,
+  score >= threshold, no earlier first-touch draft.
 Usage: uv run python -m leadgen.plan_day [--date YYYY-MM-DD] [--snapshot snap.json --sql-out writes.sql] [--dry-run]
 """
 from __future__ import annotations
@@ -23,6 +24,7 @@ from . import ROOT  # noqa: F401
 from lp.text import norm_email
 from .db import open_store
 from .draft import DraftError, compose, mailing_address, validate
+from .contacts import is_generic
 from .research import ROLE_BLOCK
 from .sequence import (OPEN_REVIEW, STOP_EVENTS, compose_followup, compute_state, is_due, local_date, parse_ts,
                        sent_at, validate_followup)
@@ -116,12 +118,18 @@ def eligible_new(store, events: list[dict], suppressed: set[str], cfg: dict) -> 
     by_p = _by_prospect(events)
     threshold = cfg["score"]["threshold"]
     redraft_skipped = cfg["sequence"].get("redraft_skipped", False)
+    require_verified = cfg["sending"].get("require_verified_decision_maker", True)
     out, used = [], set()
     for p in store.prospects(["researched"], limit=1000):
         email = norm_email(p.get("email"))
         if not email or email in used or not p.get("email_source_url") or ROLE_BLOCK.match(email.split("@")[0]):
             continue
         if (p.get("score") or 0) < threshold or email in suppressed:
+            continue
+        # 2026-10-06: first touches go only to a decision-maker whose professional email an independent verifier
+        # confirmed (leadgen/enrich.py). Generic inboxes, free-mail and unverified addresses wait for enrichment.
+        if require_verified and (p.get("enrichment_status") != "ready_for_approval"
+                                 or p.get("email_verification_status") != "verified" or is_generic(email)):
             continue
         evs = by_p.get(p["id"], [])
         if any(e.get("event_type") in STOP_EVENTS or e.get("event_type") == "sent" for e in evs):

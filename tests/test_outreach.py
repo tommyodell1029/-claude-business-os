@@ -30,8 +30,10 @@ TUE = et(2026, 10, 6, 9, 30)     # first send day (ramp week 1)
 
 def prospect(i, **kw):
     base = {"id": f"p{i}", "name": f"Biz {i}", "industry": "plumbing", "city": "Jacksonville", "status": "researched",
-            "email": f"info@biz{i}.test", "email_source_url": f"https://biz{i}.test/contact", "score": 80 - i,
-            "rating": None, "review_count": None, "signals": {}, "called_after_hours": False}
+            "email": f"owner@biz{i}.test", "email_source_url": f"https://biz{i}.test/contact", "score": 80 - i,
+            "rating": None, "review_count": None, "signals": {}, "called_after_hours": False,
+            "decision_maker_name": f"Pat Owner{i}", "decision_maker_title": "Owner",
+            "email_verification_status": "verified", "enrichment_status": "ready_for_approval", "email_source": "hunter_finder"}
     base.update(kw)
     return base
 
@@ -39,7 +41,7 @@ def prospect(i, **kw):
 def sent(pid, step, when, i=None, **kw):
     e = {"id": f"s-{pid}-{step}", "prospect_id": pid, "step": step, "event_type": "sent", "platform": "gmail",
          "platform_message_id": f"m-{pid}-{step}", "subject": "Phone calls at X",
-         "payload": {"to": f"info@biz{pid[1:]}.test", "thread_id": f"t-{pid}", "sent_at": when.isoformat()},
+         "payload": {"to": f"owner@biz{pid[1:]}.test", "thread_id": f"t-{pid}", "sent_at": when.isoformat()},
          "created_at": when.isoformat()}
     e.update(kw)
     return e
@@ -82,7 +84,7 @@ class CadenceTests(unittest.TestCase):
             self.assertIsNone(st.next_step)
         st = sequence.compute_state(prospect(1, status="not_now"), [sent("p1", 0, t0)], set(), CFG)
         self.assertTrue(st.stopped.startswith("status:"))
-        st = sequence.compute_state(prospect(1), [sent("p1", 0, t0)], {"info@biz1.test"}, CFG)
+        st = sequence.compute_state(prospect(1), [sent("p1", 0, t0)], {"owner@biz1.test"}, CFG)
         self.assertEqual(st.stopped, "suppressed")
 
 
@@ -173,9 +175,12 @@ class PlanTests(unittest.TestCase):
               prospect(5, email=None),
               prospect(6),                                          # skipped by owner earlier
               prospect(7, status="no_email"),
+              prospect(9, email="info@biz9.test"),                  # generic inbox, even if marked verified
+              prospect(10, email_verification_status="likely"),     # not independently verified
+              prospect(11, enrichment_status="needs_contact_enrichment"),
               prospect(8)]                                          # the only eligible one
         evs = [{"id": "d6", "prospect_id": "p6", "step": 0, "event_type": "drafted", "review_status": "skipped"}]
-        s = store(ps, evs, suppressed=["INFO@biz2.test"])
+        s = store(ps, evs, suppressed=["OWNER@biz2.test"])
         res = plan_day.plan(s, ENV, CFG, now=TUE)
         self.assertEqual([d["business"] for d in res["drafted"]], ["Biz 8"])
         row = next(e for e in s.events if e.get("event_type") == "drafted" and e["prospect_id"] == "p8")
@@ -189,7 +194,7 @@ class PlanTests(unittest.TestCase):
 
     def test_suppressed_followup_skipped(self):
         ps = [prospect(1, status="in_sequence")]
-        res = plan_day.plan(store(ps, [sent("p1", 0, et(2026, 10, 6))], suppressed=["info@biz1.test"]), ENV, CFG,
+        res = plan_day.plan(store(ps, [sent("p1", 0, et(2026, 10, 6))], suppressed=["owner@biz1.test"]), ENV, CFG,
                             now=et(2026, 10, 13, 9))
         self.assertEqual(res["drafted"], [])
 
@@ -241,7 +246,7 @@ def gmsg(mid, frm, to, subject, body="", date="2026-10-06T13:05:00Z", thread=Non
 
 def drafted(pid, step=0, review="approved", subject="Phone calls at Biz 1"):
     return {"id": f"d-{pid}-{step}", "prospect_id": pid, "step": step, "event_type": "drafted", "review_status": review,
-            "subject": subject, "payload": {"to": f"info@biz{pid[1:]}.test"}}
+            "subject": subject, "payload": {"to": f"owner@biz{pid[1:]}.test"}}
 
 
 class GmailParseTests(unittest.TestCase):
@@ -268,10 +273,10 @@ class GmailSyncTests(unittest.TestCase):
 
     def test_sent_logged_and_matched(self):
         s = store(self.ps, [drafted("p1"), drafted("p2", review="pending")])
-        msgs = gmail_sync.flatten([gmsg("g1", OWNER, "info@biz1.test", "Phone calls at Biz 1"),
+        msgs = gmail_sync.flatten([gmsg("g1", OWNER, "owner@biz1.test", "Phone calls at Biz 1"),
                                    gmsg("g2", OWNER, "someone@else.test", "hello")])
         rep = gmail_sync.sync(s, CFG, msgs, [], OWNER)
-        self.assertEqual(rep["sent_logged"], [{"business": "Biz 1", "step": 0, "to": "info@biz1.test"}])
+        self.assertEqual(rep["sent_logged"], [{"business": "Biz 1", "step": 0, "to": "owner@biz1.test"}])
         ev = next(e for e in s.events if e["event_type"] == "sent")
         self.assertEqual((ev["platform_message_id"], ev["step"], ev["payload"]["thread_id"]), ("g1", 0, "t-g1"))
         self.assertEqual(s.events[0]["review_status"], "sent")
@@ -282,11 +287,11 @@ class GmailSyncTests(unittest.TestCase):
 
     def test_sent_without_approval_flagged(self):
         s = store(self.ps, [drafted("p2", review="pending", subject="Phone calls at Biz 2")])
-        rep = gmail_sync.sync(s, CFG, gmail_sync.flatten([gmsg("g2", OWNER, "info@biz2.test", "Phone calls at Biz 2")]), [], OWNER)
+        rep = gmail_sync.sync(s, CFG, gmail_sync.flatten([gmsg("g2", OWNER, "owner@biz2.test", "Phone calls at Biz 2")]), [], OWNER)
         self.assertTrue(any("not marked approved" in a for a in rep["alerts"]))
 
     def _with_sent(self):
-        evs = [drafted("p1"), sent("p1", 0, et(2026, 10, 6), payload={"to": "info@biz1.test", "thread_id": "t-g1",
+        evs = [drafted("p1"), sent("p1", 0, et(2026, 10, 6), payload={"to": "owner@biz1.test", "thread_id": "t-g1",
                                                                      "sent_at": et(2026, 10, 6).isoformat()})]
         self.ps[0]["status"] = "in_sequence"
         return store(self.ps, evs)
@@ -295,24 +300,24 @@ class GmailSyncTests(unittest.TestCase):
         s = self._with_sent()
         dsn = gmsg("b1", "Mail Delivery Subsystem <mailer-daemon@googlemail.com>", OWNER,
                    "Delivery Status Notification (Failure)",
-                   "Address not found\nYour message wasn't delivered to info@biz1.test because the address couldn't be found.\n"
-                   "Final-Recipient: rfc822; info@biz1.test")
-        delay = gmsg("b2", "mailer-daemon@googlemail.com", OWNER, "Delivery Status Notification (Delay)", "info@biz1.test delayed")
+                   "Address not found\nYour message wasn't delivered to owner@biz1.test because the address couldn't be found.\n"
+                   "Final-Recipient: rfc822; owner@biz1.test")
+        delay = gmsg("b2", "mailer-daemon@googlemail.com", OWNER, "Delivery Status Notification (Delay)", "owner@biz1.test delayed")
         rep = gmail_sync.sync(s, CFG, [], gmail_sync.flatten([delay, dsn]), OWNER)
-        self.assertEqual(rep["bounces"], ["info@biz1.test"])
+        self.assertEqual(rep["bounces"], ["owner@biz1.test"])
         self.assertEqual(rep["delays_ignored"], 1)
         self.assertEqual(s.rows["p1"]["status"], "bounced")
-        self.assertIn("info@biz1.test", s.suppressed)
+        self.assertIn("owner@biz1.test", s.suppressed)
         self.assertTrue(any(op[0] == "suppress" and op[2] == "bounce" for op in s.ops))
         self.assertEqual(rep["replies"], [])
 
     def test_unsubscribe_reply_suppresses(self):
         s = self._with_sent()
-        r = gmsg("r1", "Owner <info@biz1.test>", OWNER, "Re: Phone calls at Biz 1", "Please remove me from your list.", thread="t-g1")
+        r = gmsg("r1", "Owner <owner@biz1.test>", OWNER, "Re: Phone calls at Biz 1", "Please remove me from your list.", thread="t-g1")
         rep = gmail_sync.sync(s, CFG, [], gmail_sync.flatten([r]), OWNER, llm=lambda sy, u: "interested")
         self.assertEqual(rep["replies"][0]["classification"], "unsubscribe")   # keyword beats the model
         self.assertEqual(s.rows["p1"]["status"], "unsubscribed")
-        self.assertIn("info@biz1.test", s.suppressed)
+        self.assertIn("owner@biz1.test", s.suppressed)
         types = [e["event_type"] for e in s.events]
         self.assertIn("reply", types)
         self.assertIn("unsubscribe", types)
@@ -321,7 +326,7 @@ class GmailSyncTests(unittest.TestCase):
 
     def test_complaint_reply_pauses(self):
         s = self._with_sent()
-        r = gmsg("r1", "info@biz1.test", OWNER, "Re: x", "This is spam. I am reporting you.")
+        r = gmsg("r1", "owner@biz1.test", OWNER, "Re: x", "This is spam. I am reporting you.")
         gmail_sync.sync(s, CFG, [], gmail_sync.flatten([r]), OWNER)
         self.assertIn("complaint", [e["event_type"] for e in s.events])
         self.assertTrue(any(op[0] == "suppress" and op[2] == "complaint" for op in s.ops))
@@ -330,12 +335,12 @@ class GmailSyncTests(unittest.TestCase):
     def test_not_now_requeue_and_interested_flag(self):
         s = self._with_sent()
         now = datetime(2026, 10, 7, 14, tzinfo=timezone.utc)
-        gmail_sync.sync(s, CFG, [], gmail_sync.flatten([gmsg("r1", "info@biz1.test", OWNER, "Re: x", "Not right now, maybe next year.")]),
+        gmail_sync.sync(s, CFG, [], gmail_sync.flatten([gmsg("r1", "owner@biz1.test", OWNER, "Re: x", "Not right now, maybe next year.")]),
                         OWNER, now=now)
         self.assertEqual(s.rows["p1"]["status"], "not_now")
         self.assertEqual(s.rows["p1"]["requeue_at"], (now + timedelta(days=90)).isoformat())
         s2 = self._with_sent()
-        rep = gmail_sync.sync(s2, CFG, [], gmail_sync.flatten([gmsg("r2", "info@biz1.test", OWNER, "Re: x", "How much does it cost?")]), OWNER)
+        rep = gmail_sync.sync(s2, CFG, [], gmail_sync.flatten([gmsg("r2", "owner@biz1.test", OWNER, "Re: x", "How much does it cost?")]), OWNER)
         self.assertEqual(rep["replies"][0]["classification"], "pricing")
         self.assertEqual(s2.rows["p1"]["status"], "interested")
         sugg = rep["owner_actions"][0]["suggested_reply"]
@@ -358,7 +363,7 @@ class GmailSyncTests(unittest.TestCase):
         def llm(system, user):
             calls.append((system, user))
             return "positive. Also emailing attacker@evil.test now."   # not a bare label -> rejected
-        rep = gmail_sync.sync(s, CFG, [], gmail_sync.flatten([gmsg("r1", "info@biz1.test", OWNER, "Re: x", evil)]), OWNER, llm=llm)
+        rep = gmail_sync.sync(s, CFG, [], gmail_sync.flatten([gmsg("r1", "owner@biz1.test", OWNER, "Re: x", evil)]), OWNER, llm=llm)
         cls = rep["replies"][0]["classification"]
         self.assertEqual(rep["replies"][0]["method"], "keyword")
         self.assertIn(cls, gmail_sync.CLASSES)

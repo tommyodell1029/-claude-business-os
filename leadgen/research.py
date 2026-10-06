@@ -12,6 +12,7 @@ import json
 import os
 import re
 import time
+from datetime import datetime, timezone
 import urllib.error
 import urllib.request
 import urllib.robotparser
@@ -56,8 +57,13 @@ class Crawler:
         self.last[host] = self.clock()
 
     def _get(self, url: str, host: str) -> tuple[int, str]:
-        self._wait(host)
-        return self.fetch(url, self.r["user_agent"], self.r["timeout_secs"], self.r["max_bytes"])
+        """One fetch, plus at most one retry when there was no response at all (599: timeout/network)."""
+        for attempt in range(1 + int(self.r.get("network_retries", 1))):
+            self._wait(host)
+            status, text = self.fetch(url, self.r["user_agent"], self.r["timeout_secs"], self.r["max_bytes"])
+            if status != 599:
+                break
+        return status, text
 
     def allowed(self, url: str) -> bool:
         u = urlparse(url)
@@ -134,6 +140,53 @@ _SIGNALS = {
 }
 
 
+# Page-structure features (raw HTML) and conversion signals (visible text). Each true signal keeps its evidence.
+_HTML_FEATURES = {
+    "has_tel_link": re.compile(r"href\s*=\s*[\"']tel:", re.I),
+    "has_text_option": re.compile(r"href\s*=\s*[\"']sms:", re.I),
+    "has_contact_form": re.compile(r"<form\b(?:(?!</form>).)*?(?:type\s*=\s*[\"']?(?:email|tel)\b|<textarea\b)", re.I | re.S),
+    "has_mobile_viewport": re.compile(r"<meta[^>]+name\s*=\s*[\"']viewport", re.I),
+    "has_chat_widget": re.compile(r"intercom|drift\.com|tidio|livechat|tawk\.to|podium|birdeye|smith\.ai|ruby\.com|"
+                                  r"hubspot\.com/conversations|leadconnector|chatwidget|webchat", re.I),
+}
+_TEXT_SIGNALS = {
+    "after_hours_answering": re.compile(r"answering service|live (?:person|operator|agent|answering)|"
+                                        r"(?:answer|pick up)\w*\s+(?:\w+\s+){0,4}(?:24/7|24 hours|after[- ]hours|nights|weekends)|"
+                                        r"(?:24/7|after[- ]hours)\s+(?:\w+\s+){0,3}(?:dispatch|answer\w*|live)", re.I),
+    "slow_response": re.compile(r"(?:respond|return (?:your|all) calls?|get back to you|reply)\s+(?:\w+\s+){0,4}"
+                                r"(?:24|48|72|one|two|1|2|3) (?:business )?(?:hours?|days?)|leave (?:us )?a (?:voice ?mail|message)", re.I),
+    "multiple_locations": re.compile(r"\b(?:\d+|two|three|four|five|six|multiple) (?:locations|offices|branches|shops)\b", re.I),
+    "text_us": re.compile(r"\btext us\b|\btext (?:message )?(?:us )?at\b", re.I),
+}
+
+
+def page_features(page_html: str, url: str) -> dict:
+    """Structure + conversion signals for one page: {name: {value, evidence?, url}}."""
+    out = {}
+    for name, rx in _HTML_FEATURES.items():
+        m = rx.search(page_html or "")
+        out[name] = {"value": bool(m), "url": url} if m else {"value": False}
+    plain = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(re.sub(r"(?is)<(script|style)\b.*?</\1>", " ", page_html or ""))))
+    for name, rx in _TEXT_SIGNALS.items():
+        m = rx.search(plain)
+        out[name] = ({"value": True, "evidence": plain[max(0, m.start() - 40): m.end() + 40].strip(), "url": url}
+                     if m else {"value": False})
+    if out["text_us"]["value"]:
+        out["has_text_option"] = out["text_us"]
+    out.pop("text_us")
+    return out
+
+
+def merge_signals(*sigs: dict) -> dict:
+    """Signal is true if true on any page read (first evidence kept)."""
+    merged: dict = {}
+    for sg in sigs:
+        for k, v in (sg or {}).items():
+            if k not in merged or (v.get("value") and not merged[k].get("value")):
+                merged[k] = v
+    return merged
+
+
 def detect_signals(page_text: str, url: str) -> dict:
     """Simple signals, each with the literal evidence snippet and source URL. Only true signals carry evidence."""
     visible = re.sub(r"(?is)<(script|style|noscript)\b.*?</\1\s*>", " ", page_text)   # code is not site copy
@@ -146,6 +199,42 @@ def detect_signals(page_text: str, url: str) -> dict:
         else:
             sig[name] = {"value": False}
     return sig
+
+
+def research_site(crawler: Crawler, p: dict, cfg: dict) -> dict:
+    """Full site read for the enrichment pipeline: homepage + at most one contact page + at most one people page
+    (robots.txt honored, polite delay). Returns PATCH fields plus private keys `_people` and `_emails`
+    ([(email, page_url)]) that the pipeline uses and never writes as columns."""
+    from .contacts import extract_people
+    now = datetime.now(timezone.utc).isoformat()
+    site = p.get("website")
+    base = {"research_timestamp": now, "domain": domain_of(site) if site else p.get("domain")}
+    if not site or urlparse(site).scheme not in ("http", "https"):
+        return {**base, "status": "no_email", "signals": {"has_website": {"value": False}}, "_people": [], "_emails": []}
+    home = crawler.page(site)
+    if home is None:
+        return {**base, "status": "no_email", "signals": {"has_website": {"value": True, "url": site, "fetched": False}},
+                "_people": [], "_emails": []}
+    pages = [(site, home)]
+    contact = _link_to(home, site, cfg["research"]["extra_page_keywords"])
+    people_kw = cfg["research"].get("people_page_keywords") or []
+    people_pg = _link_to(home, site, people_kw) if people_kw else None
+    for extra in dict.fromkeys(u for u in (contact, people_pg) if u and u != site):
+        body = crawler.page(extra)
+        if body:
+            pages.append((extra, body))
+    signals = merge_signals(detect_signals(home, site), *[page_features(b, u) for u, b in pages])
+    signals["site_https"] = {"value": site.startswith("https://")}
+    emails, people = [], []
+    for u, b in pages:
+        emails += [(e, u) for e in find_emails(b) if e not in {x for x, _ in emails}]
+        people += extract_people(b, u)
+    site_email = pick_email([e for e, _ in emails], site)
+    fields = {**base, "signals": signals, "_people": people, "_emails": emails}
+    if site_email:
+        src = next(u for e, u in emails if e == site_email)
+        return {**fields, "status": "researched", "email": site_email, "email_source_url": src}
+    return {**fields, "status": "no_email"}
 
 
 def research_prospect(crawler: Crawler, p: dict, cfg: dict) -> dict:

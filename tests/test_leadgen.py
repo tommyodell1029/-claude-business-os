@@ -208,17 +208,22 @@ class ResearchTests(unittest.TestCase):
 
 class ScoreTests(unittest.TestCase):
     def test_formula(self):
-        sig = {"has_website": {"value": True}, "mentions_24_7": {"value": True}, "has_online_booking": {"value": False},
-               "mentions_after_hours_text": {"value": True}}
-        p = {"email": "a@b.test", "rating": 4.6, "review_count": 150, "signals": sig}
-        self.assertEqual(score.score_prospect(p), 100)
-        self.assertEqual(score.score_prospect({"signals": {}}), 0)
+        # Opportunity model (2026-10-06): conversion problems, grouped so one problem counts once.
+        sig = {"has_website": {"value": True}, "mentions_24_7": {"value": True, "evidence": "24/7 emergency service"},
+               "has_online_booking": {"value": False}, "after_hours_answering": {"value": False},
+               "has_chat_widget": {"value": False}, "has_tel_link": {"value": True}}
+        p = {"email": "a@b.test", "industry": "plumbing", "rating": 4.6, "review_count": 150, "signals": sig}
+        # missed_call_risk 30 (answering group) + no_online_booking 20 + high_ticket 10 + reviews 10
+        self.assertEqual(score.score_prospect(p, CFG), 70)
+        self.assertEqual(score.score_prospect({"signals": {}}, CFG), 0)
 
     def test_booking_points_only_when_site_was_read(self):
-        self.assertEqual(score.score_prospect({"signals": {"has_website": {"value": False}}}), 0)
+        self.assertEqual(score.score_prospect({"signals": {"has_website": {"value": True, "fetched": False},
+                                                           "has_online_booking": {"value": False}}}, CFG), 0)
 
     def test_statuses(self):
-        good = prospect(1, status="researched", signals={"has_website": {"value": True}, "has_online_booking": {"value": False}})
+        good = prospect(1, status="researched", signals={"has_website": {"value": True}, "has_online_booking": {"value": False},
+                                                         "after_hours_answering": {"value": False}, "has_tel_link": {"value": True}})
         low = prospect(2, status="researched", rating=3.0, review_count=1, signals={})
         noemail = prospect(3, status="no_email", email=None)
         store = FakeStore([good, low, noemail])

@@ -68,3 +68,52 @@ Runbook: `/outreach-daily` (`.claude/skills/outreach-daily/SKILL.md`). The Gmail
 - **topup.py**: imports a web-search seed, runs `research.py` on the new rows only, rescores, reports counts.
 - **Snapshot mode** (`db.SnapshotStore`, `--snapshot` / `--sql-out` on every command): when the session has no `SUPABASE_SERVICE_ROLE_KEY`, the session exports a JSON snapshot with the Supabase connector, the module runs on it and writes the resulting SQL (escaped literals, suppression `on conflict do nothing`, never deletes) for `execute_sql`.
 - Research fix 2026-10-04: script/style blocks are ignored for signals, and "within 24 hours" or toolbar text no longer counts as 24/7 service (one prospect, Elite AC, would otherwise have been emailed a false "24/7" fact; rescored to 25, below threshold).
+
+## Lead pipeline repair (2026-10-06)
+
+`uv run python -m leadgen <command>` (CLI in `leadgen/__main__.py`):
+
+| Command | What it does |
+|---|---|
+| `google-places-test` | One minimal real Places (New) request. Reports key present, auth, HTTP status, Google's error, the likely cause and the fix. Never prints the key. |
+| `scout [--city C] [--industry I] [--limit N] [--dry-run] [--source places,seed,csv] [--seed F] [--csv F] [--results R]` | discover → research → qualify → decision-maker → email → verify → score/tier → angle. Ends at `ready_for_approval` or `needs_contact_enrichment`. Never drafts or sends. |
+| `enrich [--limit N] [--ids a,b] [--results R] [--dry-run]` | Re-run research + enrichment on rows already in the database. |
+| `leads [--hot \| --good \| --research \| --needs-enrichment \| --ready]` | List leads by tier / enrichment status. |
+
+All commands take `--snapshot snap.json --sql-out writes.sql` when the session has no `SUPABASE_SERVICE_ROLE_KEY`.
+
+**Discovery** (`discovery.py`): providers in `config.yaml discovery.providers`, tried in order; a failed provider (e.g. Places 403) is
+reported and skipped. `places` (Places API New), `seed` (public web-search seeds built in-session, names + websites only), `csv`
+(columns name, website, industry, city, phone, address). Dedupe by place_id, domain, phone, name+city, against the database too.
+Directories/marketplaces and rows with no website and no phone are rejected. Industries and locations are config.
+
+**Places errors** (`source.classify_places_error`): `invalid_key`, `api_disabled`, `key_restricted`, `billing`, `permission_denied`,
+`quota` (never retried), `transient` (bounded retries), `malformed`. All become `PlacesError`, so discovery falls back instead of crashing.
+
+**Site research** (`research.research_site`): homepage + at most one contact page + at most one people page, robots.txt honored
+(unknown robots = no crawl, the lead becomes `pending`), one retry on network timeout only. Signals with evidence: tap-to-call, text
+option, contact form, mobile viewport, chat widget, after-hours answering, slow-response wording, multiple locations, https, booking, 24/7.
+
+**Decision-maker** (`contacts.py`): people named next to a buyer title on the business's own pages, plus Hunter/Apollo records.
+Rank: owner > founder > president/CEO > managing member > GM > VP/director of operations > operations/office manager > service manager
+> sales manager > customer-experience lead. Marketing, technicians, assistants are never chosen. Same person from two sources = corroborated.
+
+**Email waterfall** (`enrich.py`): company site address that matches the person → Hunter domain-search record → Hunter email-finder →
+Apollo people/match → `needs_contact_enrichment`. No address is ever constructed locally. Every candidate is verified by Hunter's
+verifier: `verified` (deliverable) / `likely` (accept-all) / `unknown` / `invalid` (never stored) / `generic` (info@, office@ …) /
+`personal` (free-mail). Only `verified` reaches `ready_for_approval`. Credits are spent only on qualified leads, capped by
+`enrichment.max_per_run`. Without API keys, results come from the session's Hunter/Apollo connectors via `--results`.
+
+**Score and tiers** (`score.py`): weights in `config.yaml score.weights`, grouped so one problem counts once (answering, booking,
+follow-up, cta, mobile, site, fit). Unknown = not scored; a great website with no after-hours answering still qualifies.
+HOT = score ≥ `hot_min` + decision-maker + verified email. GOOD = score ≥ `good_min` + decision-maker. RESEARCH = not enough evidence.
+REJECTED = suppressed / closed / no website and no phone.
+
+**Into the existing outreach engine:** `plan_day.eligible_new` (unchanged otherwise) now requires `enrichment_status =
+ready_for_approval` and `email_verification_status = verified` for first touches (`sending.require_verified_decision_maker`).
+Follow-ups, suppression, bounce/reply handling and owner approval are untouched. `draft.compose` greets the decision-maker by first
+name only when their address is verified and adds one evidence-based observation (`personalized_angle`), or stays neutral.
+
+**New columns** (`supabase/migrations/20261006000001_lead_enrichment.sql`, additive): domain, decision_maker_{name,title,profile,source,
+confidence}, email_source, email_verification_status, email_confidence, pain_points, lead_tier, recommended_offer, personalized_angle,
+discovery_sources, research_timestamp, last_enriched_at, enrichment_status, pipeline_log (the per-lead audit trail).

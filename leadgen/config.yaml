@@ -17,12 +17,64 @@ places:
     locksmith: locksmith
 research:
   delay_secs: 2.0                # polite delay between requests to the same host
-  timeout_secs: 10
+  timeout_secs: 15
+  network_retries: 1             # one retry only when a site gave no response at all (timeout / network)
   max_bytes: 400000
   user_agent: "LaunchPadLocalBot/1.0 (+https://launchpadlocal.org)"
-  extra_page_keywords: [contact, about]   # at most ONE of these pages is fetched per site
+  extra_page_keywords: [contact, about]   # at most ONE of these pages is fetched per site for the email
+  people_page_keywords: [about, team, leadership, our-story, meet, staff, owner]   # at most ONE extra page for people
 score:
-  threshold: 40                  # below -> status below_threshold
+  threshold: 40                  # below -> status below_threshold (used by the planner for legacy rows)
+  # Opportunity score: conversion problems first (missed calls, no after-hours answer, no booking, slow follow-up).
+  # Each signal is detected from evidence on the business's own site or Places data; unknown = not scored.
+  # Signals in the same `group` count once (the highest weight) so one underlying problem is never double-counted.
+  weights:
+    missed_call_risk:        {points: 30, group: answering}   # phone-driven + no evidence calls are answered after hours
+    no_after_hours_response: {points: 25, group: answering}
+    no_online_booking:       {points: 20, group: booking}
+    no_lead_follow_up:       {points: 20, group: follow_up}   # no detector yet: never scored without evidence
+    slow_response:           {points: 20, group: follow_up}   # "we will return your call within 24 hours", voicemail
+    no_call_text_cta:        {points: 15, group: cta}
+    poor_mobile_contact:     {points: 15, group: mobile}      # no mobile viewport tag on the site
+    no_lead_capture:         {points: 15, group: booking}     # no form and no booking path
+    no_crm_tracking:         {points: 10, group: follow_up}   # no detector yet
+    high_ticket_service:     {points: 10, group: fit_ticket}
+    high_review_volume:      {points: 10, group: fit_reviews} # >= review_volume_min reviews (Places only)
+    multiple_locations:      {points: 10, group: fit_locations}
+    weak_website:            {points: 5,  group: site}        # site does not load over https
+    no_website:              {points: 5,  group: site}
+  review_volume_min: 100
+  tiers:
+    hot_min: 40                  # HOT: score >= hot_min + decision-maker + VERIFIED professional email
+    good_min: 40                 # GOOD: score >= good_min + decision-maker (email incomplete)
+                                 # RESEARCH: fit but not enough evidence; REJECTED: closed/invalid/duplicate/suppressed
+industries:                      # discovery targets; query = search phrase; ticket/emergency = fit hints
+  hvac:          {query: HVAC contractor,        high_ticket: true,  emergency: true}
+  plumbing:      {query: plumber,                high_ticket: true,  emergency: true}
+  electrical:    {query: electrician,            high_ticket: true,  emergency: true}
+  roofing:       {query: roofing contractor,     high_ticket: true,  emergency: true}
+  restoration:   {query: water damage restoration, high_ticket: true, emergency: true}
+  garage_door:   {query: garage door repair,     high_ticket: true,  emergency: true}
+  locksmith:     {query: locksmith,              high_ticket: false, emergency: true}
+  pest_control:  {query: pest control,           high_ticket: false, emergency: false}
+  landscaping:   {query: landscaping company,    high_ticket: true,  emergency: false}
+  cleaning:      {query: cleaning service,       high_ticket: false, emergency: false}
+  auto_services: {query: auto repair shop,       high_ticket: true,  emergency: false}
+  contractors:   {query: general contractor,     high_ticket: true,  emergency: false}
+  remodeling:    {query: remodeling contractor,  high_ticket: true,  emergency: false}
+  med_spa:       {query: med spa,                high_ticket: true,  emergency: false}
+  dental:        {query: dentist,                high_ticket: true,  emergency: true}
+  legal:         {query: law firm,               high_ticket: true,  emergency: false}
+discovery:
+  locations: ["Jacksonville, FL"]          # add ZIPs or nearby cities, e.g. "32256", "Orange Park, FL"
+  providers: [places, seed, csv]           # tried in this order; a failed provider is logged and skipped
+  seed_glob: leadgen/seed/*.json           # public web-search seeds built in-session (names + websites only)
+enrichment:
+  max_per_run: 10                # cost control: provider lookups per run (only qualified businesses get one)
+  qualify_min: 40                # opportunity score needed BEFORE spending enrichment credits
+  providers: [company_site, hunter, apollo]   # email waterfall; hunter/apollo need HUNTER_API_KEY / APOLLO_API_KEY
+                                             # or results fed from the session connectors (leadgen enrich --results)
+  verifier: hunter               # every email is verified independently before it can reach the approval queue
 draft:
   top_n: 5
   platform: gmail
@@ -46,6 +98,7 @@ sending:
   pause_bounce_rate: 0.03        # pause everything if bounces / sends over the window is above this
   bounce_window_days: 30
   complaints_acknowledged: []    # outreach_events ids of complaints the owner reviewed; any other complaint pauses all sending
+  require_verified_decision_maker: true   # first touches only to verified decision-maker emails (2026-10-06)
   topup_send_days: 3             # keep enough eligible new prospects for this many upcoming send days
 replies:
   owner_flag_classes: [positive, interested, question, pricing, meeting]

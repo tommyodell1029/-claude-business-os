@@ -31,8 +31,47 @@ def log(msg: str) -> None:
     print(redact(msg), file=sys.stderr)
 
 
-class PlacesDisabled(Exception):
-    """403 from Places: API not enabled / key not allowed. Caller reports it as a blocker."""
+class PlacesError(Exception):
+    """Any Places failure the caller should report (and fall back from) instead of crashing. `kind` is one of
+    missing_key, invalid_key, api_disabled, key_restricted, billing, permission_denied, quota, bad_request,
+    transient, malformed."""
+
+    def __init__(self, kind: str, message: str, status: int | None = None, reason: str | None = None):
+        super().__init__(f"{kind}: {message}")
+        self.kind, self.status, self.reason = kind, status, reason
+
+
+class PlacesDisabled(PlacesError):
+    """403 family (not enabled / key not allowed / billing). Kept as its own type for older callers."""
+
+
+def classify_places_error(status: int, body: str) -> PlacesError:
+    """Google error JSON -> PlacesError. Never includes the key (Google does not echo it; redact() runs anyway)."""
+    try:
+        err = (json.loads(body) or {}).get("error") or {}
+    except (ValueError, AttributeError):
+        err = {}
+    gstatus = err.get("status") or ""
+    msg = redact(str(err.get("message") or body or "")[:300])
+    reasons = [d.get("reason") for d in err.get("details") or [] if isinstance(d, dict) and d.get("reason")]
+    reason = reasons[0] if reasons else None
+    text = f"{gstatus} {reason or ''} {msg}".upper()
+    if status == 429 or gstatus == "RESOURCE_EXHAUSTED" or "QUOTA" in text or "RATE_LIMIT" in text:
+        return PlacesError("quota", msg, status, reason)
+    if "API_KEY_INVALID" in text or "API KEY NOT VALID" in text:
+        return PlacesDisabled("invalid_key", msg, status, reason)
+    if "SERVICE_DISABLED" in text or "HAS NOT BEEN USED IN PROJECT" in text:
+        return PlacesDisabled("api_disabled", msg, status, reason)
+    if "API_KEY_SERVICE_BLOCKED" in text or "API_KEY_HTTP_REFERRER_BLOCKED" in text or "API_KEY_IP_ADDRESS_BLOCKED" in text \
+            or "ARE BLOCKED" in text:
+        return PlacesDisabled("key_restricted", msg, status, reason)
+    if "BILLING" in text:
+        return PlacesDisabled("billing", msg, status, reason)
+    if status in (401, 403) or gstatus == "PERMISSION_DENIED":
+        return PlacesDisabled("permission_denied", msg, status, reason)
+    if status >= 500 or status == 599:
+        return PlacesError("transient", msg, status, reason)
+    return PlacesError("bad_request", msg, status, reason)
 
 
 class CapReached(Exception):
@@ -64,18 +103,27 @@ def search_text(http: Http, api_key: str, cfg: dict, query: str, cap: CallCap, *
     def attempt() -> str:
         if not cap.take():
             raise CapReached()
-        return call(http, "places", "POST", p["endpoint"], headers, body)
+        try:
+            return call(http, "places", "POST", p["endpoint"], headers, body)
+        except RetryableError as e:
+            if e.status == 429:          # quota / rate limit: never retried, the run stops and falls back
+                raise classify_places_error(e.status, e.body) from e
+            raise
 
     try:
         text = retry(attempt, exceptions=(RetryableError,),
                      on_error=lambda e, n: log(f"places attempt {n} failed: {e}"))
     except CapReached:
         return None
-    except HttpError as e:
-        if e.status in (401, 403):
-            raise PlacesDisabled(redact(str(e))) from e
-        raise
-    return json.loads(text)
+    except HttpError as e:               # 4xx, or 5xx after the bounded retries
+        raise classify_places_error(e.status, e.body) from e
+    try:
+        data = json.loads(text)
+    except ValueError as e:
+        raise PlacesError("malformed", "response was not JSON") from e
+    if not isinstance(data, dict) or not isinstance(data.get("places", []), list):
+        raise PlacesError("malformed", "unexpected response shape")
+    return data
 
 
 def city_of(address: str | None) -> str | None:
@@ -166,8 +214,8 @@ def main(argv=None) -> int:
         return 2
     try:
         res = source(urllib_http, store, key, cfg, a.verticals.split(",") if a.verticals else None, a.max_calls, a.dry_run)
-    except PlacesDisabled as e:
-        log(f"BLOCKED: Places API refused the request: {e}")
+    except PlacesError as e:
+        log(f"BLOCKED: Places API refused the request: {e}. Run: uv run python -m leadgen google-places-test")
         return 3
     print(json.dumps(res))
     return 0

@@ -45,13 +45,38 @@ def _service_phrase(p: dict) -> str:
     return "emergency service"
 
 
+_ANGLE_ORDER = ("missed_call_risk", "no_after_hours_response", "slow_response", "no_online_booking", "no_lead_capture",
+                "no_call_text_cta", "poor_mobile_contact")
+
+
+def personal_angle(p: dict) -> str | None:
+    """One sentence from the evidence-backed pain points (leadgen/score.py), at most two observations.
+    None when there is no evidence: the email then stays neutral instead of inventing a problem."""
+    pains = {x.get("signal"): x for x in (p.get("pain_points") or []) if x.get("sentence")}
+    picked = [pains[s]["sentence"] for s in _ANGLE_ORDER if s in pains][:2]
+    if not picked:
+        return None
+    # missed_call_risk already says "no after-hours answering"; don't repeat it with the answering sentence
+    if len(picked) == 2 and "after hours" in picked[0] and "after-hours" in picked[1]:
+        picked = picked[:1]
+    return "Looking at your website, " + " and ".join(picked) + "."
+
+
+def greeting(p: dict) -> str:
+    """'Hi John,' only when the decision-maker is known AND the address we are writing to is verified as theirs."""
+    name = (p.get("decision_maker_name") or "").split()
+    if name and p.get("email_verification_status") == "verified" and p.get("email_source") not in (None, "company_site_generic"):
+        return f"Hi {name[0]},"
+    return "Hi there,"
+
+
 def compose(p: dict, address: str, sender: str = "Tommy\nLaunchPad Local") -> tuple[str, str]:
     """(subject, body). Uses only facts in the prospect row; 'I called you' only if called_after_hours is true."""
     name = p["name"]
     industry = _INDUSTRY.get(p.get("industry") or "", p.get("industry") or "local service")
     city = p.get("city") or ""
     where = f" in {city}" if city and city.lower() not in name.lower() else ""
-    lines = ["Hi there,", ""]
+    lines = [greeting(p), ""]
     if p.get("called_after_hours") is True:
         lines += [f"I called {name} after hours recently, and that is why I'm writing.", ""]
     facts = []
@@ -61,6 +86,11 @@ def compose(p: dict, address: str, sender: str = "Tommy\nLaunchPad Local") -> tu
         facts.append(f"your website mentions {_service_phrase(p)}")
     if facts:
         lines += [("I noticed that " + " and that ".join(facts) + "."), ""]
+    angle = p.get("personalized_angle") or personal_angle(p)
+    if angle and facts:                  # the line above already mentions the website
+        angle = angle.replace("Looking at your website, ", "From what I could see, ", 1)
+    if angle:
+        lines += [angle, ""]
     lines += [
         f"I run LaunchPad Local, a Jacksonville company that sets up AI phone receptionists for local {industry} businesses. "
         "The receptionist answers inbound calls, tells the caller it is an AI assistant and that the call may be recorded, "
