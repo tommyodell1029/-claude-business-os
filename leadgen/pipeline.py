@@ -6,6 +6,7 @@ owner approves every email. A dry run writes nothing at all.
 """
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timezone
 
 from agents.notify.http import Http
@@ -107,7 +108,10 @@ def scout(store, cfg: dict, env, http: Http, crawler: Crawler, *, industries=Non
     if not dry_run and rows:
         written = len(store.upsert_prospects([to_db(r) for r in rows]))
         if usage and hasattr(store, "log_cost"):
-            store.log_cost("lead_enrichment", len(usage), 0.0, {"calls": usage})
+            try:                         # the leads are already saved; a cost-log failure must not lose the run
+                store.log_cost("lead_enrichment", len(usage), 0.0, {"calls": usage})
+            except Exception as e:  # noqa: BLE001
+                print(f"cost log failed (leads saved): {str(e)[:160]}", file=sys.stderr)
     return {"discovery": disc["providers"], "duplicates_skipped": disc["duplicates"], "businesses": rows,
             "enrichment_calls": len(usage), "budget_used": budget.used, "written": written, "dry_run": dry_run,
             "providers_available": sorted(provs)}

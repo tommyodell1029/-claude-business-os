@@ -231,6 +231,17 @@ class EmailTests(unittest.TestCase):
         self.assertEqual(r["email_verification_status"], "unknown")
         self.assertEqual(r["enrichment_status"], "needs_contact_enrichment")
 
+    def test_untitled_namesake_is_owner_others_skipped(self):
+        named = [{"value": "john.smith@acme.test", "first_name": "John", "last_name": "Smith", "confidence": 99}]
+        v = {"john.smith@acme.test": {"status": "valid", "score": 100}}
+        r = enrich.enrich(lead(name="John Smith Plumbing"), [], [], {"hunter": FakeHunter(named, verify=v)},
+                          enrich.Budget(10), CFG)
+        self.assertEqual((r["decision_maker_name"], r["enrichment_status"]), ("John Smith", "ready_for_approval"))
+        self.assertIn("inferred", r["decision_maker_title"])
+        r = enrich.enrich(lead(name="Acme Plumbing"), [], [], {"hunter": FakeHunter(named, verify=v)},
+                          enrich.Budget(10), CFG)
+        self.assertEqual(r["enrichment_status"], "needs_contact_enrichment")    # untitled, not the namesake
+
     def test_free_mail_is_personal(self):
         self.assertEqual(contacts.classify_email("bob@gmail.com", "valid"), "personal")
 
@@ -358,3 +369,20 @@ class PipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StoreTests(unittest.TestCase):
+    def test_upsert_sends_one_request_per_key_set(self):
+        from leadgen.db import Store
+        sent = []
+
+        def http(method, url, headers, data):
+            body = json.loads(data)
+            sent.append(body)
+            self.assertEqual(len({tuple(sorted(r)) for r in body}), 1)    # PostgREST: all object keys must match
+            return 201, json.dumps(body)
+        st = Store({"SUPABASE_URL": "https://x.test", "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_x"}, http)
+        rows = [{"place_id": "a", "name": "A"}, {"place_id": "b", "name": "B", "email": "o@b.test"},
+                {"place_id": "c", "name": "C"}]
+        self.assertEqual(len(st.upsert_prospects(rows)), 3)
+        self.assertEqual(len(sent), 2)

@@ -29,7 +29,15 @@ class Store:
         research results are never clobbered by a re-run."""
         if not rows:
             return []
-        return self._rest("POST", "prospects?on_conflict=place_id", "resolution=merge-duplicates,return=representation", rows)
+        # PostgREST bulk inserts need identical keys in every object: send one request per key set.
+        groups: dict[tuple, list[dict]] = {}
+        for r in rows:
+            groups.setdefault(tuple(sorted(r)), []).append(r)
+        out: list[dict] = []
+        for batch in groups.values():
+            out += self._rest("POST", "prospects?on_conflict=place_id", "resolution=merge-duplicates,return=representation",
+                              batch) or []
+        return out
 
     def prospects(self, statuses: list[str], *, order: str = "score.desc.nullslast", limit: int = 500) -> list[dict]:
         s = ",".join(statuses)

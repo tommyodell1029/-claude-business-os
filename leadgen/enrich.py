@@ -190,6 +190,13 @@ def enrich(p: dict, site_people: list[dict], site_emails: list[tuple[str, str]],
                 log.append(f"hunter domain-search: {len(hp)} named contacts")
         except ProviderError as e:
             log.append(f"hunter failed: {e}")
+    # A contact with no title whose full name is the business's name ("Michael Adams" at Michael Adams Plumbing) is
+    # treated as the owner; the title says it is inferred, and emails never state a title anyway.
+    biz = " ".join((p.get("name") or "").lower().split())
+    for c in cands:
+        nm = " ".join((c.get("name") or "").lower().split())
+        if not (c.get("title") or "").strip() and len(nm.split()) >= 2 and nm in biz:
+            c["title"] = "Owner (inferred: business carries their name)"
     ranked = rank_candidates(cands)
     if not ranked:
         return {"enrichment_status": "needs_contact_enrichment", "_log": log + ["no decision-maker identified"],
