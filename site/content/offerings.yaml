@@ -63,7 +63,7 @@ services:
     name: Websites for Local Businesses
     summary: Fast, mobile-first marketing website with a contact form and click-to-call, built and hosted for the client.
     price: { build: 1497, build_with_growth_or_scale: 997, hosting_maintenance_monthly: 49 }
-    available: false            # client-website delivery workflow not built yet (phase after T6)
+    available: false            # DROPPED by owner 2026-10-08 (not offered)
 
 # ---------------------------------------------------------------- add-ons
 addons:

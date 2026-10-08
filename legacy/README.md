@@ -5,6 +5,7 @@ Code kept until the owner approves removal (phase T9). Nothing here is used by L
 | Path | Why it moved | Still runs? |
 |---|---|---|
 | `bos-freelance-ops/` | Previous Fiverr/Upwork freelance business OS (Python stdlib + SQLite CLI). Different business; not part of the receptionist product. | Yes: `cd legacy/bos-freelance-ops && python -m unittest tests.test_bos` (57 tests) and `python -m bos status`. |
+| `site-home-receptionist/page.tsx` | 2026-10-08: owner stopped selling the voice receptionist; the public homepage (pricing, demo number, contact form) was replaced by a neutral page. The voice agent, onboarding, terms and privacy stay live for prospects already emailed. | No (not compiled; outside `site/`) |
 | `bos-freelance-ops/CLAUDE.md` | The old operating manual. Merged into the root CLAUDE.md; conflicts are listed there. | n/a |
 | `bos-freelance-ops/demos/n8n_ai_support_desk.ts` | n8n is retired. See the note below. The credential reference IDs were replaced with placeholders. | No (n8n only) |
 

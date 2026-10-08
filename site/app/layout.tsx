@@ -4,9 +4,8 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "LaunchPad Local | AI phone receptionist for Jacksonville businesses", template: "%s | LaunchPad Local" },
-  description:
-    "An AI phone receptionist that answers every call for Jacksonville local service businesses, takes messages, transfers emergencies and emails you a summary.",
+  title: { default: "LaunchPad Local", template: "%s | LaunchPad Local" },
+  description: "LaunchPad Local, Jacksonville, Florida.",
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
@@ -20,10 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="wrap bar">
             <Link href="/" className="brand">LaunchPad Local</Link>
             <nav aria-label="Main">
-              <Link href="/#how">How it works</Link>
-              <Link href="/#pricing">Pricing</Link>
-              <Link href="/#faq">FAQ</Link>
-              <Link href="/#contact" className="btn small">Contact us</Link>
+              <a href="mailto:tommy@launchpadlocal.org" className="btn small">Contact</a>
             </nav>
           </div>
         </header>
@@ -32,7 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="wrap foot-grid">
             <div>
               <strong>LaunchPad Local</strong>
-              <p>AI phone receptionists for local service businesses in Jacksonville, FL.</p>
+              <p>Jacksonville, FL.</p>
               {mailing ? <p className="addr">{mailing}</p> : null}
             </div>
             <ul>
