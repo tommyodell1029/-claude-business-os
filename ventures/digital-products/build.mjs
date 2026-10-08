@@ -8,6 +8,7 @@ import { PAPER, css, doc, esc } from "./lib.mjs";
 import { PLANNERS } from "./planners.mjs";
 import { PACKS, promptCount } from "./prompts.mjs";
 import { GUMROAD, LISTINGS, gumroadDescription } from "./listings.mjs";
+import { PLANS, pick } from "./plans.mjs";
 
 const OUT = fileURLToPath(new URL("./out/", import.meta.url));
 const what = process.argv[2] ?? "all";
@@ -221,6 +222,128 @@ if (what === "images" || what === "all") {
       </div>
       <img class="paper" src="${b64(cover)}" style="position:absolute;width:250px;right:46px;bottom:-60px;transform:rotate(4deg)">`), `${imgDir}/thumbnail-600x600.jpg`, 600, 600);
     console.log(`gumroad images ${pk.slug}: 3`);
+  }
+}
+
+// ---------------------------------------------------------------- 14-day content plans (phone/iPad PDFs) + Pinterest pins
+const nl2br = (t) => esc(t).replace(/\n/g, "<br>");
+function planHtml(key) {
+  const P = PLANS[key];
+  const isPrompts = key === "prompts";
+  const cal = P.calendar.map(([task, tag], i) => `<tr><td><b>${esc(P.startLabel(i))}</b></td><td><span class="tag">${esc(tag)}</span> ${esc(task)}</td><td class="done"><i></i></td></tr>`).join("");
+  const posts = P.posts.map((p) => `<div class="card"><div class="cardhead"><span class="id">${esc(p.id)}</span><span class="where">${esc(p.where)}</span></div>${isPrompts ? "" : `<div class="ptitle">${esc(p.title)}</div>`}<div class="post">${nl2br(p.text)}</div>${p.video ? `<div class="note"><b>Video idea:</b> ${esc(p.video)}</div>` : ""}</div>`).join("");
+  const extras = isPrompts
+    ? `<h2 class="sec">Video scripts (30 seconds, screen recording)</h2><p class="note">Record your phone or computer screen while you use the prompt in ChatGPT or Claude. Show the real answer; do not edit it to look better.</p>${P.videos.map((v) => {
+        const [t, body] = pick(v.pack, v.n);
+        return `<div class="card"><div class="cardhead"><span class="id">${esc(v.id)}</span><span class="where">${esc(v.title)}</span></div><ol class="steps"><li><b>0-3 s, on-screen text:</b> "${esc(t)} in 30 seconds"</li><li><b>3-8 s:</b> paste this prompt with your example details filled in: <span class="mono">${esc(body)}</span></li><li><b>8-25 s:</b> scroll through the AI's real answer.</li><li><b>25-30 s, say:</b> "There are 30 of these in my pack. Link in bio."</li></ol></div>`;
+      }).join("")}`
+    : `<h2 class="sec">Pinterest pin copy</h2><p class="note">Upload the pin images from the <b>pins</b> folder. Link every pin to its Etsy listing. Two pins per planner, posted on different days.</p>${P.posts.map((p) => `<div class="card"><div class="cardhead"><span class="id">${esc(p.id)}</span><span class="where">${esc(p.title)}</span></div><p><b>Pin A title:</b> ${esc(p.pinA.title)}<br><b>Description:</b> ${esc(p.pinA.description)}</p><p><b>Pin B title:</b> ${esc(p.pinB.title)}<br><b>Description:</b> ${esc(p.pinB.description)}</p></div>`).join("")}`;
+  const metric = isPrompts ? ["Date", "Post ID", "Where (group / app)", "Link to post", "Views", "Sales"] : ["Date", "Post / pin", "Where", "Link", "Etsy views", "Sales"];
+  const rules = isPrompts
+    ? [["3+ sales across the packs", "Target hit. Mark the experiment validated. Raise the best seller to $19 and make a 4th pack for the audience that bought."],
+       ["1-2 sales", "Watch. Extend 7 days and put every post into the audience that clicked most (Gumroad > Analytics shows views per product)."],
+       ["0 sales, under 100 product views", "A traffic problem, not a product problem. Try new groups or video before killing anything."],
+       ["0 sales, 100+ views", "People see it but don't buy. Test a new cover or headline, or one free sample prompt, for 7 more days, then decide validated or killed."]]
+    : [["3+ sales", "Target hit. Mark the experiment validated. Make 2-3 more variations of the best-selling planner (Etsy rewards shops with more listings in a niche)."],
+       ["1-2 sales", "Watch. Extend 7 days; pin the top listing daily and improve the other listings' first photo."],
+       ["0 sales, under 200 Etsy views", "A traffic problem. Keep pinning (Pinterest can take weeks to pick up) and post in more groups."],
+       ["0 sales, 200+ views and favorites", "Interest but no buying. Test the price ($4.99) or a clearer first photo for 7 days, then decide validated or killed."]];
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(P.title)}</title><style>${css("letter", P.palette)}
+@page { size: 8.5in 11in; margin: 0.55in 0.6in; }
+@page:first { margin: 0; }
+.flow { font-size: 10.5pt; line-height: 1.5; }
+.flow h2.sec { font: 400 21pt/1.1 "DM Serif Display", serif; border-bottom: 2.5pt solid var(--accent); padding-bottom: 5pt; margin: 4pt 0 10pt; break-after: avoid; }
+.newpage { break-before: page; }
+.card { border: 0.75pt solid var(--rule); border-radius: 8pt; padding: 10pt 12pt; margin: 0 0 9pt; break-inside: avoid; }
+.cardhead { display: flex; gap: 8pt; align-items: baseline; margin-bottom: 5pt; }
+.cardhead .id { font: 700 9pt Inter; color: #fff; background: var(--accent); border-radius: 4pt; padding: 2pt 6pt; }
+.cardhead .where { font-size: 8.5pt; color: var(--soft); }
+.ptitle { font-weight: 700; margin-bottom: 4pt; }
+.post { background: var(--tint); border-radius: 6pt; padding: 8pt 10pt; font-size: 10pt; }
+.mono { display: block; background: var(--tint); border-radius: 5pt; padding: 5pt 8pt; margin-top: 3pt; font-size: 9pt; }
+.steps { margin: 0; padding-left: 16pt; } .steps li { margin-bottom: 4pt; }
+table.cal { width: 100%; border-collapse: collapse; font-size: 9.5pt; } table.cal td { border-bottom: 0.75pt solid var(--faint); padding: 7pt 5pt; vertical-align: top; }
+table.cal td:first-child { width: 1.15in; white-space: nowrap; } table.cal td.done { width: 0.35in; } table.cal td.done i { display: inline-block; width: 11pt; height: 11pt; border: 1pt solid var(--accent); border-radius: 2pt; }
+table.cal tr { break-inside: avoid; }
+.tag { font: 700 7pt Inter; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border: 0.9pt solid var(--accent); border-radius: 99pt; padding: 1pt 5pt; margin-right: 3pt; }
+.rule { display: grid; grid-template-columns: 1.7in 1fr; gap: 10pt; border-bottom: 0.75pt solid var(--faint); padding: 8pt 0; break-inside: avoid; } .rule b { color: var(--accent); }
+ul.dos { padding-left: 16pt; margin: 0 0 10pt; } ul.dos li { margin-bottom: 4pt; }
+</style></head><body>
+<section class="page cover"><div><div class="band"></div><div class="pill">${isPrompts ? "Gumroad · Oct 8 to Oct 22, 2026" : "Etsy + Pinterest · 14 days from launch"}</div><h1 style="margin-top:16pt">${esc(P.title)}</h1>
+<div class="sub">${isPrompts ? "Goal: 3 sales across the three $12 prompt packs in 14 days. Every post gives away one genuinely useful prompt, then mentions the pack." : "Goal: 3 sales across the five planners in 14 days. Pinterest brings planner buyers; groups and short videos add the first visitors."}</div></div>
+<div><div style="font:700 8pt Inter;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8pt">Inside</div><ul><li>Rules that keep posts welcome</li><li>14-day calendar with checkboxes</li><li>${P.posts.length} ready-to-post texts</li><li>${isPrompts ? "3 video scripts" : "Pinterest pin copy (pin images in the pins folder)"}</li><li>Results tracker</li><li>Day 14 decision rules</li></ul></div>
+<div class="note">Replace [GUMROAD LINK] / [ETSY LINK] with your real links before posting. Record every sale in Money OS → Revenue so the experiment shows real numbers.</div></section>
+<div class="flow">
+<h2 class="sec">Rules that keep posts welcome</h2>
+<ul class="dos"><li><b>Read each group's rules first.</b> Many only allow promotion on certain days or in a pinned thread. Follow them; a ban costs more than one post.</li>
+<li><b>Give first.</b> Every post includes something useful on its own. The link is one line at the end.</li>
+<li><b>Say it's yours.</b> "I made this" is honest and works better than pretending to be a customer.</li>
+<li><b>No fake claims:</b> no invented sales numbers, reviews, "best seller" or fake deadlines.</li>
+<li><b>Answer every comment</b> within a day. Questions in comments often turn into sales.</li>
+<li><b>One post per group per week</b> at most. Spread posts across groups.</li></ul>
+<h2 class="sec">14-day calendar</h2>
+<table class="cal">${cal}</table>
+<h2 class="sec newpage">Ready-to-post texts</h2>
+${posts}
+${extras}
+<h2 class="sec newpage">Results tracker</h2>
+<p class="note">Fill this in as you go (or keep it in your Notes app). Views: ${isPrompts ? "Gumroad > Analytics" : "Etsy > Shop Manager > Stats"}.</p>
+<table class="t" style="height:auto">${`<tr>${metric.map((m, i) => `<th style="width:${[11, 11, 26, 26, 13, 13][i]}%">${m}</th>`).join("")}</tr>`}${Array.from({ length: 24 }, () => `<tr style="height:24pt">${metric.map(() => "<td>&nbsp;</td>").join("")}</tr>`).join("")}</table>
+<h2 class="sec newpage">Day 14 decision rules</h2>
+${rules.map(([a, b]) => `<div class="rule"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join("")}
+<p class="note" style="margin-top:12pt">Decide from recorded numbers only. Then mark the experiment validated or killed in Money OS → Experiments, with a one-line result note.</p>
+</div></body></html>`;
+}
+
+if (what === "plan-preview") {
+  for (const key of Object.keys(PLANS)) {
+    const p = await browser.newPage({ viewport: { width: 816, height: 1056 } });
+    await p.setContent(planHtml(key), { waitUntil: "load" });
+    await p.evaluate(() => document.fonts.ready);
+    await p.screenshot({ path: `${process.env.PREVIEW_DIR}/plan-${key}.png`, fullPage: true });
+    await p.close();
+  }
+}
+
+if (what === "plans" || what === "all") {
+  mkdirSync(`${OUT}content-plans`, { recursive: true });
+  for (const key of Object.keys(PLANS)) {
+    const p = await browser.newPage();
+    await p.setContent(planHtml(key), { waitUntil: "load" });
+    await p.evaluate(() => document.fonts.ready);
+    const file = `${OUT}content-plans/${key === "prompts" ? "prompt-packs-content-plan" : "etsy-planners-content-plan"}.pdf`;
+    await p.pdf({ path: file, width: "8.5in", height: "11in", printBackground: true, preferCSSPageSize: true });
+    await p.close();
+    console.log(`content plan ${key}`);
+  }
+}
+
+if (what === "pins" || what === "all") {
+  for (const pl of PLANNERS) {
+    const L = LISTINGS[pl.slug];
+    const dir = `${OUT}planners/${pl.slug}`;
+    const pinDir = `${OUT}pins/${pl.slug}`;
+    mkdirSync(pinDir, { recursive: true });
+    const pages = readdirSync(`${dir}/pages`).sort().map((f) => `${dir}/pages/${f}`);
+    await shot(shell(pl.palette, `
+      <div style="position:absolute;left:70px;right:70px;top:80px">
+        <div style="font-size:22px"><span class="chip" style="border-width:2px">Printable · Undated</span></div>
+        <h1 class="h" style="font-size:78px;margin-top:22px">${esc(pl.title)}</h1>
+        <p style="font-size:30px;line-height:1.35;color:#3c424c;margin-top:20px">${esc(L.heroLine)}</p>
+      </div>
+      <img class="paper" src="${b64(pages[L.detailPage])}" style="position:absolute;width:700px;left:150px;top:560px;transform:rotate(-2deg)">
+      <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:var(--accent);color:#fff;font:700 34px Inter;display:flex;align-items:center;justify-content:center">Instant download · US Letter + A4</div>`), `${pinDir}/pin-A-1000x1500.jpg`, 1000, 1500);
+    const thumbs = pages.slice(1, 9);
+    await shot(shell(pl.palette, `
+      <div style="position:absolute;left:60px;right:60px;top:60px">
+        <h1 class="h" style="font-size:64px">${pl.pages.length - 1} printable pages</h1>
+        <p style="font-size:30px;color:#3c424c;margin-top:12px">${esc(pl.title)}</p>
+      </div>
+      <div style="position:absolute;left:60px;right:60px;top:300px;display:grid;grid-template-columns:repeat(3,1fr);gap:56px 26px">
+        ${thumbs.slice(0, 6).map((f, i) => `<figure style="margin:0"><img class="paper" src="${b64(f)}" style="width:100%"><figcaption style="font-size:20px;font-weight:600;margin-top:10px;line-height:1.25">${esc(pl.pages[i + 1].name)}</figcaption></figure>`).join("")}
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:var(--accent);color:#fff;font:700 34px Inter;display:flex;align-items:center;justify-content:center">Instant download · US Letter + A4</div>`), `${pinDir}/pin-B-1000x1500.jpg`, 1000, 1500);
+    console.log(`pins ${pl.slug}: 2`);
   }
 }
 

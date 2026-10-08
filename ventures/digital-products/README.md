@@ -31,6 +31,25 @@ Prompt packs (30 prompts each):
 - `real-estate-agent-prompts`
 - `etsy-seller-prompts`
 
+## Content plans and Pinterest pins (`out/content-plans/`, `out/pins/`)
+
+**`prompt-packs-content-plan.pdf`** covers Oct 8 to Oct 22, 2026 and includes:
+- posting rules
+- a 14-day calendar with checkboxes
+- 12 ready-to-post texts, each built on a real prompt from the packs
+- 3 screen-recording video scripts
+- a results tracker
+- the day-14 decision rules
+
+**`etsy-planners-content-plan.pdf`** covers 14 days from the Etsy launch and includes:
+- a calendar with Pinterest setup
+- 5 group posts
+- pin titles and descriptions
+- a tracker
+- the decision rules
+
+**`out/pins/<slug>/`** holds two 1000×1500 Pinterest pins per planner, rendered from the real pages. Rebuild with `node build.mjs plans` and `node build.mjs pins`.
+
 ## Honesty rules used
 - **Images:** every listing image is a render of the real page in the file. There are no fake mockups, reviews, "best seller" badges or sales claims.
 - **Disclosure:** descriptions say the designs were made with the help of AI tools. Etsy asks for that disclosure; check the listing form and its creativity standards when you publish.
