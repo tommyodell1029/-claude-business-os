@@ -3,3 +3,4 @@ out/**/pages/
 out/*.zip
 out/.built
 out/videos/tmp/
+out/videos/*.txt
