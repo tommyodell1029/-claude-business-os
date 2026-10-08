@@ -72,5 +72,28 @@ export const OS_CONFIG = {
         "max_days_to_first_dollar": 14
       }
     }
+  },
+  "radar": {
+    "role": "small",
+    "max_searches": 2,
+    "max_opportunities": 4,
+    "max_tokens": 2500,
+    "categories": {
+      "ai_tools": "AI tools and AI utilities that individuals or small businesses pay for",
+      "ai_income": "ways people earn income using AI (services, freelancing, side businesses)",
+      "ai_shopping": "AI shopping assistants, deal finding and product comparison",
+      "affiliate": "affiliate programs and affiliate content businesses with recurring commissions",
+      "tiktok_commerce": "TikTok Shop and short-video commerce",
+      "digital_products": "digital products (templates, guides, courses, printables) that sell online",
+      "creator_tools": "tools and services for content creators",
+      "job_income_tools": "job search, resume, interview and income tools for workers",
+      "media_newsletters": "niche media and paid or sponsored newsletters",
+      "micro_saas": "micro-SaaS for small, underserved niches and emerging consumer problems"
+    }
+  },
+  "research": {
+    "role": "small",
+    "max_searches": 5,
+    "max_tokens": 3000
   }
 } as const;

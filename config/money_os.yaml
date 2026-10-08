@@ -63,3 +63,29 @@ score:
     high_score_min: 7.0
     strong_evidence: { min_confidence: 0.6, min_domains: 3 }
     fast_validation: { max_validation_difficulty: 3, max_days_to_first_dollar: 14 }
+
+# Money Radar (site/lib/os/research.ts): one owner-triggered sweep walks these categories, one model call each with
+# web search capped at max_searches. No category is assumed to win: ranking only comes from evidence + scores.
+# Full sweep cap = categories x max_searches = 20 searches ($0.20 in search fees) plus tokens, inside the daily budget.
+radar:
+  role: small
+  max_searches: 2
+  max_opportunities: 4
+  max_tokens: 2500
+  categories:
+    ai_tools: AI tools and AI utilities that individuals or small businesses pay for
+    ai_income: ways people earn income using AI (services, freelancing, side businesses)
+    ai_shopping: AI shopping assistants, deal finding and product comparison
+    affiliate: affiliate programs and affiliate content businesses with recurring commissions
+    tiktok_commerce: TikTok Shop and short-video commerce
+    digital_products: digital products (templates, guides, courses, printables) that sell online
+    creator_tools: tools and services for content creators
+    job_income_tools: job search, resume, interview and income tools for workers
+    media_newsletters: niche media and paid or sponsored newsletters
+    micro_saas: micro-SaaS for small, underserved niches and emerging consumer problems
+
+# Deep research on one opportunity: evidence for demand, competition, pricing, affiliate options, trend.
+research:
+  role: small
+  max_searches: 5
+  max_tokens: 3000

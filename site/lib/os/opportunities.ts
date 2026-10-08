@@ -68,7 +68,7 @@ export async function createOpportunity(db: Db, input: NewOpportunity): Promise<
   if (existing.length) return { created: false, opportunity: existing[0] };
   const row = await db.insert<OppRow>("opportunities", {
     slug: v.value.slug, name: v.value.name, category: v.value.category,
-    problem: v.value.problem || null, audience: v.value.audience || null, monetization: v.value.monetization,
+    problem: v.value.problem || null, audience: v.value.audience || null, monetization: v.value.monetization, status: "discovered",
   });
   return { created: true, opportunity: row };
 }

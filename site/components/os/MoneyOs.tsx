@@ -95,12 +95,59 @@ function OppCard({ o, onOpen }: { o: Opp; onOpen: (id: string) => void }) {
   );
 }
 
+type RadarStep = { category: string; text: string; bad?: boolean };
+
+/** Money Radar: walks the categories one request at a time, stops at the first budget refusal. */
+function RadarPanel({ onDone }: { onDone: () => void }) {
+  const info = useView("radar", 0);
+  const [running, setRunning] = useState(false);
+  const [steps, setSteps] = useState<RadarStep[]>([]);
+  const run = async (cats: { key: string }[], worst: number, searches: number) => {
+    if (!window.confirm(`Money Radar searches up to ${searches} times across ${cats.length} categories. Worst case about $${worst.toFixed(2)}, always inside today's AI budget. Run it?`)) return;
+    setRunning(true);
+    setSteps([]);
+    for (const c of cats) {
+      const r = await post("os/radar", { category: c.key });
+      const b = r.body;
+      const label = c.key.replace(/_/g, " ");
+      if (r.status === 200 && b.ok) {
+        const note = b.cached ? " (reused from cache, $0)" : ` · $${Number(b.spentUsd ?? 0).toFixed(3)}`;
+        setSteps((s) => [...s, { category: c.key, text: `${label}: ${b.created} new, ${b.existing} known, ${b.evidenceAdded} evidence${Number(b.evidenceDropped) ? `, ${b.evidenceDropped} unsourced dropped` : ""}${note}` }]);
+      } else {
+        setSteps((s) => [...s, { category: c.key, text: `${label}: ${String(b.error ?? `HTTP ${r.status}`)}`, bad: true }]);
+        if (r.status === 401 || /budget|cap/i.test(String(b.error ?? ""))) break;
+      }
+    }
+    setRunning(false);
+    onDone();
+  };
+  return (
+    <div className="os-card">
+      <h3 className="os-h3">Money Radar</h3>
+      <Shell load={info}>
+        {(d) => {
+          const cats = list<{ key: string; description: string }>(d.categories) ?? [];
+          return (
+            <>
+              <p className="os-dim">Searches the web in {cats.length} categories for opportunities with real evidence. Every source link is checked against the actual search results.</p>
+              <button className="os-btn" disabled={running} onClick={() => void run(cats, Number(d.worstCaseUsd), Number(d.maxSearches))}>{running ? "Running…" : "Run Money Radar"}</button>
+            </>
+          );
+        }}
+      </Shell>
+      {steps.map((s) => <p key={s.category} className={`os-line${s.bad ? " os-warn" : ""}`}>{s.text}</p>)}
+    </div>
+  );
+}
+
 function Opportunities({ nonce, onOpen }: { nonce: number; onOpen: (id: string) => void }) {
   const [status, setStatus] = useState("");
-  const load = useView(`opportunities${status ? `?status=${encodeURIComponent(status)}` : ""}`, nonce);
+  const [bump, setBump] = useState(0);
+  const load = useView(`opportunities${status ? `?status=${encodeURIComponent(status)}` : ""}`, nonce * 1000 + bump);
   const statuses = ["", "discovered", "researched", "validation_ready", "validating", "validated", "live", "killed"];
   return (
     <>
+      <RadarPanel onDone={() => setBump((b) => b + 1)} />
       <div className="os-filters" role="group" aria-label="Filter by status">
         {statuses.map((s) => (
           <button key={s || "all"} className={`os-pill${status === s ? " on" : ""}`} onClick={() => setStatus(s)}>{s ? s.replace(/_/g, " ") : "all active"}</button>
@@ -110,10 +157,37 @@ function Opportunities({ nonce, onOpen }: { nonce: number; onOpen: (id: string) 
         {(d) => {
           const items = list<Opp>(d.items);
           if (!items) return <p className="os-warn">{UNAVAILABLE}</p>;
-          if (!items.length) return <p className="os-dim">No opportunities yet. Money Radar (next build slice) will add them with evidence.</p>;
+          if (!items.length) return <p className="os-dim">No opportunities yet. Run Money Radar to find some with evidence.</p>;
           return items.map((o) => <OppCard key={o.id} o={o} onOpen={onOpen} />);
         }}
       </Shell>
+    </>
+  );
+}
+
+/** Deep research for one opportunity (owner-triggered, budgeted, cached). */
+function ResearchButton({ id, researched, onDone }: { id: string; researched: boolean; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; bad?: boolean } | null>(null);
+  const go = async () => {
+    const force = researched;
+    if (force && !window.confirm("Research again? This runs new searches (about $0.10 to $0.25) instead of reusing the saved result.")) return;
+    setBusy(true);
+    setMsg(null);
+    const r = await post("os/research", { id, force });
+    setBusy(false);
+    const b = r.body;
+    if (r.status === 200 && b.ok) {
+      setMsg({ text: b.cached ? "Reused saved research ($0)." : `${b.evidenceAdded} evidence added, ${b.scored} dimensions scored${Number(b.evidenceDropped) ? `, ${b.evidenceDropped} unsourced dropped` : ""} · $${Number(b.spentUsd ?? 0).toFixed(3)}` });
+      onDone();
+    } else {
+      setMsg({ text: String(b.error ?? `HTTP ${r.status}`), bad: true });
+    }
+  };
+  return (
+    <>
+      <button className="os-btn" disabled={busy} onClick={() => void go()}>{busy ? "Researching… (up to a minute)" : researched ? "Research again" : "Research this"}</button>
+      {msg ? <p className={msg.bad ? "os-warn" : "os-dim"} role="status">{msg.text}</p> : null}
     </>
   );
 }
@@ -123,7 +197,8 @@ type Ev = { kind: string; claim: string; source_url: string | null; source_domai
 const BAD = new Set(["competition", "startup_cost", "tech_difficulty", "acquisition_difficulty"]);
 
 function OpportunityDetail({ id, nonce, onBack }: { id: string; nonce: number; onBack: () => void }) {
-  const load = useView(`opportunity?id=${encodeURIComponent(id)}`, nonce);
+  const [bump, setBump] = useState(0);
+  const load = useView(`opportunity?id=${encodeURIComponent(id)}`, nonce * 1000 + bump);
   return (
     <>
       <button className="os-link" onClick={onBack}>← All opportunities</button>
@@ -148,6 +223,7 @@ function OpportunityDetail({ id, nonce, onBack }: { id: string; nonce: number; o
                 </div>
                 {o.problem ? <p><span className="os-dim">Problem: </span>{String(o.problem)}</p> : null}
                 {o.audience ? <p><span className="os-dim">Audience: </span>{String(o.audience)}</p> : null}
+                <ResearchButton id={String(o.id)} researched={o.status !== "discovered"} onDone={() => setBump((b) => b + 1)} />
               </div>
               <div className="os-card">
                 <h3 className="os-h3">Why it scored this way</h3>

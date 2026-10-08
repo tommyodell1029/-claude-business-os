@@ -202,3 +202,13 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - Tiles: AI cost today, opportunities (excluding killed), active experiments (validating + live), revenue this month (live Stripe payments + revenue entries; sandbox excluded), prospect replies (7 days), system health. Briefing gains a `money_os` block; agency call/lead counts stay in the briefing for the remaining prospects.
 - `/os` has its own sign-in (email + code) and home-screen manifest; ULTRON links to Money OS.
 - Tests: site 110/110 (3 new in `lib/jarvis/ultron.test.ts`), typecheck, lint, build clean.
+
+## Money OS slice 4: research engine + Money Radar: 2026-10-08 (orchestrator, Opus)
+- `site/lib/os/research.ts`: Anthropic Messages API with the basic web search tool (`web_search_20250305`, `max_uses` from `config/money_os.yaml` `radar` / `research`), runtime role `small`. Handles `pause_turn` (up to 2 continuations). Every request is logged to `ai_usage` with tokens and `web_searches` ($0.01 each).
+- Budget: before each call, a worst-case cost (searches × 12k input tokens + max output, ×2, + search fees) must fit both the $0.25 per-run cap and today's remaining $2; otherwise it refuses without calling (`budget_stop` activity, `research_runs.status = budget_refused`).
+- Grounding: evidence is kept only when its `source_url` matches a result returned by this call's own searches (host + path). Opportunities with no grounded evidence are not created. Research stores model-proposed sub-scores only for known dimensions, only after `validateProposal`, and only if at least one piece of evidence is grounded; the overall score, confidence and labels are always recomputed in code.
+- Cache: `research_runs` by query hash, 14 days; a cached run costs $0. "Re-research" forces a fresh run after a confirm.
+- Routes: `GET/POST /api/jarvis/os/radar` (one category per POST; 10 categories), `POST /api/jarvis/os/research` (`{id}`), owner-only + origin check, 60 s max.
+- UI: Opportunities tab has "Run Money Radar" (confirm → sweeps categories one at a time, stops on budget/cap); detail has "Research".
+- Open: Haiku 4.5 support for web search is unconfirmed (no Anthropic key in the build container). If the first live run returns a 400, point `radar.role` / `research.role` at a model that supports it.
+- Tests: site 118/118 (8 new in `lib/os/research.test.ts`), typecheck, lint, build + client bundle check clean; Python 283/283.
