@@ -9,7 +9,7 @@ export function normalizeUtterance(text: string): string {
     .toLowerCase()
     .replace(/[’']/g, "")
     .replace(/[^a-z\s]/g, " ")
-    .replace(/\b(jarvis|sir|okay|ok)\b/g, " ")
+    .replace(/\b(jarvis|ultron|sir|okay|ok)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

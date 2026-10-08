@@ -11,10 +11,10 @@ import type { OrbState } from "./Orb";
 type Line = { id: number; who: "you" | "jarvis" | "system"; text: string };
 type Pending = { id: string; tool: string; summary: string; expiresAt: string };
 type Tiles = {
-  calls_today: number | null;
-  urgent_today: number | null;
-  leads_7d: number | null;
-  drafts_pending: number | null;
+  ai_cost_today: number | null;
+  opportunities: number | null;
+  experiments_active: number | null;
+  revenue_month: number | null;
   replies_7d: number | null;
   health: { ok: number; total: number; failing: string[] } | null;
 };
@@ -85,7 +85,7 @@ function SignIn({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="jv-signin">
-      <h1>JARVIS</h1>
+      <h1>ULTRON</h1>
       <p className="jv-sub">Owner access only.</p>
       {step === "email" ? (
         <form onSubmit={send}>
@@ -396,12 +396,12 @@ export default function Hud() {
     <div className="jv" data-reduced={reducedMotion ? "1" : "0"}>
       <div className="jv-grid" aria-hidden="true" />
       {auth === "checking" ? <p className="jv-center">Initialising…</p> : null}
-      {auth === "unconfigured" ? <p className="jv-center">Jarvis is not configured yet. Owner setup steps are in docs/JARVIS_SPEC.md.</p> : null}
+      {auth === "unconfigured" ? <p className="jv-center">ULTRON is not configured yet. Owner setup steps are in docs/JARVIS_SPEC.md.</p> : null}
       {auth === "signin" ? <SignIn onDone={() => void checkSession()} /> : null}
       {auth === "ready" ? (
         <div className="jv-shell">
           <header className="jv-head">
-            <span className="jv-title">J.A.R.V.I.S.</span>
+            <span className="jv-title">U.L.T.R.O.N.</span>
             <span className="jv-head-actions">
               <a className="jv-link" href="/os">Money OS</a>
               <button className="jv-link" onClick={() => setMuted((m) => !m)} aria-pressed={muted}>{muted ? "Voice off" : "Voice on"}</button>
@@ -410,11 +410,11 @@ export default function Hud() {
           </header>
 
           <section className="jv-tiles" aria-label="Live status">
-            <Tile label="Calls today" value={tiles ? tiles.calls_today : null} />
-            <Tile label="Urgent today" value={tiles ? tiles.urgent_today : null} alert={!!tiles?.urgent_today} />
-            <Tile label="Leads · 7 days" value={tiles ? tiles.leads_7d : null} />
-            <Tile label="Drafts awaiting approval" value={tiles ? tiles.drafts_pending : null} />
-            <Tile label="Replies · 7 days" value={tiles ? tiles.replies_7d : null} />
+            <Tile label="AI cost today" value={tiles && tiles.ai_cost_today !== null ? `$${tiles.ai_cost_today.toFixed(4)}` : null} />
+            <Tile label="Opportunities" value={tiles ? tiles.opportunities : null} />
+            <Tile label="Active experiments" value={tiles ? tiles.experiments_active : null} />
+            <Tile label="Revenue · this month" value={tiles && tiles.revenue_month !== null ? `$${tiles.revenue_month.toFixed(2)}` : null} />
+            <Tile label="Prospect replies · 7 days" value={tiles ? tiles.replies_7d : null} alert={!!tiles?.replies_7d} />
             <Tile label="System health" value={health} alert={!!tiles?.health?.failing.length} />
           </section>
 
@@ -439,7 +439,7 @@ export default function Hud() {
             {lines.length === 0 ? <p className="jv-hint">Hold the button and speak, or try “Brief me”.</p> : null}
             {lines.map((l) => (
               <p key={l.id} className={`jv-line ${l.who}`}>
-                <span className="jv-who">{l.who === "you" ? "YOU" : l.who === "jarvis" ? "JARVIS" : "SYSTEM"}</span>
+                <span className="jv-who">{l.who === "you" ? "YOU" : l.who === "jarvis" ? "ULTRON" : "SYSTEM"}</span>
                 {l.text}
               </p>
             ))}
@@ -470,7 +470,7 @@ export default function Hud() {
                 void ask(t);
               }}
             >
-              <input aria-label="Type to Jarvis" placeholder="Or type…" maxLength={2000} value={typed} onChange={(e) => setTyped(e.target.value)} />
+              <input aria-label="Type to ULTRON" placeholder="Or type…" maxLength={2000} value={typed} onChange={(e) => setTyped(e.target.value)} />
               <button className="jv-btn small">Send</button>
             </form>
           </footer>

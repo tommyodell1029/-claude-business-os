@@ -102,7 +102,7 @@ test("a model turn that calls a write tool returns a pending action, not a done 
   assert.equal(out.reply, "Shall I approve it, sir?");
   assert.equal(fx.tables.outreach_events[0].review_status, "pending");
   assert.equal(bodies[0].model, MODELS_CONFIG.models.small);
-  assert.match(String(bodies[0].system), /Jarvis/);
+  assert.match(String(bodies[0].system), /ULTRON/);
 });
 
 test("speech helpers: audio type allow-list, speakable text, voice fallback", () => {

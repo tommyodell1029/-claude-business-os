@@ -1,6 +1,6 @@
 {
-  "name": "Jarvis",
-  "short_name": "Jarvis",
+  "name": "ULTRON",
+  "short_name": "ULTRON",
   "description": "Private assistant for the LaunchPad Local owner.",
   "start_url": "/jarvis",
   "scope": "/jarvis",

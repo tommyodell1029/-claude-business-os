@@ -195,3 +195,10 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - AI Cost: today, month, tokens, daily budget meter, by task, per opportunity, per experiment (month starts at ET midnight).
 - Fix found by the mobile check: a global `nav a { display: none }` rule for the old marketing header (≤600px) hid the tabs on phones; scoped to `header.top nav`.
 - Tests: site 107/107 (5 new in `lib/os/views.test.ts`), typecheck, lint, build clean. Playwright on the production build with fixture data at 390×844 (iPhone) and 820×1180 (iPad): all 8 screens render, no horizontal scroll, 40px tabs, no page errors, signed-out prompt shown.
+
+## Jarvis → ULTRON: 2026-10-08 (owner request)
+- Owner: "make Jarvis ULTRON until we can make ULTRON in StarNet." Same app, sign-in, voice (ElevenLabs voice unchanged), confirm gate and URL (`/jarvis`, so the installed home-screen app keeps working); visible name, sign-in, transcript label, page title and home-screen name are now ULTRON.
+- Persona: ULTRON, command center of the Money OS; told the receptionist business is wound down except the 9 emailed prospects. Iron Man film reference removed. Voice confirmation accepts "ULTRON, do it" (and still "Jarvis, do it").
+- Tiles: AI cost today, opportunities (excluding killed), active experiments (validating + live), revenue this month (live Stripe payments + revenue entries; sandbox excluded), prospect replies (7 days), system health. Briefing gains a `money_os` block; agency call/lead counts stay in the briefing for the remaining prospects.
+- `/os` has its own sign-in (email + code) and home-screen manifest; ULTRON links to Money OS.
+- Tests: site 110/110 (3 new in `lib/jarvis/ultron.test.ts`), typecheck, lint, build clean.

@@ -3,11 +3,11 @@ import type { ReactNode } from "react";
 import "./jarvis.css";
 
 export const metadata: Metadata = {
-  title: { absolute: "Jarvis" },
+  title: { absolute: "ULTRON" },
   description: "Private assistant for the LaunchPad Local owner.",
   robots: { index: false, follow: false },
   manifest: "/jarvis.webmanifest",
-  appleWebApp: { capable: true, title: "Jarvis", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "ULTRON", statusBarStyle: "black-translucent" },
   icons: { apple: "/jarvis-icon-180.png", icon: "/jarvis-icon-512.png" },
 };
 
