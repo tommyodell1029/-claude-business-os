@@ -395,8 +395,47 @@ function Activity({ nonce }: { nonce: number }) {
   );
 }
 
+const BUDGET_LABELS: Record<string, string> = { per_day_usd: "Per day", per_turn_usd: "Per ULTRON request", per_research_run_usd: "Per research run" };
+
+/** Edits the owner-adjustable budgets within the limits from config/money_os.yaml (checked again on the server). */
+function BudgetEditor({ budgets, defaults, editable, onSaved }: { budgets: Record<string, number>; defaults: Record<string, number>; editable: { name: string; min: number; max: number }[]; onSaved: () => void }) {
+  const [draft, setDraft] = useState<Record<string, string>>(() => Object.fromEntries(editable.map((e) => [e.name, String(budgets[e.name] ?? "")])));
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const changes = editable
+    .map((e) => ({ ...e, value: Number(draft[e.name]) }))
+    .filter((e) => draft[e.name] !== "" && Number.isFinite(e.value) && Math.round(e.value * 100) / 100 !== budgets[e.name]);
+  const bad = editable.find((e) => { const v = Number(draft[e.name]); return draft[e.name] === "" || !Number.isFinite(v) || v < e.min || v > e.max; });
+  const save = async () => {
+    if (!changes.length || bad) return;
+    const text = changes.map((c) => `${BUDGET_LABELS[c.name] ?? c.name}: ${usd(budgets[c.name])} → ${usd(c.value)}`).join("\n");
+    if (!window.confirm(`Change AI budgets?\n\n${text}`)) return;
+    setBusy(true); setMsg("");
+    const r = await post("os/settings", { budgets: Object.fromEntries(changes.map((c) => [c.name, c.value])) });
+    setBusy(false);
+    if (r.status === 200 && r.body.ok) { setMsg("Saved."); onSaved(); } else setMsg(String(r.body.error ?? `Could not save (${r.status}).`));
+  };
+  return (
+    <div className="os-card">
+      <h3 className="os-h3">AI budgets</h3>
+      {editable.map((e) => (
+        <label key={e.name} className="os-row-between os-line">
+          <span>{BUDGET_LABELS[e.name] ?? e.name}<br /><span className="os-dim">{usd(e.min)}–{usd(e.max)} · default {usd(defaults[e.name])}</span></span>
+          <input className="os-input" style={{ width: 96 }} inputMode="decimal" type="number" step="0.01" min={e.min} max={e.max}
+            value={draft[e.name] ?? ""} onChange={(ev) => setDraft({ ...draft, [e.name]: ev.target.value })} aria-label={BUDGET_LABELS[e.name] ?? e.name} />
+        </label>
+      ))}
+      <div className="os-row-between os-line"><span>Per experiment</span><span>{usd(budgets.per_experiment_usd)}</span></div>
+      {bad ? <p className="os-dim">{BUDGET_LABELS[bad.name]} must be {usd(bad.min)}–{usd(bad.max)}.</p> : null}
+      <button className="os-btn" type="button" disabled={busy || !changes.length || Boolean(bad)} onClick={save}>{busy ? "Saving…" : "Save budgets"}</button>
+      {msg ? <p className="os-line" role="status">{msg}</p> : null}
+    </div>
+  );
+}
+
 function Settings({ nonce }: { nonce: number }) {
-  const load = useView("settings", nonce);
+  const [bump, setBump] = useState(0);
+  const load = useView("settings", nonce + bump);
   return (
     <Shell load={load}>
       {(d) => {
@@ -405,15 +444,20 @@ function Settings({ nonce }: { nonce: number }) {
         const L = (sc?.labels ?? {}) as Any;
         const se = (L.strong_evidence ?? {}) as Any;
         const fv = (L.fast_validation ?? {}) as Any;
+        const editable = list<{ name: string; min: number; max: number }>(d.editable) ?? [];
         return (
           <>
-            <div className="os-card">
-              <h3 className="os-h3">AI budgets</h3>
-              <div className="os-row-between os-line"><span>Per day</span><span>{usd(b?.per_day_usd)}</span></div>
-              <div className="os-row-between os-line"><span>Per ULTRON request</span><span>{usd(b?.per_turn_usd)}</span></div>
-              <div className="os-row-between os-line"><span>Per research run</span><span>{usd(b?.per_research_run_usd)}</span></div>
-              <div className="os-row-between os-line"><span>Per experiment</span><span>{usd(b?.per_experiment_usd)}</span></div>
-            </div>
+            {d.canEdit && editable.length
+              ? <BudgetEditor key={JSON.stringify(b)} budgets={b} defaults={(d.defaults ?? {}) as Record<string, number>} editable={editable} onSaved={() => setBump((x) => x + 1)} />
+              : (
+                <div className="os-card">
+                  <h3 className="os-h3">AI budgets</h3>
+                  <div className="os-row-between os-line"><span>Per day</span><span>{usd(b?.per_day_usd)}</span></div>
+                  <div className="os-row-between os-line"><span>Per ULTRON request</span><span>{usd(b?.per_turn_usd)}</span></div>
+                  <div className="os-row-between os-line"><span>Per research run</span><span>{usd(b?.per_research_run_usd)}</span></div>
+                  <div className="os-row-between os-line"><span>Per experiment</span><span>{usd(b?.per_experiment_usd)}</span></div>
+                </div>
+              )}
             <div className="os-card">
               <h3 className="os-h3">Labels</h3>
               <p className="os-line">HIGH SCORE: score ≥ {String(L.high_score_min)}</p>
@@ -424,7 +468,7 @@ function Settings({ nonce }: { nonce: number }) {
               <h3 className="os-h3">Cache</h3>
               <p className="os-line">Research results reused for {String((d.cache as Any)?.research_ttl_days)} days.</p>
             </div>
-            <p className="os-dim">Read-only for now. Values live in config/money_os.yaml; editing from the phone comes in a later build slice.</p>
+            <p className="os-dim">Budget changes apply to the next AI call. Prices, scoring and cache stay in config/money_os.yaml.</p>
           </>
         );
       }}

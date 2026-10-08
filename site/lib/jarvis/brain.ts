@@ -8,6 +8,7 @@ import type { PendingAction, ToolCtx } from "./tools.ts";
 import { anthropicTools, runTool } from "./tools.ts";
 import type { ApiUsage, BudgetVerdict } from "../os/usage.ts";
 import { checkBudget, costOf, logActivity, logUsage, spentToday, tokensFrom, usd } from "../os/usage.ts";
+import { effectiveConfig } from "../os/settings.ts";
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -67,11 +68,12 @@ export async function runTurn(messages: ChatMessage[], ctx: ToolCtx): Promise<{ 
   const used: string[] = [];
   let pending: PendingAction | null = null;
   const modelId = model("small", "jarvis");
-  const dayBefore = await spentToday(ctx.db, ctx.now); // read once; this request's spend is added locally
+  const osCfg = await effectiveConfig(ctx.db); // yaml budgets + the owner's overrides from /os Settings
+  const dayBefore = await spentToday(ctx.db, ctx.now, osCfg); // read once; this request's spend is added locally
   let turnSpent = 0;
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const verdict = checkBudget(dayBefore, turnSpent);
+    const verdict = checkBudget(dayBefore, turnSpent, osCfg);
     if (!verdict.ok) {
       await logActivity(ctx.db, "system", "budget_stop", `jarvis_chat refused: ${verdict.scope} budget ${usd(verdict.limitUsd)} reached (${usd(verdict.spentUsd)})`);
       return { reply: budgetReply(verdict, address), pending, tools: used };

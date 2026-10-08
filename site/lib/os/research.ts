@@ -12,6 +12,7 @@ import type { EvidenceInput } from "./opportunities.ts";
 import { DIMENSIONS, validateProposal } from "./score.ts";
 import type { ApiUsage, OsConfig } from "./usage.ts";
 import { costOf, logActivity, logUsage, spentToday, tokensFrom, usd } from "./usage.ts";
+import { effectiveConfig } from "./settings.ts";
 
 type Cfg = OsConfig & {
   cache: { research_ttl_days: number };
@@ -103,15 +104,17 @@ type CallOut = { ok: true; text: string; hits: Hit[]; spent: number } | { ok: fa
  */
 export async function searchCall(
   ctx: Ctx,
-  o: { task: string; role: string; system: string; prompt: string; maxSearches: number; maxTokens: number; runCapUsd: number; opportunityId?: string | null },
+  o: { task: string; role: string; system: string; prompt: string; maxSearches: number; maxTokens: number; runCapUsd?: number; opportunityId?: string | null },
 ): Promise<CallOut> {
   const key = anthropicKey(ctx.env);
   if (!key) return { ok: false, error: "ANTHROPIC_API_KEY not set", spent: 0 };
   const modelId = model(o.role, "os");
+  const budgets = (await effectiveConfig(ctx.db)).budgets; // yaml + the owner's overrides from /os Settings
   const dayBefore = await spentToday(ctx.db, ctx.now);
-  const limitDay = CFG.budgets.per_day_usd;
+  const limitDay = budgets.per_day_usd;
+  const runCap = o.runCapUsd ?? budgets.per_research_run_usd;
   const worst = worstCase(modelId, o.maxSearches, o.maxTokens, o.system.length + o.prompt.length);
-  if (worst > o.runCapUsd) return { ok: false, error: `run cap ${usd(o.runCapUsd)} is below this call's worst case ${usd(worst)}; raise the cap or lower max_searches`, spent: 0, refused: true };
+  if (worst > runCap) return { ok: false, error: `run cap ${usd(runCap)} is below this call's worst case ${usd(worst)}; raise the cap or lower max_searches`, spent: 0, refused: true };
   if (dayBefore !== null && dayBefore + worst > limitDay) {
     await logActivity(ctx.db, "system", "budget_stop", `${o.task} refused: today's ${usd(dayBefore)} + worst case ${usd(worst)} would pass the ${usd(limitDay)} daily budget`);
     return { ok: false, error: `today's AI budget would be exceeded (${usd(dayBefore)} spent of ${usd(limitDay)})`, spent: 0, refused: true };
@@ -151,7 +154,7 @@ export async function searchCall(
     hits.push(...hitsFrom(content));
     texts.push(...content.filter((b) => b.type === "text" && typeof b.text === "string").map((b) => b.text as string));
     if (data.stop_reason !== "pause_turn") break;
-    if (spent >= o.runCapUsd) return { ok: false, error: `run cap ${usd(o.runCapUsd)} reached`, spent, refused: true };
+    if (spent >= runCap) return { ok: false, error: `run cap ${usd(runCap)} reached`, spent, refused: true };
     messages.push({ role: "assistant", content }); // resend the paused turn unchanged to continue
   }
   return { ok: true, text: texts.join("\n"), hits, spent };
@@ -209,7 +212,7 @@ Return JSON:
 
 Give each opportunity 2 to 4 evidence items.
 ${RULES}`;
-  const call = await searchCall(ctx, { task: "radar_sweep", role: R.role, system, prompt, maxSearches: R.max_searches, maxTokens: R.max_tokens, runCapUsd: CFG.budgets.per_research_run_usd });
+  const call = await searchCall(ctx, { task: "radar_sweep", role: R.role, system, prompt, maxSearches: R.max_searches, maxTokens: R.max_tokens });
   if (!call.ok) {
     await saveRun(ctx.db, { kind: "radar_sweep", query, queryHash: qh, status: call.refused ? "budget_refused" : "failed", result: { error: call.error }, now: ctx.now });
     await logActivity(ctx.db, "radar", "radar_failed", `${category}: ${call.error}`);
@@ -288,7 +291,7 @@ Return JSON:
 
 Give 3 to 8 evidence items. Use only the dimension names listed above.
 ${RULES}`;
-  const call = await searchCall(ctx, { task: "research", role: RS.role, system, prompt, maxSearches: RS.max_searches, maxTokens: RS.max_tokens, runCapUsd: CFG.budgets.per_research_run_usd, opportunityId: id });
+  const call = await searchCall(ctx, { task: "research", role: RS.role, system, prompt, maxSearches: RS.max_searches, maxTokens: RS.max_tokens, opportunityId: id });
   if (!call.ok) {
     await saveRun(ctx.db, { kind: "opportunity_research", query, queryHash: qh, status: call.refused ? "budget_refused" : "failed", result: { error: call.error }, opportunityId: id, now: ctx.now });
     await logActivity(ctx.db, "ultron", "research_failed", `${String(o.name)}: ${call.error}`);

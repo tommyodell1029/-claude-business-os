@@ -65,7 +65,7 @@ test("AI cost: today, month, budget meter and per-task / per-opportunity groups 
 test("views: unknown view 404, no database 503, settings carry no secrets", async () => {
   assert.equal((await loadView("users", fakeDb().db, q(), NOW)).status, 404);
   assert.equal((await loadView("revenue", null, q(), NOW)).status, 503);
-  const s = JSON.stringify(settingsView()).toLowerCase();
+  const s = JSON.stringify(await settingsView()).toLowerCase();
   for (const bad of ["key", "secret", "token", "password", "sk_", "eyj"]) assert.ok(!s.includes(bad), `settings must not contain ${bad}`);
 });
 

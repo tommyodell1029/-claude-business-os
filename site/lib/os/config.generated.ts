@@ -7,6 +7,20 @@ export const OS_CONFIG = {
     "per_research_run_usd": 0.25,
     "per_experiment_usd": 1
   },
+  "editable_budgets": {
+    "per_day_usd": {
+      "min": 0.25,
+      "max": 10
+    },
+    "per_turn_usd": {
+      "min": 0.02,
+      "max": 0.5
+    },
+    "per_research_run_usd": {
+      "min": 0.2,
+      "max": 1
+    }
+  },
   "tasks": {
     "jarvis_chat": {
       "role": "small",

@@ -7,10 +7,10 @@ import { labelsForRow, listRanked } from "./opportunities.ts";
 import { DIMENSIONS, explain, subScoresFromRow } from "./score.ts";
 import type { Dimension } from "./score.ts";
 import { dayKey } from "./usage.ts";
+import { EDITABLE_KEYS, LIMITS, effectiveConfig } from "./settings.ts";
 
 type Row = Record<string, unknown>;
 const TZ = (OS_CONFIG as unknown as { timezone: string }).timezone;
-const BUDGETS = (OS_CONFIG as unknown as { budgets: { per_day_usd: number } }).budgets;
 
 const num = (v: unknown): number => {
   const x = typeof v === "string" ? Number(v) : v;
@@ -104,6 +104,7 @@ export async function costView(db: Db, now: number) {
   const month = today.slice(0, 7);
   const daily = await safe(() => db.select<Row>("ai_cost_daily", "day,calls,input_tokens,output_tokens,cost_usd,any_estimated", [["day", "gte", `${month}-01`]], "day.desc", 31));
   const monthStart = startOfDayIso(TZ, new Date(now), Number(today.slice(8, 10)) - 1); // local midnight on the 1st
+  const BUDGETS = (await effectiveConfig(db)).budgets;
   const usage = await safe(() => db.select<Row>("ai_usage", "task,model,input_tokens,output_tokens,est_cost_usd,estimated,opportunity_id,experiment_id,ok", [["at", "gte", monthStart]], "at.desc", 5000));
   if (daily === null || usage === null) return { today: null, month: null, budget: { perDayUsd: BUDGETS.per_day_usd }, byTask: null, perOpportunity: null, perExperiment: null, days: null };
 
@@ -140,10 +141,14 @@ export async function activityView(db: Db) {
   return { items };
 }
 
-/** Read-only settings: budgets, prices, scoring thresholds, cache. Never includes secrets or env values. */
-export function settingsView() {
+/** Settings: effective budgets (yaml + owner overrides), yaml defaults, edit limits, prices, scoring, cache. No secrets. */
+export async function settingsView(db: Db | null = null) {
   const c = OS_CONFIG as unknown as Row;
-  return { timezone: c.timezone, budgets: c.budgets, prices: c.prices, webSearchUsd: c.web_search_usd, cache: c.cache, score: c.score };
+  const budgets = (await effectiveConfig(db)).budgets;
+  return {
+    timezone: c.timezone, budgets, defaults: c.budgets, editable: EDITABLE_KEYS.map((k) => ({ name: k, ...LIMITS[k] })),
+    canEdit: db !== null, prices: c.prices, webSearchUsd: c.web_search_usd, cache: c.cache, score: c.score,
+  };
 }
 
 export const VIEWS = ["opportunities", "opportunity", "experiments", "revenue", "cost", "activity", "settings"] as const;
@@ -151,7 +156,7 @@ export type View = (typeof VIEWS)[number];
 
 export async function loadView(view: string, db: Db | null, q: URLSearchParams, now: number): Promise<{ status: number; body: unknown }> {
   if (!(VIEWS as readonly string[]).includes(view)) return { status: 404, body: { ok: false, error: "unknown view" } };
-  if (view === "settings") return { status: 200, body: { ok: true, ...settingsView() } };
+  if (view === "settings") return { status: 200, body: { ok: true, ...(await settingsView(db)) } };
   if (!db) return { status: 503, body: { ok: false, error: "database not configured" } };
   switch (view as View) {
     case "opportunities": return { status: 200, body: { ok: true, ...(await opportunitiesView(db, q)) } };

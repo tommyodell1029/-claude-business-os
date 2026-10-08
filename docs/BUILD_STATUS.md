@@ -212,3 +212,10 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - UI: Opportunities tab has "Run Money Radar" (confirm → sweeps categories one at a time, stops on budget/cap); detail has "Research".
 - Open: Haiku 4.5 support for web search is unconfirmed (no Anthropic key in the build container). If the first live run returns a 400, point `radar.role` / `research.role` at a model that supports it.
 - Tests: site 118/118 (8 new in `lib/os/research.test.ts`), typecheck, lint, build + client bundle check clean; Python 283/283.
+
+## Money OS slice 5: ULTRON tools + editable budgets: 2026-10-08 (orchestrator, Opus)
+- ULTRON read tools: `top_opportunities` (code ranking, killed excluded), `opportunity_detail` (sub-scores, reasons, up to 10 evidence claims with source domains), `query_experiments`.
+- ULTRON write tools, all through the existing confirm gate (pending action, owner says yes or taps Confirm within 2 minutes): `radar_sweep`, `research_opportunity` (summary states the worst-case cost; the model is called only after confirm), `create_experiment` (opportunity moves to validating), `set_experiment_status` (killed sets ended_at), `kill_opportunity` (status only, never deleted), `record_revenue` (manual/affiliate/marketplace/other; Stripe is never typed in; no future dates). Ids are re-checked on confirm; every change is logged to activity. Persona: report system scores as given, use only owner-stated amounts/targets, propose Radar/research only when asked.
+- Confirm route `maxDuration = 60` (a confirmed Radar/research run makes a web-search call).
+- Editable budgets: `/os` Settings edits per-day, per-ULTRON-request and per-research-run budgets within `config/money_os.yaml` `editable_budgets` limits (checked on save and again on read). Stored in `public.os_settings` (migration `20261008000003_os_settings.sql`, applied 2026-10-08; RLS forced, anon revoked). ULTRON chat, Radar, research and the AI Cost meter all use the effective values. Each change is logged (`settings_changed`).
+- Tests: site 126/126 (8 new in `lib/os/tools.test.ts`), typecheck, lint, build + client bundle check clean; Python suite OK.

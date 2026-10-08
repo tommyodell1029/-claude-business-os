@@ -6,6 +6,7 @@ import { jsonResponse, readJson, withOwner } from "../../../../lib/jarvis/http.t
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // a confirmed Radar sweep or research run makes a web-search model call
 
 export const POST = withOwner(async (req, { email }) => {
   const r = parseConfirmRequest(await readJson(req, 2000));

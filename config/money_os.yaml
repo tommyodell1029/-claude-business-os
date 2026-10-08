@@ -12,6 +12,14 @@ budgets:
   per_research_run_usd: 0.25   # slice 4
   per_experiment_usd: 1.00     # slice 4/5: research attributed to one experiment
 
+# Budgets the owner may change from /os Settings (stored in public.os_settings, overriding the values above).
+# Hard limits: a value outside [min, max] is refused, and a stored value outside them is ignored. per_research_run_usd
+# min is above the research worst case (site/lib/os/research.ts worstCase), so research can never be locked out.
+editable_budgets:
+  per_day_usd:          { min: 0.25, max: 10.00 }
+  per_turn_usd:         { min: 0.02, max: 0.50 }
+  per_research_run_usd: { min: 0.20, max: 1.00 }
+
 # Per-task caps that keep a single call small (tokens are enforced by max_tokens on the request).
 tasks:
   jarvis_chat: { role: small, max_tokens: 700, max_rounds: 5 }
