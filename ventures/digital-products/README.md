@@ -50,6 +50,18 @@ Prompt packs (30 prompts each):
 
 **`out/pins/<slug>/`** holds two 1000×1500 Pinterest pins per planner, rendered from the real pages. Rebuild with `node build.mjs plans` and `node build.mjs pins`.
 
+## Promo videos (`out/videos/`)
+
+There are 8 vertical videos (1080×1920, about 18–24 s each) for TikTok, Instagram Reels and YouTube Shorts:
+- **V1–V3:** one per prompt pack. Each shows the real prompt filled with labelled example details, then an example AI answer, then the pack.
+- **P1–P5:** one per planner. Each walks through 3 real pages and ends with the cover.
+
+Voiceovers were made in ElevenLabs (voice "Maya", about $0.05 each) and saved in `out/videos/audio/`; the ElevenLabs flow is "LaunchPad experiment videos - voiceovers".
+
+Rebuild with `FFMPEG=<path to ffmpeg> node videos.mjs [V1|P3|…]`.
+
+No AI-generated footage is used, so the product shown is always the real file.
+
 ## Honesty rules used
 - **Images:** every listing image is a render of the real page in the file. There are no fake mockups, reviews, "best seller" badges or sales claims.
 - **Disclosure:** descriptions say the designs were made with the help of AI tools. Etsy asks for that disclosure; check the listing form and its creativity standards when you publish.
