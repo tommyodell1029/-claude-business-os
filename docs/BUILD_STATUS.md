@@ -187,3 +187,11 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - `site/lib/os/opportunities.ts`: create (deduped by slug), evidence (http(s) links only, tracking params stripped, content-hash dedupe, future dates clamped), apply proposal, rescore, ranked list (killed hidden by default). Migration `20261008000002` adds `opportunities.evidence_domains` (applied).
 - Not wired to any route yet (screens = slice 3, ULTRON tools = slice 5); nothing to deploy.
 - Tests: site 102/102 (8 new in `lib/os/score.test.ts`), typecheck, lint, build clean. `ai_usage` has 0 rows so far (no Jarvis use since the slice 1 deploy).
+
+## Money OS slice 3: 2026-10-08 (orchestrator, Opus)
+- `/os` (owner-only, noindex): tabs Command · Opportunities (ranked list, status filter, detail with sub-score bars, reasons, "why it scored", evidence links) · Experiments · Revenue · AI Cost · Activity · Settings (read-only). Command links to ULTRON (`/jarvis`).
+- Data: `GET /api/jarvis/os/<view>` behind the existing owner session (same cookies as Jarvis; signed-out → prompt to sign in at /jarvis). `site/lib/os/views.ts` computes everything in code; unreadable source → `DATA UNAVAILABLE`.
+- Revenue counts only Stripe payments whose event is live mode; the Oct 4 sandbox $497 (`test-co-2`) is excluded and shown as "1 test-mode payment excluded". Other ventures come from `revenue_entries`.
+- AI Cost: today, month, tokens, daily budget meter, by task, per opportunity, per experiment (month starts at ET midnight).
+- Fix found by the mobile check: a global `nav a { display: none }` rule for the old marketing header (≤600px) hid the tabs on phones; scoped to `header.top nav`.
+- Tests: site 107/107 (5 new in `lib/os/views.test.ts`), typecheck, lint, build clean. Playwright on the production build with fixture data at 390×844 (iPhone) and 820×1180 (iPad): all 8 screens render, no horizontal scroll, 40px tabs, no page errors, signed-out prompt shown.
