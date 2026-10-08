@@ -156,3 +156,16 @@ test("radar and research via ULTRON: cost shown before confirm, the model is cal
   await handleConfirm({ actionId: rejected.pending!.id, decision: "reject", via: "tap" }, s.ctx(NOW + 6_000));
   assert.equal(calls, 1, "a rejected research run never calls the model");
 });
+
+test("every write tool is allowed by the latest jarvis_actions tool check in supabase/migrations", async () => {
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const { TOOLS } = await import("../jarvis/tools.ts");
+  const dir = new URL("../../../supabase/migrations/", import.meta.url);
+  let allowed: string[] = [];
+  for (const f of readdirSync(dir).filter((x) => x.endsWith(".sql")).sort()) {
+    const sql = readFileSync(new URL(f, dir), "utf8");
+    const m = sql.match(/jarvis_actions_tool_check check \(tool in \(([^)]*)\)/s) ?? sql.match(/create table if not exists public\.jarvis_actions[\s\S]*?tool\s+text not null check \(tool in \(([^)]*)\)/);
+    if (m) allowed = [...m[1].matchAll(/'([a-z_]+)'/g)].map((x) => x[1]);
+  }
+  for (const t of TOOLS.filter((x) => x.kind === "write")) assert.ok(allowed.includes(t.name), `${t.name} missing from the jarvis_actions tool check`);
+});
