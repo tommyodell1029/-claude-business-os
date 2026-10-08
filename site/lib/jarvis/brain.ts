@@ -6,6 +6,8 @@ import { systemPrompt } from "./persona.ts";
 import { TZ } from "./status.ts";
 import type { PendingAction, ToolCtx } from "./tools.ts";
 import { anthropicTools, runTool } from "./tools.ts";
+import type { ApiUsage, BudgetVerdict } from "../os/usage.ts";
+import { checkBudget, costOf, logActivity, logUsage, spentToday, tokensFrom, usd } from "../os/usage.ts";
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -38,6 +40,12 @@ export function parseMessages(body: unknown): ChatMessage[] | null {
 }
 
 type Block = { type: "text"; text: string } | { type: "tool_use"; id: string; name: string; input: unknown };
+
+function budgetReply(v: Extract<BudgetVerdict, { ok: false }>, address: string): string {
+  return v.scope === "day"
+    ? `I've stopped there, ${address}: today's AI budget of ${usd(v.limitUsd)} is used up (${usd(v.spentUsd)} so far). It resets at midnight Eastern, or the limit can be raised in config/money_os.yaml.`
+    : `That request reached its spending cap of ${usd(v.limitUsd)}, ${address}. Could you ask more narrowly?`;
+}
 type ApiMessage = { role: "user" | "assistant"; content: string | unknown[] };
 
 async function loadNotes(db: Db | null): Promise<{ kind: string; note: string }[]> {
@@ -58,13 +66,22 @@ export async function runTurn(messages: ChatMessage[], ctx: ToolCtx): Promise<{ 
   const convo: ApiMessage[] = messages.map((m) => ({ role: m.role, content: m.content }));
   const used: string[] = [];
   let pending: PendingAction | null = null;
+  const modelId = model("small", "jarvis");
+  const dayBefore = await spentToday(ctx.db, ctx.now); // read once; this request's spend is added locally
+  let turnSpent = 0;
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+    const verdict = checkBudget(dayBefore, turnSpent);
+    if (!verdict.ok) {
+      await logActivity(ctx.db, "system", "budget_stop", `jarvis_chat refused: ${verdict.scope} budget ${usd(verdict.limitUsd)} reached (${usd(verdict.spentUsd)})`);
+      return { reply: budgetReply(verdict, address), pending, tools: used };
+    }
+    const started = Date.now();
     const r = await ctx.fetchImpl("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
       body: JSON.stringify({
-        model: model("small", "jarvis"),
+        model: modelId,
         max_tokens: 700,
         system,
         tools: anthropicTools(),
@@ -74,8 +91,15 @@ export async function runTurn(messages: ChatMessage[], ctx: ToolCtx): Promise<{ 
       }),
       signal: AbortSignal.timeout(25_000),
     });
-    if (!r.ok) throw new Error(`anthropic ${r.status}`);
-    const data = (await r.json()) as { content: Block[]; stop_reason: string };
+    if (!r.ok) {
+      await logUsage(ctx.db, { task: "jarvis_chat", component: "jarvis", model: modelId, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, webSearches: 0 }, usd: 0, estimated: false, durationMs: Date.now() - started, ok: false });
+      throw new Error(`anthropic ${r.status}`);
+    }
+    const data = (await r.json()) as { content: Block[]; stop_reason: string; usage?: ApiUsage };
+    const { tokens, estimated: noCounts } = tokensFrom(data.usage, { inChars: system.length + JSON.stringify(convo).length, outChars: JSON.stringify(data.content ?? []).length });
+    const cost = costOf(modelId, tokens);
+    turnSpent += cost.usd;
+    await logUsage(ctx.db, { task: "jarvis_chat", component: "jarvis", model: modelId, tokens, usd: cost.usd, estimated: noCounts || cost.estimated, durationMs: Date.now() - started, ok: true });
     const calls = data.content.filter((b): b is Extract<Block, { type: "tool_use" }> => b.type === "tool_use");
     const text = data.content.filter((b): b is Extract<Block, { type: "text" }> => b.type === "text").map((b) => b.text).join(" ").trim();
     if (data.stop_reason !== "tool_use" || !calls.length) {

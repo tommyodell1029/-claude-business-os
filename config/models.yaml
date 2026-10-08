@@ -18,4 +18,5 @@ allowed:
   notify: [small]
   leadgen: [small]
   jarvis: [small]
+  os: [small]            # Money OS (research, scoring, Radar); same cheap role as Jarvis
   audit: [audit, small]

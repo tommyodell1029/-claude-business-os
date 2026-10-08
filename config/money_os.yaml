@@ -1,0 +1,32 @@
+# Money OS settings (docs/money-os/PHASE_1_PLAN.md). Single source of truth for AI budgets, model prices,
+# cache TTLs and Radar categories. The site reads a generated copy (site/lib/os/config.generated.ts, written by
+# site/scripts/sync-offerings.mjs). Model IDs stay in config/models.yaml; this file only prices them.
+
+timezone: America/New_York
+
+# Budgets in USD. Checked in code BEFORE every model call, from public.ai_usage. Over budget -> the call is
+# refused, logged to public.activity, and the owner sees why. No retries past a budget.
+budgets:
+  per_day_usd: 2.00            # all AI calls (Jarvis/ULTRON chat, research, Radar) on one calendar day
+  per_turn_usd: 0.10           # one ULTRON/Jarvis request, across its tool rounds
+  per_research_run_usd: 0.25   # slice 4
+  per_experiment_usd: 1.00     # slice 4/5: research attributed to one experiment
+
+# Per-task caps that keep a single call small (tokens are enforced by max_tokens on the request).
+tasks:
+  jarvis_chat: { role: small, max_tokens: 700, max_rounds: 5 }
+
+# USD per 1M tokens. Source: Anthropic first-party prices, claude-api skill model table cached 2026-10-06.
+# cache_write = 1.25 x input (5-minute cache); cache_read = 0.1 x input unless listed. Re-check when models change.
+# A model missing here is still allowed to run (if models.yaml allows it) but its cost is logged as estimated
+# at the most expensive listed rate, so budgets stay conservative.
+prices:
+  claude-haiku-4-5-20251001: { input: 1.00, output: 5.00, cache_write: 1.25, cache_read: 0.10 }
+  claude-opus-5-5:           { input: 4.00, output: 20.00, cache_write: 5.00, cache_read: 0.20 }
+
+# USD per web search (server tool). Unknown until verified against Anthropic's pricing page in slice 4;
+# while null, any call that used web search is logged with estimated = true.
+web_search_usd: null
+
+cache:
+  research_ttl_days: 14

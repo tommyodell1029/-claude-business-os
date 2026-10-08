@@ -20,6 +20,9 @@ export const MODELS_CONFIG = {
     "jarvis": [
       "small"
     ],
+    "os": [
+      "small"
+    ],
     "audit": [
       "audit",
       "small"
