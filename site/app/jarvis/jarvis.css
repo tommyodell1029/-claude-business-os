@@ -69,3 +69,4 @@ body:has(.jv) { background: #02070d; overscroll-behavior: none; }
 @media (prefers-reduced-motion: reduce) {
   .jv *, .jv { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+a.jv-link { display: inline-flex; align-items: center; }

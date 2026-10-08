@@ -68,3 +68,8 @@ body:has(.os) { background: var(--bg, #0b1117); }
 .os-link { background: none; border: 0; color: var(--accent); font: 600 14px system-ui, sans-serif; cursor: pointer; min-height: 44px; padding: 0; text-align: left; }
 .os :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .os-note { text-transform: none; color: var(--dim); }
+.os-signin form { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.os-signin label { font-size: 13px; color: var(--dim); }
+.os-signin input { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 8px 12px; font: 16px system-ui, sans-serif; }
+.os-btn { border: 0; cursor: pointer; font-size: 15px; }
+.os-btn:disabled { opacity: .6; }

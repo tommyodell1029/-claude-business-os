@@ -56,8 +56,8 @@ function Shell({ load, children }: { load: Load; children: (d: Any) => React.Rea
   if (load.state === "signin") {
     return (
       <div className="os-card">
-        <p>Sign in through ULTRON first. Money OS uses the same owner sign-in.</p>
-        <a className="os-btn" href="/jarvis">Open ULTRON to sign in</a>
+        <p>Your sign-in has expired.</p>
+        <button className="os-btn" onClick={() => window.location.reload()}>Sign in again</button>
       </div>
     );
   }
@@ -386,7 +386,84 @@ function Command({ nonce, go }: { nonce: number; go: (h: string) => void }) {
   );
 }
 
+async function post(path: string, data: unknown): Promise<{ status: number; body: Any }> {
+  const r = await fetch(`/api/jarvis/${path}`, { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
+  return { status: r.status, body: (await r.json().catch(() => ({}))) as Any };
+}
+
+/** Owner sign-in on this page (same endpoints and rules as ULTRON): email, then the 6-digit code from the email. */
+function SignIn({ onDone }: { onDone: () => void }) {
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const r = await post("auth/start", { email });
+    setBusy(false);
+    setMsg(String(r.body.message ?? r.body.error ?? ""));
+    if (r.status === 200) setStep("code");
+  };
+  const verify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const r = await post("auth/verify", { email, code });
+    setBusy(false);
+    if (r.status === 200) onDone();
+    else setMsg(String(r.body.error ?? "Sign-in failed."));
+  };
+  return (
+    <div className="os-card os-signin">
+      <h2 className="os-h2">Sign in</h2>
+      <p className="os-dim">Owner access only.</p>
+      {step === "email" ? (
+        <form onSubmit={send}>
+          <label htmlFor="os-email">Email</label>
+          <input id="os-email" type="email" autoComplete="email" inputMode="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <button className="os-btn" disabled={busy}>Email me a code</button>
+        </form>
+      ) : (
+        <form onSubmit={verify}>
+          <label htmlFor="os-code">6-digit code from the email</label>
+          <input id="os-code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]*" required value={code} onChange={(e) => setCode(e.target.value)} />
+          <button className="os-btn" disabled={busy}>Sign in</button>
+          <button type="button" className="os-link" onClick={() => setStep("email")}>Use a different email</button>
+        </form>
+      )}
+      {msg ? <p role="status">{msg}</p> : null}
+      <p className="os-dim">Use the code here. The link in the email opens ULTRON instead.</p>
+    </div>
+  );
+}
+
 export default function MoneyOs() {
+  const [auth, setAuth] = useState<"checking" | "signin" | "ready" | "error">("checking");
+  const [authTry, setAuthTry] = useState(0);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/jarvis/me", { credentials: "same-origin", cache: "no-store" })
+      .then((r) => { if (live) setAuth(r.status === 200 ? "ready" : r.status === 401 || r.status === 403 ? "signin" : "error"); })
+      .catch(() => { if (live) setAuth("error"); });
+    return () => { live = false; };
+  }, [authTry]);
+  if (auth !== "ready") {
+    return (
+      <div className="os">
+        <div className="os-shell">
+          <header className="os-head"><span className="os-title">MONEY OS</span></header>
+          {auth === "checking" ? <p className="os-dim">Loading…</p>
+            : auth === "signin" ? <SignIn onDone={() => setAuthTry((n) => n + 1)} />
+            : <p className="os-warn">{UNAVAILABLE} (sign-in service unreachable)</p>}
+        </div>
+      </div>
+    );
+  }
+  return <Dashboard />;
+}
+
+function Dashboard() {
   const [hash, setHash] = useState("command");
   const [nonce, setNonce] = useState(0);
   useEffect(() => {

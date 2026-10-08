@@ -1,0 +1,15 @@
+{
+  "name": "Money OS",
+  "short_name": "Money OS",
+  "description": "Private Money OS for the LaunchPad Local owner.",
+  "start_url": "/os",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1117",
+  "theme_color": "#0b1117",
+  "icons": [
+    { "src": "/jarvis-icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/jarvis-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

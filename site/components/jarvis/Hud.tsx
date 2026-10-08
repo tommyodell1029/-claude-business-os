@@ -403,6 +403,7 @@ export default function Hud() {
           <header className="jv-head">
             <span className="jv-title">J.A.R.V.I.S.</span>
             <span className="jv-head-actions">
+              <a className="jv-link" href="/os">Money OS</a>
               <button className="jv-link" onClick={() => setMuted((m) => !m)} aria-pressed={muted}>{muted ? "Voice off" : "Voice on"}</button>
               <button className="jv-link" onClick={() => void signOut()}>Sign out</button>
             </span>
