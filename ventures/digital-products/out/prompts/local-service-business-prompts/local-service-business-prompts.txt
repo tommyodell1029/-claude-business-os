@@ -1,0 +1,130 @@
+LOCAL SERVICE BUSINESS MARKETING PROMPTS
+
+30 copy-and-paste AI prompts for plumbers, cleaners, landscapers, electricians, HVAC and every local service business: Google profile posts, review replies, quote follow-ups, website pages and repeat business.
+
+HOW TO USE
+1. Paste the starter context into a new AI chat, fill in the [BRACKETS], send.
+2. Pick a prompt, replace the [BRACKETS] with your details, send.
+3. Check every fact before you publish.
+
+STARTER CONTEXT (paste once per chat)
+----------------------------------------
+You are helping me market my local service business. Use only the facts I give you; if something is missing, ask me instead of guessing.
+Business name: [BUSINESS NAME]
+Trade / services: [SERVICES]
+Service area: [CITY AND NEARBY AREAS]
+What makes us different: [2-3 REAL DIFFERENCES, e.g. same-day service, family-owned since 2009]
+Tone: [friendly / professional / no-nonsense]
+Things we never promise: [e.g. exact prices without an inspection]
+----------------------------------------
+
+
+== GOOGLE BUSINESS PROFILE ==
+
+01. Weekly update post
+Write a Google Business Profile update for [BUSINESS NAME] about [RECENT JOB OR TOPIC] in [CITY]. 80-120 words, one clear call to action ([CALL / BOOK ONLINE]), no hashtags, no prices unless I give them. Give me 3 versions with different openings.
+
+02. Seasonal tip post
+Write a Google Business Profile post with one practical [SEASON] tip for homeowners in [CITY] about [TOPIC, e.g. preparing AC for summer]. Make the tip genuinely useful on its own, then mention we can help. Under 120 words.
+
+03. Offer post
+Write a Google Business Profile offer post for this real offer: [OFFER, DATES, CONDITIONS]. Include the conditions plainly. Give a short title (under 58 characters) and 2 body versions under 100 words.
+
+04. Services description
+Write the 'From the business' description for our Google Business Profile (max 750 characters). Cover: what we do ([SERVICES]), where ([SERVICE AREA]), and why choose us ([DIFFERENCES]). Natural language, no keyword stuffing, no claims I did not give you.
+
+05. Q&A section
+List 10 questions customers in [CITY] commonly ask a [TRADE] business before hiring, then write a short, honest answer for each using only these facts: [FACTS: hours, areas, licenses, warranty, payment methods]. Flag any answer where you need more information from me.
+
+
+== REVIEWS ==
+
+06. Reply to a 5-star review
+Write a reply to this 5-star review: "[REVIEW TEXT]". Thank them by first name, mention the specific job they described, and keep it under 60 words. Do not offer discounts. Give 3 versions that do not sound templated.
+
+07. Reply to a negative review
+Write a calm, professional public reply to this negative review: "[REVIEW TEXT]". Our side of the story: [WHAT ACTUALLY HAPPENED]. Do not argue, do not share private details, take responsibility where it is fair, and invite them to contact [NAME] at [PHONE OR EMAIL] to fix it. Under 90 words.
+
+08. Review request text
+Write a short text message asking [CUSTOMER FIRST NAME] for a Google review after we [JOB DONE] today. Friendly, under 300 characters, includes the link [REVIEW LINK], no incentives (incentivized reviews break Google's rules).
+
+09. Review request email
+Write a follow-up email asking a happy customer for a review a few days after [JOB]. Under 120 words, explain in one line why reviews help a small local business, include [REVIEW LINK], and make it easy to say no.
+
+10. Turn reviews into marketing
+Here are [NUMBER] of our real reviews: [PASTE REVIEWS]. Pull out the 5 themes customers mention most, quote the best real sentence for each (word for word, no edits), and suggest where to use each one (website, truck, social post).
+
+
+== LEADS & QUOTES ==
+
+11. Missed-call text back
+Write a text we send automatically when we miss a call: introduce [BUSINESS NAME], say we will call back within [TIME], and ask what they need help with. Under 250 characters. Give 3 versions.
+
+12. First reply to a web lead
+A customer filled in our website form: "[THEIR MESSAGE]". Write a reply email that answers what we can from these facts: [FACTS], asks the 2-3 questions we need to quote, and offers [BOOKING OPTION]. Under 150 words.
+
+13. Quote cover message
+Write the email that goes with our quote of [AMOUNT] for [JOB] at [ADDRESS OR AREA]. Summarize what is included ([INCLUDED]) and not included ([EXCLUDED]), how long it is valid ([DAYS]), and the next step to book. Plain and confident, under 150 words.
+
+14. Quote follow-up sequence
+Write 3 short follow-ups for a quote with no reply: day 2 (text), day 5 (email), day 10 (text, polite last check). No pressure tactics, no fake deadlines. Each under 60 words.
+
+15. Price objection reply
+A customer said our quote of [AMOUNT] is higher than [COMPETITOR OR 'another quote']. Write a respectful reply that explains what is included ([INCLUDED, WARRANTY, LICENSE, INSURANCE]) without criticizing the competitor, and offers [OPTION IF ANY]. Under 120 words.
+
+16. Phone script for new callers
+Write a simple phone script for whoever answers our phone: greeting, 5 questions to qualify the job ([TYPE OF JOBS WE WANT]), how to book, and what to say when it is a job we do not do. Keep each line short and natural.
+
+
+== WEBSITE & LOCAL SEO ==
+
+17. Service page
+Write a website page for our [SERVICE] service in [CITY]. Sections: what the service is, signs you need it, how our process works ([STEPS]), service area, FAQ (4 questions), call to action. 500-700 words, helpful first, no invented stats or guarantees.
+
+18. City / area page
+Write a page for customers in [NEIGHBORHOOD OR TOWN] that is genuinely about that area: local details I give you ([LOCAL DETAILS: housing age, common problems, landmarks]) and how we serve it. Avoid copying our other area pages; 400-500 words.
+
+19. Homepage headline options
+Give me 10 homepage headline + subheadline pairs for [BUSINESS NAME], a [TRADE] in [CITY]. Each headline under 10 words and specific about the customer's problem. Mark your top 3 and say why.
+
+20. Meta titles and descriptions
+Write SEO titles (under 60 characters) and meta descriptions (under 155 characters) for these pages: [LIST OF PAGES]. Include the service and city naturally, no keyword stuffing, one call to action per description.
+
+21. Blog post from a real job
+Turn this real job into a short blog post: [WHAT THE PROBLEM WAS, WHAT WE FOUND, WHAT WE DID, RESULT]. Teach the reader something useful, include what a homeowner can check themselves, and end with when to call a pro. 400-600 words. No customer names or addresses.
+
+
+== SOCIAL MEDIA & EMAIL ==
+
+22. Before/after post
+Write a Facebook/Instagram caption for before-and-after photos of [JOB] in [AREA]. What was wrong, what we did, one tip. Under 100 words, 3-5 relevant hashtags, no customer details.
+
+23. 30-day content calendar
+Make a 30-day social posting plan for a [TRADE] business: mix of tips, behind-the-scenes, job highlights, team, and reviews. Table with day, post idea, format (photo/video/text), and a one-line caption starter. Seasonal for [MONTH] in [CITY].
+
+24. Short video script
+Write a 30-45 second vertical video script where [PERSON] explains [COMMON PROBLEM] and one thing homeowners can check. Hook in the first 3 seconds, plain words, ends with a soft call to action. Include shot notes.
+
+25. Monthly customer email
+Write a monthly email for past customers: one seasonal tip ([TOPIC]), one company update ([UPDATE]), and a reminder to book [MAINTENANCE SERVICE]. Under 200 words, subject line options x3.
+
+26. Nextdoor / community post
+Write a helpful post for a neighborhood group in [AREA] that offers a genuinely useful [TRADE] tip and only lightly mentions we are local. Under 120 words, not salesy, follows typical community rules against ads.
+
+
+== REPEAT BUSINESS & REFERRALS ==
+
+27. Job-complete thank-you
+Write a thank-you text sent after we finish [JOB]: thanks, what we did in one line, how to reach us if anything is wrong, and when they should think about [NEXT SERVICE]. Under 300 characters.
+
+28. Maintenance reminder
+Write a reminder that it has been [TIME] since [CUSTOMER FIRST NAME]'s last [SERVICE], why maintenance matters (one sentence, no scare tactics), and how to book. Text version under 300 characters and email version under 120 words.
+
+29. Referral ask
+Write a short message asking a happy customer if they know anyone who needs a [TRADE]. Mention our referral thank-you only if I give one: [REFERRAL REWARD OR 'none']. Warm, no pressure, under 80 words.
+
+30. Win back a past customer
+Write a friendly check-in to a customer we have not served in [TIME]: no guilt, remind them what we do, mention [REAL REASON TO CALL: season, new service], and make booking easy. Under 100 words.
+
+
+For your own business use. Please do not resell or share this file.

@@ -1,0 +1,129 @@
+ETSY SELLER LISTING & SEO PROMPTS
+
+30 AI prompts for Etsy sellers: search-friendly titles and all 13 tags, descriptions that answer buyer questions, photo shot lists, shop setup, customer messages, review replies and Pinterest pins.
+
+HOW TO USE
+1. Paste the starter context into a new AI chat, fill in the [BRACKETS], send.
+2. Pick a prompt, replace the [BRACKETS] with your details, send.
+3. Check every fact before you publish.
+
+STARTER CONTEXT (paste once per chat)
+----------------------------------------
+You are helping me run my Etsy shop. Use only the facts I give you about my products and never invent materials, sizes, reviews or sales numbers.
+Shop name: [SHOP NAME]
+What I sell: [PRODUCT TYPE]
+Who buys it: [BUYER, e.g. teachers, new moms, gift shoppers]
+Style / brand words: [3-5 WORDS]
+Rules to follow: Etsy's seller policies, including disclosing AI-assisted designs where Etsy requires it.
+----------------------------------------
+
+
+== TITLES & TAGS ==
+
+01. Search-friendly title
+Write 5 Etsy titles (max 140 characters) for this product: [PRODUCT, KEY FEATURES, WHO IT IS FOR]. Put the clearest description of what it is in the first 40 characters, read naturally (no keyword lists), and use only true features.
+
+02. All 13 tags
+Give me 13 Etsy tags (each max 20 characters, multi-word phrases where possible) for [PRODUCT]. Mix: what it is, who it is for, occasion, style, and use. No repeated words across more than 3 tags. Output as a comma-separated list.
+
+03. Long-tail keyword ideas
+List 30 long-tail search phrases a buyer might type to find [PRODUCT], grouped by intent (gift, problem to solve, style, occasion). Mark which you would use in title vs tags vs description.
+
+04. Title audit
+Review my current title and tags: [TITLE] / [TAGS]. Point out wasted characters, repeated words and missing buyer phrases, then give an improved title and full tag set.
+
+05. Attributes checklist
+For a [PRODUCT CATEGORY] listing, list every Etsy listing attribute/field I should fill in (category, occasion, holiday, colors, style, etc.) and suggest values based on these facts: [FACTS].
+
+06. Seasonal keyword refresh
+It is [MONTH]. Suggest seasonal versions of my title and 4 replacement tags for [PRODUCT] for upcoming occasions in the next 6-8 weeks. Only occasions that truly fit the product.
+
+
+== DESCRIPTIONS ==
+
+07. Full listing description
+Write an Etsy description for [PRODUCT] using these facts: [FACTS: what is included, sizes/formats, materials or file types, how it works, processing time]. Structure: 2-line hook, what you get (bullets), how to use, FAQ (3), shop note. No claims I did not give you.
+
+08. Digital download description
+Write a description for a digital download: [PRODUCT, FILE TYPES, SIZES, NUMBER OF PAGES]. Make it crystal clear nothing physical ships, how to download, printing tips, and personal-use terms ([TERMS]). Include an AI-assistance disclosure line if I tell you AI was used: [YES/NO].
+
+09. Gift-buyer angle
+Rewrite this description for gift buyers: [DESCRIPTION]. Answer: who it is a great gift for (use cases, not demographics I did not give), how fast it arrives, gift options [OPTIONS].
+
+10. FAQ builder
+Write 8 FAQs with short answers for [PRODUCT] based on these facts and policies: [FACTS + POLICIES]. Cover sizing, timing, customization, returns and care. Flag anything you need me to confirm.
+
+11. Personalization instructions
+Write clear personalization instructions for buyers of [PRODUCT]: what they can customize ([OPTIONS]), character limits, format to type it in, and what happens if info is missing. Under 400 characters for Etsy's personalization box.
+
+
+== PHOTOS & LISTING IMAGES ==
+
+12. Photo shot list
+Make a 10-image shot list for my [PRODUCT] listing: main image, scale shot, detail, in-use, what's included, size chart, back/inside, packaging, lifestyle, and a text-overlay info image. One line on how to shoot each with a phone.
+
+13. Text for listing graphics
+Write short on-image text for 5 listing graphics for [PRODUCT]: 'what's included', 'how it works', 'sizes', 'why buyers like it' (use only real features), and 'instant download' if digital. Max 8 words per line.
+
+14. Main image critique
+I will describe my main listing photo: [DESCRIPTION]. Tell me how it might look as a small search thumbnail, and give 5 concrete changes to make it clearer and more clickable.
+
+15. Alt text
+Write descriptive alt text (under 250 characters each) for these listing images: [IMAGE DESCRIPTIONS]. Accurate and helpful for screen readers, not keyword-stuffed.
+
+
+== SHOP SETUP ==
+
+16. Shop announcement
+Write my Etsy shop announcement: what I make, who it is for, current processing times ([TIMES]) and one current note ([NOTE]). Under 500 characters, friendly.
+
+17. About section
+Write my shop's About section from these facts: [MY STORY, HOW I MAKE THINGS, WHERE, WHY]. Warm, specific, under 300 words, no claims about sales or rankings.
+
+18. Shop policies in plain words
+Turn these policies into clear buyer-friendly text: [RETURNS, EXCHANGES, CANCELLATIONS, DIGITAL DOWNLOAD TERMS, CUSTOM ORDERS]. Keep them consistent with Etsy's rules; flag anything that might conflict.
+
+19. Product line ideas
+Based on my best seller [PRODUCT] and buyer [BUYER], suggest 10 related products or variations I could add, each with the buyer problem it solves and a one-line listing title draft. Mark the 3 easiest to make.
+
+
+== CUSTOMER SERVICE ==
+
+20. Order thank-you message
+Write the message buyers see after purchase for [PRODUCT]: thank you, what happens next ([PROCESSING / DOWNLOAD STEPS]), how to reach me. Under 500 characters.
+
+21. Download help reply
+A buyer cannot find their digital download. Write a friendly reply with the exact steps to find files in their Etsy account (Purchases and reviews > Download files) and an offer to help further. Under 120 words.
+
+22. Delayed order reply
+Write an honest reply to a buyer whose order is delayed because [REASON]. New date [DATE], what I am doing about it, and options ([OPTIONS]). Apologetic but not over the top. Under 120 words.
+
+23. Custom request reply
+A buyer asked: "[REQUEST]". Write a reply saying [YES WITH TERMS / NO, BUT HERE IS AN ALTERNATIVE], with price/timing only if I give them ([DETAILS]). Under 120 words.
+
+24. Reply to a critical review
+Write a calm public response to this review: "[REVIEW]". What actually happened: [FACTS]. No arguing, no private details, show future buyers I care. Under 80 words.
+
+25. Review request (no incentives)
+Write a short follow-up message a week after delivery asking how [PRODUCT] is working out and, if they are happy, whether they would leave a review. No incentives (against Etsy policy). Under 300 characters.
+
+
+== MARKETING ==
+
+26. Pinterest pins
+Write 5 Pinterest pin titles (under 100 characters) and descriptions (under 300 characters) for [PRODUCT], each targeting a different search idea ([IDEAS]). Natural keywords, one call to action.
+
+27. Instagram / TikTok captions
+Write 5 short captions showing [PRODUCT] being used or made, each with a hook line, one useful detail, and a soft call to action. Under 80 words each, 4 relevant hashtags.
+
+28. Sale email to past buyers
+Write an email for my real sale: [OFFER, DATES, CONDITIONS]. Short, clear, subject line options x3, no fake urgency beyond the real end date.
+
+29. Launch plan for a new listing
+Make a 7-day launch checklist for my new listing [PRODUCT]: listing polish, photos, social posts, Pinterest, telling past buyers, and what to measure (views, favorites, sales) each day.
+
+30. Monthly numbers review
+Here are my shop stats for [MONTH]: [VISITS, VIEWS, ORDERS, CONVERSION, TOP LISTINGS, TRAFFIC SOURCES]. Explain what they suggest in plain words and give 5 specific things to try next month. Do not assume numbers I did not give.
+
+
+For your own business use. Please do not resell or share this file.

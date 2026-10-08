@@ -1,0 +1,129 @@
+REAL ESTATE AGENT LISTING & SOCIAL PROMPTS
+
+30 AI prompts for agents: listing descriptions, open house and just-sold posts, buyer and seller emails, video scripts, market updates and client conversations, with fair housing guardrails built in.
+
+HOW TO USE
+1. Paste the starter context into a new AI chat, fill in the [BRACKETS], send.
+2. Pick a prompt, replace the [BRACKETS] with your details, send.
+3. Check every fact before you publish.
+
+STARTER CONTEXT (paste once per chat)
+----------------------------------------
+You are helping me, a real estate agent, write marketing and client communication. Use only the facts I give you and never invent property features, numbers or school ratings.
+Follow fair housing rules: describe the property and its features, never the kind of people who should live there (no references to race, religion, sex, disability, familial status, national origin or other protected classes, and no phrases like "perfect for families" or "walking distance to churches").
+My name and brokerage: [NAME, BROKERAGE]
+Market: [CITY / AREAS]
+Tone: [warm / polished / straightforward]
+Brokerage or MLS rules I must follow: [e.g. required disclosures]
+----------------------------------------
+
+
+== LISTINGS ==
+
+01. MLS listing description
+Write an MLS description for [ADDRESS OR 'this home'] using only these facts: [BEDS, BATHS, SQFT, LOT, YEAR, UPDATES, FEATURES, HOA]. Lead with the strongest real feature, keep to [CHARACTER LIMIT] characters, no exaggerations, fair-housing compliant. Give 2 versions.
+
+02. Feature-led listing variations
+Rewrite this listing description 3 ways, each leading with a different real feature: [DESCRIPTION]. Keep facts unchanged. Point out anything that might not be fair-housing compliant.
+
+03. Luxury listing
+Write a refined listing description for a higher-end property using these facts: [FACTS]. Elegant but concrete: name materials, views and finishes I list, avoid empty words like 'stunning' more than once.
+
+04. Condo / townhome listing
+Write a listing for a condo/townhome with these facts: [FACTS, HOA FEES AND WHAT THEY COVER, AMENITIES, PARKING, PET RULES AS STATED]. Make the HOA value clear without overselling.
+
+05. Land / lot listing
+Write a listing for a land parcel: [ACREAGE, ZONING, UTILITIES, ACCESS, SURVEY, RESTRICTIONS]. Explain what a buyer can and cannot do based only on what I provide; flag what a buyer should verify.
+
+06. Listing compliance check
+Review this listing text for fair housing problems, unverifiable claims and exaggerations: [TEXT]. List each issue, why it matters, and a compliant rewrite. Then give the corrected full text.
+
+
+== SOCIAL MEDIA ==
+
+07. Just listed post
+Write an Instagram/Facebook 'Just Listed' caption for [ADDRESS OR AREA] with [3 KEY FACTS], showing date [DATE] and a call to action to [ACTION]. Under 120 words, 5 relevant hashtags, fair-housing compliant.
+
+08. Open house post
+Write an open house announcement for [ADDRESS] on [DATE, TIME]: 3 real highlights, parking or entry notes [NOTES], and RSVP option [LINK OR 'none']. Two versions: social caption and a short text for my sphere.
+
+09. Just sold post
+Write a 'Just Sold' post for [AREA] that tells a short true story about the sale ([WHAT HAPPENED, e.g. multiple offers, closed in 21 days]) without sharing private client details or numbers I have not cleared. Under 100 words.
+
+10. Carousel outline
+Create a 7-slide carousel outline on [TOPIC, e.g. what a buyer pays at closing in [STATE]]. Slide-by-slide headline and 1-2 lines of copy. Add a note on any facts I need to verify for my state.
+
+11. Agent intro post
+Write a 'meet your agent' post about me using these facts: [BACKGROUND, YEARS, AREAS, WHY I DO THIS, ONE PERSONAL DETAIL]. Warm, under 150 words, no claims of 'top' or 'best' unless I give you the source.
+
+12. Two weeks of posts
+Plan 14 days of posts for an agent in [MARKET]: listings, tips, local spotlights, client stories (with permission), personal posts. Table with day, idea, format and a caption starter.
+
+
+== EMAIL & LEAD NURTURE ==
+
+13. New buyer lead reply
+A buyer lead wrote: "[MESSAGE]". Write a quick, helpful reply that answers what I can ([FACTS]), asks 3 questions (timeline, financing, must-haves) and offers [NEXT STEP]. Under 120 words.
+
+14. Seller lead reply
+A homeowner asked what their home is worth: "[MESSAGE]". Write a reply that explains how I prepare a comparative market analysis, what I need from them, and offers a time to talk. No value estimate. Under 130 words.
+
+15. 5-email buyer nurture
+Write a 5-email sequence for new buyer leads over 3 weeks: 1) welcome and next steps, 2) how pre-approval works, 3) how offers work in [MARKET], 4) common mistakes, 5) check-in. Each under 150 words with a subject line.
+
+16. Past client check-in
+Write a check-in email to a past client from [YEAR]: personal touch [DETAIL], a useful home-owner reminder ([e.g. homestead exemption deadline in [STATE] if applicable]), and an easy reply ask. Under 120 words.
+
+17. Expired listing outreach letter
+Write a respectful letter to the owner of an expired listing in [AREA]. Acknowledge the frustration, explain 3 specific things I would do differently ([MY PLAN]), no criticism of the previous agent. Under 220 words. Note any do-not-contact rules I must check first.
+
+18. Monthly newsletter
+Write a short monthly newsletter for my sphere: local market note using only these numbers [NUMBERS + SOURCE], one home tip, one local event [EVENT], and a soft referral ask. Under 300 words.
+
+
+== VIDEO SCRIPTS ==
+
+19. Listing walkthrough
+Write a 60-second vertical walkthrough script for [ADDRESS OR 'this home'] covering [ROOMS / FEATURES IN ORDER]. Hook in 3 seconds, short lines I can say naturally, on-screen text suggestions, compliant language.
+
+20. Buyer myth-buster
+Write a 45-second script busting one myth buyers in [MARKET] believe about [TOPIC]. State the myth, the reality (only facts I can verify — flag them), and one action step.
+
+21. Neighborhood spotlight
+Write a 60-second neighborhood spotlight for [NEIGHBORHOOD] using these real places and facts: [PLACES, PARKS, COMMUTE TIMES I PROVIDE]. Describe places and amenities, never the people who live there.
+
+22. Seller tip
+Write a 30-second script with one practical tip for sellers preparing to list in [SEASON], plus a call to action to [ACTION]. Include 3 caption options.
+
+
+== MARKET UPDATES & GUIDES ==
+
+23. Market update in plain English
+Turn these numbers into a plain-English market update for buyers and sellers: [MEDIAN PRICE, DAYS ON MARKET, INVENTORY, SALE-TO-LIST, PERIOD, SOURCE]. What it means for each side, 150-200 words, cite the source line at the end.
+
+24. First-time buyer guide
+Outline a first-time buyer guide for [STATE/CITY]: steps from pre-approval to keys, typical timeline, documents, and costs to expect. Mark every state-specific item I must verify. Use headings and short paragraphs.
+
+25. Seller prep checklist
+Create a room-by-room listing prep checklist (quick wins under $100, weekend projects, things to leave alone). Printable, short bullets.
+
+26. Relocation welcome guide
+Write a relocation guide outline for people moving to [CITY]: areas overview (amenities and commute only), utilities to set up, DMV/registration steps, and local resources I list [RESOURCES].
+
+
+== CLIENT CONVERSATIONS ==
+
+27. Explain a low offer
+Help me explain to my sellers why an offer came in at [AMOUNT] vs list [LIST PRICE], using these comps [COMPS] and buyer notes [NOTES]. Calm, factual talking points and 3 response options to discuss.
+
+28. Price reduction conversation
+Write talking points for recommending a price change to sellers after [DAYS] days with [SHOWINGS/FEEDBACK]. Empathetic, data-based ([DATA]), with 2 alternatives to a reduction.
+
+29. Inspection repair request
+Draft a clear, reasonable repair request based on these inspection items: [ITEMS]. Group by priority, suggest repair vs credit, and keep the tone cooperative.
+
+30. Closing day message
+Write a closing-day congratulations message for [CLIENT FIRST NAMES] with a personal note [DETAIL], what to do in the first week (change locks, utilities, keep documents), and how to reach me. Under 150 words.
+
+
+For your own business use. Please do not resell or share this file.

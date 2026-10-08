@@ -1,0 +1,8 @@
+{
+  "name": "launchpad-digital-products",
+  "private": true,
+  "type": "module",
+  "description": "Builds the printable planners, prompt packs and listing images (ventures/digital-products/README.md).",
+  "scripts": { "build": "node build.mjs all" },
+  "devDependencies": { "playwright": "1.56.1" }
+}

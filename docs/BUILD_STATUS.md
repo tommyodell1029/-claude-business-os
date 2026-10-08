@@ -251,3 +251,14 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - Migration `20261008000005_monetization_and_stop.sql` applied (two columns added; `os_settings` key and value checks widened).
 - Docs: `PHASE_1_PLAN.md` (slice 7), `PHASE_2_PLAN.md` (Ponytail, approval levels, emergency stop, observability, Competitor Replication Lab), `PHASE_1_COMPLETE.md` rewritten to the revised §47/§48.
 - Tests: site 137/137 (8 new in `lib/os/monetization.test.ts`), typecheck, lint, build + client bundle check. Playwright iPhone/iPad: every screen and every new form open, no horizontal scroll, inputs 44 px, no page errors.
+
+## Money OS experiments: planner + prompt pack products: 2026-10-08
+- Owner moved "Printable planner templates" and "AI prompt packs" to experiments. Targets as owner stated:
+  - Planners: 5 Etsy listings, 3 sales in 14 days, $1.
+  - Prompt packs: 3 Gumroad products, 3 sales in 14 days, $0.
+- Built in `ventures/digital-products/` (see its README), with niches taken from the stored research evidence:
+  - 5 undated planners (US Letter + A4 PDFs).
+  - 3 prompt packs (30 prompts each, PDF + TXT).
+  - 4 Etsy images per planner and 3 Gumroad images per pack, all rendered from the real pages.
+  - Listing sheets: titles checked against Etsy's 140-character limit; 13 tags each, all within 20 characters.
+- Claude cannot open the shops or publish; the owner uploads. Experiment start dates move to the go-live date when the owner says so.
