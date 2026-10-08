@@ -37,7 +37,7 @@ const PROMPT_VIDEOS = [
     ],
   },
   {
-    id: "V2", slug: "real-estate-agent-prompts", n: 1, hook: "Agents: AI listings without the fair housing risk",
+    id: "V2", slug: "real-estate-agent-prompts", n: 1, hook: "Agents: AI listings with fair housing guardrails",
     filled: "Write an MLS description for this home using only these facts: 3 beds, 2 baths, 1,640 sq ft, 0.24-acre lot, built 1998, new roof 2023, kitchen updated with quartz counters, fenced backyard, screened porch, no HOA. Lead with the strongest real feature, keep to 500 characters, no exaggerations, fair-housing compliant. Give 2 versions.",
     answer: [
       "1. Updated 3-bedroom, 2-bath home with a new roof (2023) and a renovated kitchen with quartz counters. The 1,640 sq ft layout opens to a screened porch overlooking a fully fenced backyard on a 0.24-acre lot. Built in 1998, with no HOA.",
