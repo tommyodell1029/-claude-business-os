@@ -49,6 +49,9 @@ export const TOOLS: ToolSpec[] = [
   { name: "top_opportunities", kind: "read", description: "Money OS opportunities ranked by the code-computed score (killed ones left out unless asked for by status), with confidence and labels (HIGH SCORE, STRONG EVIDENCE, FAST VALIDATION). A null score means not researched yet.", fields: { status: { type: "enum", values: OPP_STATUS, description: "Only opportunities with this status." }, limit }, required: [] },
   { name: "opportunity_detail", kind: "read", description: "One Money OS opportunity: sub-scores with their reasons, what drives the score, unknown dimensions, and up to ten evidence claims with their source domains.", fields: { opportunity_id: { type: "uuid", description: "The opportunity id from top_opportunities." } }, required: ["opportunity_id"] },
   { name: "query_experiments", kind: "read", description: "Money OS experiments, newest first: name, status, hypothesis, success metric, target, budget and result note.", fields: { status: { type: "enum", values: EXP_STATUS, description: "Only experiments with this status." }, limit }, required: [] },
+  { name: "revenue_summary", kind: "read", description: "Revenue, cost and profit by venture: live Stripe payments (test-mode excluded) plus recorded revenue entries, with this month's total.", fields: {}, required: [] },
+  { name: "ai_cost_summary", kind: "read", description: "AI spend from the usage ledger: today, this month, the daily budget meter, and spend by task and by opportunity.", fields: {}, required: [] },
+  { name: "what_next", kind: "read", description: "What needs the owner's attention in the Money OS, ranked by code: experiments waiting on a decision, the best scored opportunities, unresearched opportunities with the most evidence, and today's remaining AI budget.", fields: {}, required: [] },
   { name: "radar_sweep", kind: "write", description: "Propose a Money Radar web search for new opportunities in one category. It costs money (web searches plus tokens, within the AI budgets), so it does NOT run until the owner confirms. A recent identical sweep is reused for free.", fields: { category: { type: "enum", values: RADAR_KEYS, description: "The Radar category." } }, required: ["category"] },
   { name: "research_opportunity", kind: "write", description: "Propose web research on one opportunity (evidence plus proposed sub-scores; the score itself is computed in code). Costs money, so it does NOT run until the owner confirms. Results from the last 14 days are reused for free unless fresh is yes.", fields: { opportunity_id: { type: "uuid", description: "The opportunity id." }, fresh: { type: "enum", values: ["yes", "no"], description: "yes to ignore a recent cached result (default no)." } }, required: ["opportunity_id"] },
   { name: "create_experiment", kind: "write", description: "Propose a new Money OS experiment (status validating). Does NOT execute until the owner confirms. Use only details the owner gave; never invent targets or budgets.", fields: { name: { type: "text", min: 1, max: 160, description: "Short experiment name." }, opportunity_id: { type: "uuid", description: "The opportunity it tests, if any." }, hypothesis: { type: "text", min: 1, max: 1000, description: "What we believe will happen." }, success_metric: { type: "text", min: 1, max: 300, description: "How success is measured." }, target: { type: "text", min: 1, max: 300, description: "The number that counts as success." }, budget_usd: { type: "number", min: 0, max: 10000, description: "Money budget in USD (default 0)." } }, required: ["name"] },
@@ -180,6 +183,17 @@ async function readTool(name: string, v: Record<string, string | number>, ctx: T
       const ev = (d.evidence as Record<string, unknown>[]).slice(0, 10).map((e) => ({ kind: e.kind, claim: clip(e.claim, 300), source: e.source_domain ?? null }));
       return { ...d, problem: clip(d.problem, 400), evidence: ev, evidence_total: (d.evidence as unknown[]).length };
     }
+    case "revenue_summary": {
+      const r = await (await import("../os/views.ts")).revenueView(db, ctx.now);
+      return r.ventures === null ? { error: "data unavailable: revenue could not be read" } : r;
+    }
+    case "ai_cost_summary": {
+      const c = await (await import("../os/views.ts")).costView(db, ctx.now);
+      if (c.today === null) return { error: "data unavailable: the AI usage ledger could not be read" };
+      return { today: c.today, month: c.month, budget: c.budget, by_task: c.byTask, per_opportunity: c.perOpportunity?.slice(0, 5) };
+    }
+    case "what_next":
+      return whatNext(db, ctx.now);
     case "query_experiments": {
       const f: [string, "eq", string][] = v.status ? [["status", "eq", String(v.status)]] : [];
       const rows = await db.select("experiments", "id,name,status,hypothesis,success_metric,target,budget_usd,result_note,started_at,ended_at,opportunity_id", f, "started_at.desc", lim(v));
@@ -234,6 +248,28 @@ const todayLocal = (now: number) => new Intl.DateTimeFormat("en-CA", { timeZone:
 
 async function loadOne(db: Db, table: string, select: string, id: string): Promise<Record<string, unknown> | null> {
   return (await db.select<Record<string, unknown>>(table, select, [["id", "eq", id]], undefined, 1))[0] ?? null;
+}
+
+const DECISION_AFTER_DAYS = 7;
+
+/** Attention list for the Money OS. Ordering and thresholds are code; the model only phrases the result. */
+async function whatNext(db: Db, now: number) {
+  const { listRanked } = await import("../os/opportunities.ts");
+  const { effectiveConfig } = await import("../os/settings.ts");
+  const { spentToday } = await import("../os/usage.ts");
+  const cutoff = new Date(now - DECISION_AFTER_DAYS * 86_400_000).toISOString();
+  const waiting = await db.select("experiments", "id,name,status,target,started_at", [["status", "eq", "validating"], ["started_at", "lte", cutoff]], "started_at.asc", 5);
+  const ranked = await listRanked(db, { limit: 100 });
+  const best = ranked.filter((o) => o.overall !== null).slice(0, 3);
+  const unresearched = ranked.filter((o) => o.status === "discovered").sort((a, b) => b.evidenceCount - a.evidenceCount || b.domains - a.domains).slice(0, 3);
+  const cfg = await effectiveConfig(db);
+  const spent = await spentToday(db, now, cfg);
+  return {
+    experiments_needing_decision: waiting.map((e) => ({ ...e, note: `validating for more than ${DECISION_AFTER_DAYS} days: decide validated or killed` })),
+    best_opportunities: best.map((o) => ({ id: o.id, name: o.name, score: o.overall, confidence: o.confidence, labels: o.labels.text || null, status: o.status })),
+    research_next: unresearched.map((o) => ({ id: o.id, name: o.name, evidence: o.evidenceCount, sources: o.domains })),
+    ai_budget_left_today: spent === null ? null : Math.max(0, Math.round((cfg.budgets.per_day_usd - spent) * 100) / 100),
+  };
 }
 
 /** Checks a Money OS write against stored data and describes exactly what confirming will do. Executes nothing. */

@@ -137,3 +137,15 @@ test("research with no grounded evidence stores no scores", async () => {
   assert.equal(r.scored, 0);
   assert.equal(fx.tables.opportunities[0].s_demand, undefined);
 });
+
+test("a request that dies mid-flight is still logged, at an estimated worst case, so budgets stay conservative", async () => {
+  const fx = fakeDb();
+  const f = (async () => { throw Object.assign(new Error("timed out"), { name: "TimeoutError" }); }) as unknown as typeof fetch;
+  const r = await radarCategory({ db: fx.db, env: ENV, fetchImpl: f, now: NOW }, "ai_tools");
+  assert.equal(r.ok, false);
+  assert.match(String(r.error), /TimeoutError/);
+  assert.equal(fx.tables.ai_usage.length, 1);
+  assert.equal(fx.tables.ai_usage[0].ok, false);
+  assert.equal(fx.tables.ai_usage[0].estimated, true);
+  assert.ok(Number(fx.tables.ai_usage[0].est_cost_usd) > 0);
+});

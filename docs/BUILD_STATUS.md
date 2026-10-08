@@ -221,3 +221,15 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - Tests: site 126/126 (8 new in `lib/os/tools.test.ts`), typecheck, lint, build + client bundle check clean; Python suite OK.
 - Fix 2026-10-08 (found by the owner's first live test): `jarvis_actions.tool` check only allowed the two original tools, so every new write tool failed with "lookup failed". Migration `20261008000004_jarvis_actions_money_os_tools.sql` widens it (applied); a test now fails if a write tool is missing from the latest check.
 - First live Radar sweep (from /os, `ai_income`) stored 4 opportunities: Haiku 4.5 + `web_search_20250305` works.
+
+## Money OS slice 6: mobile pass + Phase 1 checkpoint audit: 2026-10-08 (orchestrator, Opus)
+- Plan gaps closed: ULTRON read tools `revenue_summary`, `ai_cost_summary`, `what_next` (code-ranked: experiments validating > 7 days, best scored, most-evidenced unresearched, budget left today).
+- Mobile: Playwright on the production build at 390×844 and 820×1180. All 8 screens, Radar/Research buttons, budget editor and signed-out sign-in pass; no horizontal scroll, no page errors. Tabs raised from 40 px to 44 px (plan: tap targets ≥ 44 px).
+- Audit (Opus):
+  - Every `/api/jarvis/*` route is owner-only with `SameSite=Strict` cookies; money-spending POSTs also check the origin.
+  - Writes are confirm-gated, with summaries built in code.
+  - Web text reaches the model only as data; links are rendered http(s) only.
+  - Fix: research/Radar runs now share a 50 s deadline (routes cap at 60 s), so no request is cut off unlogged. A request that dies mid-flight is logged at an estimated worst case.
+  - Accepted, documented risks: concurrent-run budget overshoot (≤ 1 run) and continuation search allowance (run cap still applies).
+- `docs/money-os/PHASE_1_COMPLETE.md`: Definition of Done table with verification, measured costs ($0.29 to date), known issues, owner test list, Phase 2 scope. Only open item: the owner opens `/os` on the iPad.
+- Tests: site 129/129, typecheck, lint, build + client bundle check clean.

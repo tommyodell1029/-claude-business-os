@@ -28,6 +28,9 @@ type Block = { type: string; text?: string; content?: unknown };
 /** Assumed input tokens one basic web search adds to the context; used only for the pre-call worst-case estimate. */
 const TOKENS_PER_SEARCH = 12_000;
 const MAX_CONTINUATIONS = 2;
+/** Wall-clock budget for one run, below the routes' 60 s maxDuration so every request is logged before the cutoff. */
+const RUN_DEADLINE_MS = 50_000;
+const MIN_REQUEST_MS = 8_000;
 
 export const sha = (s: string): string => createHash("sha256").update(s).digest("hex");
 
@@ -124,8 +127,13 @@ export async function searchCall(
   const hits: Hit[] = [];
   const texts: string[] = [];
   let spent = 0;
+  const deadline = Date.now() + RUN_DEADLINE_MS;
+  // A request that dies mid-flight may still be billed: count it at its worst case (marked estimated).
+  const perRequestWorst = Math.round((worstCase(modelId, o.maxSearches, o.maxTokens, o.system.length + o.prompt.length) / 2) * 1e6) / 1e6;
   for (let i = 0; i <= MAX_CONTINUATIONS; i++) {
     const started = Date.now();
+    const left = deadline - started;
+    if (left < MIN_REQUEST_MS) return { ok: false, error: "ran out of time before finishing; partial results were not saved", spent };
     let r: Response;
     try {
       r = await ctx.fetchImpl("https://api.anthropic.com/v1/messages", {
@@ -135,10 +143,11 @@ export async function searchCall(
           model: modelId, max_tokens: o.maxTokens, system: o.system, messages,
           tools: [{ type: "web_search_20250305", name: "web_search", max_uses: o.maxSearches }],
         }),
-        signal: AbortSignal.timeout(55_000),
+        signal: AbortSignal.timeout(left),
       });
     } catch (e) {
-      return { ok: false, error: `model request failed: ${(e as Error).name}`, spent };
+      await logUsage(ctx.db, { task: o.task, component: "os", model: modelId, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, webSearches: 0 }, usd: perRequestWorst, estimated: true, durationMs: Date.now() - started, ok: false, opportunityId: o.opportunityId });
+      return { ok: false, error: `model request failed: ${(e as Error).name}`, spent: spent + perRequestWorst };
     }
     if (!r.ok) {
       const detail = (await r.text().catch(() => "")).slice(0, 300).replace(/\s+/g, " ");

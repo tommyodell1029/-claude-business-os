@@ -19,7 +19,7 @@ body:has(.os) { background: var(--bg, #0b1117); }
 
 .os-tabs { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 6px 0 10px; margin: 0 -16px; padding-inline: 16px; scrollbar-width: none; }
 .os-tabs::-webkit-scrollbar { display: none; }
-.os-tab { flex: 0 0 auto; min-height: 40px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px;
+.os-tab { flex: 0 0 auto; min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px;
   border: 1px solid var(--line); color: var(--dim); text-decoration: none; font-weight: 600; font-size: 14px; }
 .os-tab.on { background: var(--accent); border-color: var(--accent); color: #04121c; }
 

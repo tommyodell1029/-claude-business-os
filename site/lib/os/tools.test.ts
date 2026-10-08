@@ -169,3 +169,28 @@ test("every write tool is allowed by the latest jarvis_actions tool check in sup
   }
   for (const t of TOOLS.filter((x) => x.kind === "write")) assert.ok(allowed.includes(t.name), `${t.name} missing from the jarvis_actions tool check`);
 });
+
+test("what_next: stale experiments, best scored and most-evidenced unresearched opportunities, budget left, all from code", async () => {
+  const s = setup({
+    experiments: [
+      { id: "e1", name: "Old test", status: "validating", started_at: "2026-09-20T12:00:00Z" },
+      { id: "e2", name: "New test", status: "validating", started_at: "2026-10-07T12:00:00Z" },
+    ],
+    ai_cost_daily: [{ day: "2026-10-08", cost_usd: "0.29" }],
+  });
+  for (const n of ["Scored idea", "Thin idea", "Rich idea"]) await createOpportunity(s.db, { name: n, category: "ai_tools" });
+  Object.assign(s.tables.opportunities[0], { overall_score: "6.5", confidence: "0.8", status: "researched" });
+  Object.assign(s.tables.opportunities[1], { evidence_count: 1 });
+  Object.assign(s.tables.opportunities[2], { evidence_count: 5 });
+  const w = (await runTool("what_next", {}, s.ctx())).content as {
+    experiments_needing_decision: { name: string }[]; best_opportunities: { name: string }[]; research_next: { name: string }[]; ai_budget_left_today: number;
+  };
+  assert.deepEqual(w.experiments_needing_decision.map((e) => e.name), ["Old test"]);
+  assert.deepEqual(w.best_opportunities.map((o) => o.name), ["Scored idea"]);
+  assert.deepEqual(w.research_next.map((o) => o.name), ["Rich idea", "Thin idea"]);
+  assert.equal(w.ai_budget_left_today, Math.round((DEFAULTS.per_day_usd - 0.29) * 100) / 100);
+  const rev = (await runTool("revenue_summary", {}, s.ctx())).content as { totals: { revenue: number } };
+  assert.equal(rev.totals.revenue, 0, "no revenue is $0, never invented");
+  const cost = (await runTool("ai_cost_summary", {}, s.ctx())).content as { today: { costUsd: number } };
+  assert.equal(cost.today.costUsd, 0.29);
+});
