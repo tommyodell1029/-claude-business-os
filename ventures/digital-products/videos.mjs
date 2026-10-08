@@ -82,10 +82,10 @@ function segment(png, seconds, file, { scroll = false } = {}) {
   execFileSync(FF, ["-y", "-loglevel", "error", "-loop", "1", "-framerate", String(FPS), "-i", png, "-t", seconds.toFixed(2), "-vf", vf, "-r", String(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "20", file]);
 }
 
-function assemble(segs, audio, file) {
+function assemble(segs, audio, file, seconds) {
   const list = `${file}.txt`;
   execFileSync("bash", ["-c", `printf "${segs.map((s) => `file '${s}'`).join("\\n")}\\n" > '${list}'`]);
-  execFileSync(FF, ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-i", audio, "-c:v", "copy", "-af", "apad", "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart", file]);
+  execFileSync(FF, ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-i", audio, "-c:v", "copy", "-af", "apad", "-c:a", "aac", "-b:a", "160k", "-t", seconds.toFixed(2), "-movflags", "+faststart", file]);
   rmSync(list);
 }
 
@@ -127,7 +127,7 @@ for (const v of PROMPT_VIDEOS) {
     <div class="bar">$12 · Link in bio</div>`), `${tmp}/4.png`);
   const t1 = 2.6, t2 = 5.4, t4 = 4.6, t3 = Math.max(4, total - t1 - t2 - t4);
   const segs = [[1, t1], [2, t2], [3, t3], [4, t4]].map(([n, s]) => { const f = `${tmp}/${n}.mp4`; segment(`${tmp}/${n}.png`, s, f); return f; });
-  assemble(segs, audio, `${OUT}${v.id}-${v.slug}.mp4`);
+  assemble(segs, audio, `${OUT}${v.id}-${v.slug}.mp4`, t1 + t2 + t3 + t4);
   console.log(`${v.id} done (${total.toFixed(1)}s)`);
 }
 
@@ -165,7 +165,7 @@ for (const v of PLANNER_VIDEOS) {
   add(`${tmp}/1.png`, t1);
   show.forEach((_, k) => add(`${tmp}/p${k}.png`, tp));
   add(`${tmp}/5.png`, t5);
-  assemble(segs, audio, `${OUT}${v.id}-${pl.slug}.mp4`);
+  assemble(segs, audio, `${OUT}${v.id}-${pl.slug}.mp4`, t1 + t5 + tp * show.length);
   console.log(`${v.id} done (${total.toFixed(1)}s)`);
 }
 
