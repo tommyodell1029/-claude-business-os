@@ -28,7 +28,7 @@ export const OS_CONFIG = {
       "cache_read": 0.2
     }
   },
-  "web_search_usd": null,
+  "web_search_usd": 0.01,
   "cache": {
     "research_ttl_days": 14
   },
