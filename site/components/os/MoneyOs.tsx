@@ -1,5 +1,6 @@
 "use client";
-// Money OS (Phase 1): read-only screens for opportunities, experiments, revenue, AI cost, activity and settings.
+// Money OS (Phase 1): screens for opportunities, experiments, revenue, AI cost, activity and settings. Owner changes
+// (Radar, research, experiments, kills, revenue, budgets, emergency stop) each sit behind a confirm dialog.
 // Data comes only from /api/jarvis/os/* (same-origin, owner session cookies). ULTRON (chat + voice) is /jarvis.
 // Every value is rendered as React text; links are shown only for http(s) URLs.
 import { useCallback, useEffect, useState } from "react";
@@ -80,7 +81,19 @@ function Chip({ tier, text }: { tier: number; text: string }) {
   return <span className={`os-chip t${tier}`}>{text}</span>;
 }
 
-type Opp = { id: string; name: string; category: string; status: string; overall: number | null; confidence: number; evidenceCount: number; domains: number; labels: { tier: number; text: string } };
+type Opp = {
+  id: string; name: string; category: string; status: string; overall: number | null; confidence: number; evidenceCount: number; domains: number;
+  labels: { tier: number; text: string; highScore?: boolean; strongEvidence?: boolean; fastValidation?: boolean };
+  daysToFirstDollar?: number | null; models?: string[]; monetization?: string[]; createdAt?: string;
+};
+const pretty = (s: unknown) => String(s ?? "").replace(/_/g, " ");
+
+/** Owner change from a screen: same validation and execution as a confirmed ULTRON action. */
+async function act(tool: string, input: Record<string, unknown>): Promise<{ ok: boolean; text: string }> {
+  const clean = Object.fromEntries(Object.entries(input).filter(([, v]) => v !== "" && v !== undefined && v !== null));
+  const r = await post("os/action", { tool, input: clean });
+  return r.status === 200 && r.body.ok ? { ok: true, text: String(r.body.message ?? "Saved.") } : { ok: false, text: String(r.body.error ?? `Could not save (${r.status}).`) };
+}
 
 function OppCard({ o, onOpen }: { o: Opp; onOpen: (id: string) => void }) {
   return (
@@ -89,7 +102,8 @@ function OppCard({ o, onOpen }: { o: Opp; onOpen: (id: string) => void }) {
         <strong>{o.name}</strong>
         <span className="os-score">{o.overall === null ? "unscored" : o.overall.toFixed(1)}</span>
       </div>
-      <div className="os-meta">{o.category} · {o.status.replace(/_/g, " ")} · confidence {pct(o.confidence)} · {o.evidenceCount} evidence / {o.domains} sources</div>
+      <div className="os-meta">{pretty(o.category)} · {pretty(o.status)} · confidence {pct(o.confidence)} · {o.evidenceCount} evidence / {o.domains} sources{typeof o.daysToFirstDollar === "number" ? ` · ~${o.daysToFirstDollar} days to first $` : ""}</div>
+      {o.models && o.models.length ? <div className="os-meta">Fits: {o.models.map(pretty).join(", ")}</div> : null}
       <Chip tier={o.labels.tier} text={o.labels.text} />
     </button>
   );
@@ -140,9 +154,28 @@ function RadarPanel({ onDone }: { onDone: () => void }) {
   );
 }
 
+const SORTS = [["score", "Score"], ["fastest", "Fastest to $"], ["confidence", "Confidence"], ["newest", "Newest"]] as const;
+const LABEL_FILTERS = [["", "Any label"], ["high", "HIGH SCORE"], ["strong", "+ STRONG EVIDENCE"], ["fast", "+ FAST VALIDATION"]] as const;
+
+/** Search, filter and sort in the browser over the code-ranked list (no model calls; unknown values sort last). */
+function refine(items: Opp[], f: { q: string; category: string; label: string; model: string; sort: string }): Opp[] {
+  const q = f.q.trim().toLowerCase();
+  let out = items.filter((o) =>
+    (!q || `${o.name} ${o.category} ${(o.monetization ?? []).join(" ")}`.toLowerCase().includes(q)) &&
+    (!f.category || o.category === f.category) &&
+    (!f.model || (o.models ?? []).includes(f.model)) &&
+    (!f.label || (f.label === "high" ? o.labels.tier >= 1 : f.label === "strong" ? o.labels.tier >= 2 : o.labels.tier >= 3)));
+  const last = (x: number | null | undefined, dir: number) => (typeof x === "number" ? dir * x : Number.POSITIVE_INFINITY);
+  if (f.sort === "fastest") out = [...out].sort((a, b) => last(a.daysToFirstDollar, 1) - last(b.daysToFirstDollar, 1) || last(a.overall, -1) - last(b.overall, -1));
+  else if (f.sort === "confidence") out = [...out].sort((a, b) => b.confidence - a.confidence);
+  else if (f.sort === "newest") out = [...out].sort((a, b) => String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")));
+  return out;
+}
+
 function Opportunities({ nonce, onOpen }: { nonce: number; onOpen: (id: string) => void }) {
   const [status, setStatus] = useState("");
   const [bump, setBump] = useState(0);
+  const [f, setF] = useState({ q: "", category: "", label: "", model: "", sort: "score" });
   const load = useView(`opportunities${status ? `?status=${encodeURIComponent(status)}` : ""}`, nonce * 1000 + bump);
   const statuses = ["", "discovered", "researched", "validation_ready", "validating", "validated", "live", "killed"];
   return (
@@ -158,7 +191,24 @@ function Opportunities({ nonce, onOpen }: { nonce: number; onOpen: (id: string) 
           const items = list<Opp>(d.items);
           if (!items) return <p className="os-warn">{UNAVAILABLE}</p>;
           if (!items.length) return <p className="os-dim">No opportunities yet. Run Money Radar to find some with evidence.</p>;
-          return items.map((o) => <OppCard key={o.id} o={o} onOpen={onOpen} />);
+          const cats = [...new Set(items.map((o) => o.category))].sort();
+          const models = [...new Set(items.flatMap((o) => o.models ?? []))].sort();
+          const shown = refine(items, f);
+          return (
+            <>
+              <div className="os-card os-form">
+                <input className="os-input wide" type="search" placeholder="Search name, category, money model" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} aria-label="Search opportunities" />
+                <div className="os-form-row">
+                  <select className="os-input" value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value })} aria-label="Sort">{SORTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+                  <select className="os-input" value={f.label} onChange={(e) => setF({ ...f, label: e.target.value })} aria-label="Label">{LABEL_FILTERS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+                  <select className="os-input" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} aria-label="Category"><option value="">All categories</option>{cats.map((c) => <option key={c} value={c}>{pretty(c)}</option>)}</select>
+                  <select className="os-input" value={f.model} onChange={(e) => setF({ ...f, model: e.target.value })} aria-label="Money model"><option value="">Any money model</option>{models.map((m) => <option key={m} value={m}>{pretty(m)}</option>)}</select>
+                </div>
+                <p className="os-dim">{shown.length} of {items.length} shown</p>
+              </div>
+              {shown.map((o) => <OppCard key={o.id} o={o} onOpen={onOpen} />)}
+            </>
+          );
         }}
       </Shell>
     </>
@@ -225,6 +275,15 @@ function OpportunityDetail({ id, nonce, onBack }: { id: string; nonce: number; o
                 {o.audience ? <p><span className="os-dim">Audience: </span>{String(o.audience)}</p> : null}
                 <ResearchButton id={String(o.id)} researched={o.status !== "discovered"} onDone={() => setBump((b) => b + 1)} />
               </div>
+              <MonetizationCard m={o.monetizationAnalysis as Any | undefined} />
+              {o.status !== "killed" ? (
+                <div className="os-card">
+                  <h3 className="os-h3">Decide</h3>
+                  <NewExperimentForm opportunityId={String(o.id)} defaultName={`Validate: ${String(o.name)}`.slice(0, 160)}
+                    defaultHypothesis={String(((o.monetizationAnalysis as Any | undefined)?.cheapestValidation as Any | null)?.description ?? "")} onDone={() => setBump((b) => b + 1)} />
+                  <KillButton id={String(o.id)} name={String(o.name)} onDone={() => setBump((b) => b + 1)} />
+                </div>
+              ) : null}
               <div className="os-card">
                 <h3 className="os-h3">Why it scored this way</h3>
                 {why.strongest.length ? <ul>{why.strongest.map((s) => <li key={s}>{s}</li>)}</ul> : <p className="os-dim">No strong factors yet.</p>}
@@ -265,7 +324,8 @@ function OpportunityDetail({ id, nonce, onBack }: { id: string; nonce: number; o
 }
 
 function Experiments({ nonce }: { nonce: number }) {
-  const load = useView("experiments", nonce);
+  const [bump, setBump] = useState(0);
+  const load = useView("experiments", nonce * 1000 + bump);
   return (
     <Shell load={load}>
       {(d) => {
@@ -277,12 +337,14 @@ function Experiments({ nonce }: { nonce: number }) {
             <div className="os-stats">
               {["validating", "validated", "live", "killed"].map((s) => <Stat key={s} label={s} value={String(by[s] ?? 0)} />)}
             </div>
-            {!items.length ? <p className="os-dim">No experiments yet. Create one from an opportunity (ULTRON, later build slice).</p> : items.map((e) => (
+            <div className="os-card"><h3 className="os-h3">New experiment</h3><NewExperimentForm onDone={() => setBump((b) => b + 1)} /></div>
+            {!items.length ? <p className="os-dim">No experiments yet. Start one here, from an opportunity, or ask ULTRON.</p> : items.map((e) => (
               <div key={String(e.id)} className="os-card">
-                <div className="os-row-between"><strong>{String(e.name)}</strong><span className="os-tag">{String(e.status)}</span></div>
+                <div className="os-row-between"><strong>{String(e.name)}</strong><span className="os-tag">{pretty(e.status)}</span></div>
                 {e.hypothesis ? <p>{String(e.hypothesis)}</p> : null}
-                <div className="os-meta">Metric: {String(e.success_metric ?? "not set")} · Target: {String(e.target ?? "not set")} · Budget {usd(Number(e.budget_usd))}</div>
+                <div className="os-meta">Metric: {String(e.success_metric ?? "not set")} · Target: {String(e.target ?? "not set")} · Budget {usd(Number(e.budget_usd))} · started {when(e.started_at)}</div>
                 {e.result_note ? <p className="os-dim">{String(e.result_note)}</p> : null}
+                <ExperimentStatus id={String(e.id)} current={String(e.status)} onDone={() => setBump((b) => b + 1)} />
               </div>
             ))}
           </>
@@ -293,7 +355,8 @@ function Experiments({ nonce }: { nonce: number }) {
 }
 
 function Revenue({ nonce }: { nonce: number }) {
-  const load = useView("revenue", nonce);
+  const [bump, setBump] = useState(0);
+  const load = useView("revenue", nonce * 1000 + bump);
   return (
     <Shell load={load}>
       {(d) => {
@@ -308,6 +371,7 @@ function Revenue({ nonce }: { nonce: number }) {
               <Stat label="Recorded costs" value={t ? usd(t.cost) : UNAVAILABLE} />
               <Stat label="Profit" value={t ? usd(t.profit) : UNAVAILABLE} />
             </div>
+            <RecordRevenueForm onDone={() => setBump((b) => b + 1)} />
             {typeof d.excludedTestPayments === "number" && d.excludedTestPayments > 0 ? (
               <p className="os-dim">{d.excludedTestPayments} Stripe test-mode payment(s) excluded.</p>
             ) : null}
@@ -458,6 +522,7 @@ function Settings({ nonce }: { nonce: number }) {
                   <div className="os-row-between os-line"><span>Per experiment</span><span>{usd(b?.per_experiment_usd)}</span></div>
                 </div>
               )}
+            {d.canEdit ? <StopSwitch paused={d.aiPaused === true} onDone={() => setBump((x) => x + 1)} /> : null}
             <div className="os-card">
               <h3 className="os-h3">Labels</h3>
               <p className="os-line">HIGH SCORE: score ≥ {String(L.high_score_min)}</p>
@@ -476,12 +541,203 @@ function Settings({ nonce }: { nonce: number }) {
   );
 }
 
+/** Monetization Analysis: revenue models (proposed by research, validated in code) plus stored sub-scores. */
+function MonetizationCard({ m }: { m: Any | undefined }) {
+  if (!m) return null;
+  const models = list<{ model: string; fit: number; reason: string }>(m.models) ?? [];
+  const v = m.cheapestValidation as Any | null;
+  const n = (x: unknown, suffix = "/10") => (typeof x === "number" ? `${x}${suffix}` : "unknown");
+  return (
+    <div className="os-card">
+      <h3 className="os-h3">Monetization analysis</h3>
+      {!m.analyzed ? <p className="os-dim">Not analyzed yet. Research this opportunity to see which revenue models fit.</p> : models.map((x) => (
+        <div key={x.model} className="os-bar-row">
+          <span className="os-bar-label">{pretty(x.model)}</span>
+          <span className="os-bar" aria-label={`${x.fit} out of 10`}><span style={{ width: `${x.fit * 10}%` }} /></span>
+          <span className="os-bar-reason">{x.reason}</span>
+        </div>
+      ))}
+      <div className="os-stats">
+        <Stat label="Recurring potential" value={n(m.recurring)} />
+        <Stat label="Affiliate potential" value={n(m.affiliate)} />
+        <Stat label="Digital product fit" value={n(m.digitalProduct)} />
+        <Stat label="SaaS fit" value={n(m.saas)} />
+        <Stat label="Days to first $" value={n(m.daysToFirstDollar, "")} />
+        <Stat label="Validation difficulty" value={n(m.validationDifficulty)} />
+      </div>
+      {list<string>(m.withoutSoftware)?.length ? <p className="os-line">Without building software: {(list<string>(m.withoutSoftware) ?? []).map(pretty).join(", ")}</p> : null}
+      {v ? <p className="os-line"><span className="os-dim">Cheapest validation: </span>{pretty(v.method)}: {String(v.description)} (~{usd(v.est_cost_usd)}, ~{String(v.est_days)} days)</p> : null}
+      <p className="os-dim">Fits and the validation plan are model estimates from the stored evidence; sub-scores come from the scoring above.</p>
+    </div>
+  );
+}
+
+function NewExperimentForm({ opportunityId, defaultName = "", defaultHypothesis = "", onDone }: { opportunityId?: string; defaultName?: string; defaultHypothesis?: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [v, setV] = useState({ name: defaultName, hypothesis: defaultHypothesis, success_metric: "", target: "", budget_usd: "0" });
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!open) return <button className="os-btn" onClick={() => setOpen(true)}>Start an experiment</button>;
+  const save = async () => {
+    const budget = Number(v.budget_usd || 0);
+    if (!v.name.trim() || !Number.isFinite(budget) || budget < 0) { setMsg({ ok: false, text: "Name and a budget of $0 or more are required." }); return; }
+    if (!window.confirm(`Create experiment "${v.name.trim()}" with budget ${usd(budget)}?`)) return;
+    setBusy(true);
+    const r = await act("create_experiment", { name: v.name.trim(), opportunity_id: opportunityId, hypothesis: v.hypothesis.trim(), success_metric: v.success_metric.trim(), target: v.target.trim(), budget_usd: budget });
+    setBusy(false); setMsg(r);
+    if (r.ok) { setOpen(false); onDone(); }
+  };
+  const field = (k: keyof typeof v, label: string, extra: Record<string, unknown> = {}) => (
+    <label className="os-field"><span>{label}</span><input className="os-input wide" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} {...extra} /></label>
+  );
+  return (
+    <div className="os-form">
+      {field("name", "Name", { maxLength: 160 })}
+      {field("hypothesis", "Hypothesis", { maxLength: 1000 })}
+      {field("success_metric", "Success metric (e.g. purchases)", { maxLength: 300 })}
+      {field("target", "Target (e.g. 5 sales in 14 days)", { maxLength: 300 })}
+      {field("budget_usd", "Budget $", { inputMode: "decimal", type: "number", min: 0, step: "0.01" })}
+      <div className="os-form-row"><button className="os-btn" disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Create"}</button><button className="os-btn ghost" onClick={() => setOpen(false)}>Cancel</button></div>
+      {msg ? <p className={msg.ok ? "os-dim" : "os-warn"} role="status">{msg.text}</p> : null}
+    </div>
+  );
+}
+
+const EXP_STATUSES = ["validation_ready", "validating", "validated", "building", "live", "growing", "killed"];
+
+function ExperimentStatus({ id, current, onDone }: { id: string; current: string; onDone: () => void }) {
+  const [status, setStatus] = useState(current);
+  const [note, setNote] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    if (status === current) return;
+    if (!window.confirm(`Change status from ${pretty(current)} to ${pretty(status)}?`)) return;
+    setBusy(true);
+    const r = await act("set_experiment_status", { experiment_id: id, status, result_note: note.trim() });
+    setBusy(false); setMsg(r);
+    if (r.ok) onDone();
+  };
+  return (
+    <div className="os-form">
+      <div className="os-form-row">
+        <select className="os-input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Experiment status">{EXP_STATUSES.map((s) => <option key={s} value={s}>{pretty(s)}</option>)}</select>
+        <button className="os-btn" disabled={busy || status === current} onClick={() => void save()}>Update</button>
+      </div>
+      {status !== current ? <input className="os-input wide" placeholder="Result note (what the data showed)" maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} aria-label="Result note" /> : null}
+      {msg ? <p className={msg.ok ? "os-dim" : "os-warn"} role="status">{msg.text}</p> : null}
+    </div>
+  );
+}
+
+function KillButton({ id, name, onDone }: { id: string; name: string; onDone: () => void }) {
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const go = async () => {
+    const reason = window.prompt(`Why kill "${name}"? (It stays stored, hidden from the ranking.)`)?.trim();
+    if (!reason) return;
+    const r = await act("kill_opportunity", { opportunity_id: id, reason: reason.slice(0, 500) });
+    setMsg(r);
+    if (r.ok) onDone();
+  };
+  return <>
+    <button className="os-btn ghost" onClick={() => void go()}>Kill this opportunity</button>
+    {msg ? <p className={msg.ok ? "os-dim" : "os-warn"} role="status">{msg.text}</p> : null}
+  </>;
+}
+
+const REVENUE_SOURCES = ["manual", "affiliate", "marketplace", "other"];
+const todayEt = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+
+function RecordRevenueForm({ onDone }: { onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [v, setV] = useState({ venture: "", amount_usd: "", cost_usd: "0", source: "manual", occurred_on: todayEt(), product: "", note: "" });
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!open) return <div className="os-card"><button className="os-btn" onClick={() => setOpen(true)}>Record revenue</button><p className="os-dim">For money received outside Stripe (affiliate payouts, marketplace sales). Stripe payments are counted automatically.</p></div>;
+  const save = async () => {
+    const amount = Number(v.amount_usd);
+    const cost = Number(v.cost_usd || 0);
+    if (!v.venture.trim() || !Number.isFinite(amount) || amount <= 0 || !Number.isFinite(cost) || cost < 0) { setMsg({ ok: false, text: "Venture and an amount above $0 are required." }); return; }
+    if (!window.confirm(`Record ${usd(amount)} for ${v.venture.trim()} on ${v.occurred_on}?`)) return;
+    setBusy(true);
+    const r = await act("record_revenue", { venture: v.venture.trim(), amount_usd: amount, cost_usd: cost, source: v.source, occurred_on: v.occurred_on, product: v.product.trim(), note: v.note.trim() });
+    setBusy(false); setMsg(r);
+    if (r.ok) { setOpen(false); onDone(); }
+  };
+  const field = (k: keyof typeof v, label: string, extra: Record<string, unknown> = {}) => (
+    <label className="os-field"><span>{label}</span><input className="os-input wide" value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} {...extra} /></label>
+  );
+  return (
+    <div className="os-card os-form">
+      <h3 className="os-h3">Record revenue</h3>
+      {field("venture", "Venture", { maxLength: 80 })}
+      {field("amount_usd", "Amount received $", { inputMode: "decimal", type: "number", min: 0, step: "0.01" })}
+      {field("cost_usd", "Direct cost $", { inputMode: "decimal", type: "number", min: 0, step: "0.01" })}
+      <label className="os-field"><span>Source</span><select className="os-input wide" value={v.source} onChange={(e) => setV({ ...v, source: e.target.value })}>{REVENUE_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
+      {field("occurred_on", "Date", { type: "date", max: todayEt() })}
+      {field("product", "Product (optional)", { maxLength: 160 })}
+      {field("note", "Note (optional)", { maxLength: 500 })}
+      <div className="os-form-row"><button className="os-btn" disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Save"}</button><button className="os-btn ghost" onClick={() => setOpen(false)}>Cancel</button></div>
+      {msg ? <p className={msg.ok ? "os-dim" : "os-warn"} role="status">{msg.text}</p> : null}
+    </div>
+  );
+}
+
+/** Emergency stop: refuses every model call (ULTRON, Radar, research) until resumed. */
+function StopSwitch({ paused, onDone }: { paused: boolean; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const flip = async () => {
+    if (!window.confirm(paused ? "Resume AI calls?" : "Stop ALL AI calls now? ULTRON, Radar and research will refuse until you resume.")) return;
+    setBusy(true);
+    const r = await post("os/settings", { aiPaused: !paused });
+    setBusy(false);
+    if (r.status === 200 && r.body.ok) { setMsg(r.body.aiPaused ? "AI stopped." : "AI resumed."); onDone(); } else setMsg(String(r.body.error ?? `Could not save (${r.status}).`));
+  };
+  return (
+    <div className={`os-card${paused ? " os-stopped" : ""}`}>
+      <h3 className="os-h3">Emergency stop</h3>
+      <p className="os-line">{paused ? "AI is STOPPED. No model calls are made." : "AI is running within the budgets above."}</p>
+      <button className={`os-btn${paused ? "" : " danger"}`} disabled={busy} onClick={() => void flip()}>{paused ? "Resume AI" : "Stop all AI"}</button>
+      {msg ? <p className="os-dim" role="status">{msg}</p> : null}
+    </div>
+  );
+}
+
 function Command({ nonce, go }: { nonce: number; go: (h: string) => void }) {
   const opps = useView("opportunities", nonce);
   const cost = useView("cost", nonce);
   const exps = useView("experiments", nonce);
+  const rev = useView("revenue", nonce);
+  const next = useView("next", nonce);
   return (
     <>
+      <div className="os-card os-next">
+        <h3 className="os-h3">Next move</h3>
+        <Shell load={next}>
+          {(d) => {
+            const r = d.recommended as { kind: string; text: string; targetId: string | null } | null;
+            const t = d.top_opportunity as Any | null;
+            if (!r) return <p className="os-warn">{UNAVAILABLE}</p>;
+            const v = t?.cheapestValidation as Any | null;
+            return (
+              <>
+                <p className="os-next-text">{r.text}</p>
+                {r.targetId && r.kind !== "decide_experiment" ? <button className="os-btn" onClick={() => go(`opportunity/${r.targetId}`)}>Open</button> : null}
+                {r.kind === "decide_experiment" ? <button className="os-btn" onClick={() => go("experiments")}>Open experiments</button> : null}
+                {r.kind === "run_radar" ? <button className="os-btn" onClick={() => go("opportunities")}>Go to Money Radar</button> : null}
+                {t ? (
+                  <div className="os-line">
+                    <span className="os-dim">Highest potential: </span><strong>{String(t.name)}</strong> · {typeof t.score === "number" ? (t.score as number).toFixed(1) : "unscored"} · confidence {pct(t.confidence)}
+                    {list<Any>(t.models)?.length ? <div className="os-meta">Money: {(list<Any>(t.models) ?? []).map((m) => `${pretty(m.model)} ${String(m.fit)}/10`).join(", ")}</div> : null}
+                    {v ? <div className="os-meta">Cheapest test: {pretty(v.method)}, ~{usd(v.est_cost_usd)}, ~{String(v.est_days)} days</div> : null}
+                  </div>
+                ) : null}
+              </>
+            );
+          }}
+        </Shell>
+      </div>
       <div className="os-card">
         <h2 className="os-h2">ULTRON</h2>
         <p className="os-dim">Talk or type to the assistant. It answers from the same data and asks before changing anything.</p>
@@ -490,6 +746,7 @@ function Command({ nonce, go }: { nonce: number; go: (h: string) => void }) {
       <div className="os-stats">
         <Shell load={cost}>{(d) => <Stat label="AI cost today" value={d.today ? usd((d.today as Any).costUsd, 4) : UNAVAILABLE} />}</Shell>
         <Shell load={exps}>{(d) => <Stat label="Active experiments" value={d.byStatus ? String(((d.byStatus as Record<string, number>).validating ?? 0) + ((d.byStatus as Record<string, number>).live ?? 0)) : UNAVAILABLE} />}</Shell>
+        <Shell load={rev}>{(d) => <Stat label="Revenue this month" value={d.totals ? usd((d.totals as Any).thisMonth) : UNAVAILABLE} />}</Shell>
       </div>
       <div className="os-card">
         <h3 className="os-h3">Top opportunities</h3>

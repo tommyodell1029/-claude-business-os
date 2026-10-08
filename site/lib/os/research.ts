@@ -10,6 +10,7 @@ import { OS_CONFIG } from "./config.generated.ts";
 import { addEvidence, applyProposal, createOpportunity } from "./opportunities.ts";
 import type { EvidenceInput } from "./opportunities.ts";
 import { DIMENSIONS, validateProposal } from "./score.ts";
+import { REVENUE_MODELS, VALIDATION_METHODS, validateModels, validateValidation } from "./monetization.ts";
 import type { ApiUsage, OsConfig } from "./usage.ts";
 import { costOf, logActivity, logUsage, spentToday, tokensFrom, usd } from "./usage.ts";
 import { effectiveConfig } from "./settings.ts";
@@ -112,7 +113,12 @@ export async function searchCall(
   const key = anthropicKey(ctx.env);
   if (!key) return { ok: false, error: "ANTHROPIC_API_KEY not set", spent: 0 };
   const modelId = model(o.role, "os");
-  const budgets = (await effectiveConfig(ctx.db)).budgets; // yaml + the owner's overrides from /os Settings
+  const eff = await effectiveConfig(ctx.db);
+  if (eff.aiPaused) {
+    await logActivity(ctx.db, "system", "budget_stop", `${o.task} refused: AI is stopped (emergency stop in /os Settings)`);
+    return { ok: false, error: "AI is stopped (emergency stop); resume it in Settings", spent: 0, refused: true };
+  }
+  const budgets = eff.budgets; // yaml + the owner's overrides from /os Settings
   const dayBefore = await spentToday(ctx.db, ctx.now);
   const limitDay = budgets.per_day_usd;
   const runCap = o.runCapUsd ?? budgets.per_research_run_usd;
@@ -266,11 +272,14 @@ const RUBRIC = `Score each dimension 0-10 ONLY when your evidence supports it, w
 - retention: likelihood customers stay or return.
 - market_size: size of the reachable market.
 - defensibility: how hard it is to copy.
-Also give validation_difficulty (integer 1-10, 1 = a landing page test in a day) and est_days_to_first_dollar (integer), only if the evidence supports an estimate.`;
+Also give validation_difficulty (integer 1-10, 1 = a landing page test in a day) and est_days_to_first_dollar (integer), only if the evidence supports an estimate.
+
+Monetization: list the revenue models that fit, from ONLY these: ${REVENUE_MODELS.join(", ")}. Give each a fit 0-10 and a one-line reason tied to the evidence (for example, programs or prices you found). Prefer ways to make money without building software when the evidence allows.
+Cheapest validation: the cheapest, fastest measurable test of whether people will pay. method is one of: ${VALIDATION_METHODS.join(", ")}. Include a one-sentence description, est_cost_usd (number) and est_days (integer).`;
 
 export type ResearchResult = {
   ok: boolean; id: string; cached?: boolean; error?: string;
-  evidenceAdded: number; evidenceDropped: number; scored: number; spentUsd: number;
+  evidenceAdded: number; evidenceDropped: number; scored: number; models?: number; spentUsd: number;
 };
 
 /** Deep research on one opportunity: grounded evidence, then a validated sub-score proposal, then code rescoring. */
@@ -296,7 +305,7 @@ Research demand, competition, typical prices, affiliate programs and trend for t
 ${RUBRIC}
 
 Return JSON:
-{"evidence":[{"kind":"demand","claim":"...","source_url":"..."}],"scores":{"demand":7},"reasons":{"demand":"..."},"validation_difficulty":3,"est_days_to_first_dollar":14}
+{"evidence":[{"kind":"demand","claim":"...","source_url":"..."}],"scores":{"demand":7},"reasons":{"demand":"..."},"validation_difficulty":3,"est_days_to_first_dollar":14,"monetization_models":[{"model":"affiliate","fit":7,"reason":"..."}],"cheapest_validation":{"method":"landing_page","description":"...","est_cost_usd":20,"est_days":7}}
 
 Give 3 to 8 evidence items. Use only the dimension names listed above.
 ${RULES}`;
@@ -318,15 +327,25 @@ ${RULES}`;
     est_days_to_first_dollar: Number.isInteger(parsed.est_days_to_first_dollar) ? parsed.est_days_to_first_dollar : null,
   });
   let scored = 0;
-  // Scores are accepted only when this run produced grounded evidence for them to rest on.
+  let models = 0;
+  // Scores and the monetization analysis are accepted only when this run produced grounded evidence to rest on.
   if (proposal.ok && kept.length) {
     scored = Object.keys(proposal.value.scores).length;
     await applyProposal(ctx.db, id, proposal.value, ctx.now);
   }
+  if (kept.length) {
+    const fits = validateModels(parsed.monetization_models);
+    const plan = validateValidation(parsed.cheapest_validation);
+    const patch: Record<string, unknown> = {};
+    if (fits.length) patch.monetization_models = fits;
+    if (plan) patch.cheapest_validation = plan;
+    if (Object.keys(patch).length) await ctx.db.update("opportunities", [["id", "eq", id]], patch);
+    models = fits.length;
+  }
   if (!o.status || o.status === "discovered") await ctx.db.update("opportunities", [["id", "eq", id]], { status: "researched" });
-  const result: ResearchResult = { ok: true, id, evidenceAdded: ev.added, evidenceDropped: dropped, scored, spentUsd: call.spent };
+  const result: ResearchResult = { ok: true, id, evidenceAdded: ev.added, evidenceDropped: dropped, scored, models, spentUsd: call.spent };
   await saveRun(ctx.db, { kind: "opportunity_research", query, queryHash: qh, status: "ok", result, opportunityId: id, now: ctx.now });
-  await logActivity(ctx.db, "ultron", "research", `${String(o.name)}: ${ev.added} evidence added, ${dropped} ungrounded dropped, ${scored} dimensions scored, ${usd(call.spent)}`);
+  await logActivity(ctx.db, "ultron", "research", `${String(o.name)}: ${ev.added} evidence added, ${dropped} ungrounded dropped, ${scored} dimensions scored, ${models} revenue models, ${usd(call.spent)}`);
   return result;
 }
 

@@ -74,3 +74,15 @@ body:has(.os) { background: var(--bg, #0b1117); }
 .os-input { min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 8px 10px; font: 16px system-ui, sans-serif; text-align: right; }
 .os-btn { border: 0; cursor: pointer; font-size: 15px; }
 .os-btn:disabled { opacity: .6; }
+/* slice 7: forms, next move, emergency stop */
+.os-form { display: grid; gap: 8px; }
+.os-form-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.os-form-row > .os-input { flex: 1 1 140px; min-width: 0; text-align: left; }
+.os-field { display: grid; gap: 4px; font-size: 14px; color: var(--dim); }
+.os-input.wide { width: 100%; box-sizing: border-box; text-align: left; }
+select.os-input { text-align: left; }
+.os-btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.os-btn.danger { background: var(--warn); color: #1a0f00; }
+.os-stopped { border-color: var(--warn); }
+.os-next { border-color: var(--accent); }
+.os-next-text { font-size: 17px; font-weight: 600; margin: 4px 0 8px; }

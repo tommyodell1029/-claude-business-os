@@ -6,6 +6,7 @@ import type { Db } from "./db.ts";
 import { hoursAgoIso } from "./db.ts";
 import { expiresAt, isUuid } from "./gate.ts";
 import { OS_CONFIG } from "../os/config.generated.ts";
+import { REVENUE_MODELS } from "../os/monetization.ts";
 
 export type ToolCtx = { db: Db | null; email: string; env: Record<string, string | undefined>; fetchImpl: typeof fetch; now: number };
 export type ToolResult = { content: unknown; pending?: PendingAction };
@@ -46,7 +47,7 @@ export const TOOLS: ToolSpec[] = [
   { name: "query_clients", kind: "read", description: "LaunchPad Local's clients.", fields: { status: { type: "enum", values: CLIENT_STATUS, description: "Only clients with this status." } }, required: [] },
   { name: "diagnostics", kind: "read", description: "Runs a health check: database, last call saved, website, Resend email domains, Pipecat voice agent and Twilio demo number. Checks without credentials report unavailable.", fields: {}, required: [] },
   { name: "memory_recall", kind: "read", description: "The owner's saved notes and preferences, newest first.", fields: { limit }, required: [] },
-  { name: "top_opportunities", kind: "read", description: "Money OS opportunities ranked by the code-computed score (killed ones left out unless asked for by status), with confidence and labels (HIGH SCORE, STRONG EVIDENCE, FAST VALIDATION). A null score means not researched yet.", fields: { status: { type: "enum", values: OPP_STATUS, description: "Only opportunities with this status." }, limit }, required: [] },
+  { name: "top_opportunities", kind: "read", description: "Money OS opportunities ranked by the code-computed score (killed ones left out unless asked for by status), with confidence, labels (HIGH SCORE, STRONG EVIDENCE, FAST VALIDATION), estimated days to first dollar and the revenue models that fit well. A null score means not researched yet. Use sort fastest for 'launch quickly' or 'first dollar fast' questions, and model for a revenue type (subscription for recurring revenue, affiliate, digital_product …).", fields: { status: { type: "enum", values: OPP_STATUS, description: "Only opportunities with this status." }, sort: { type: "enum", values: ["score", "fastest", "confidence", "newest"], description: "score (default), fastest (fewest estimated days to first dollar), confidence, or newest." }, model: { type: "enum", values: REVENUE_MODELS, description: "Only opportunities where this revenue model fits well (6/10 or better)." }, limit }, required: [] },
   { name: "opportunity_detail", kind: "read", description: "One Money OS opportunity: sub-scores with their reasons, what drives the score, unknown dimensions, and up to ten evidence claims with their source domains.", fields: { opportunity_id: { type: "uuid", description: "The opportunity id from top_opportunities." } }, required: ["opportunity_id"] },
   { name: "query_experiments", kind: "read", description: "Money OS experiments, newest first: name, status, hypothesis, success metric, target, budget and result note.", fields: { status: { type: "enum", values: EXP_STATUS, description: "Only experiments with this status." }, limit }, required: [] },
   { name: "revenue_summary", kind: "read", description: "Revenue, cost and profit by venture: live Stripe payments (test-mode excluded) plus recorded revenue entries, with this month's total.", fields: {}, required: [] },
@@ -174,8 +175,9 @@ async function readTool(name: string, v: Record<string, string | number>, ctx: T
     case "memory_recall":
       return { notes: await db.select("jarvis_memory", "id,kind,note,created_at", [], "created_at.desc", lim(v)) };
     case "top_opportunities": {
-      const items = await (await import("../os/opportunities.ts")).listRanked(db, { status: v.status ? String(v.status) : undefined, limit: lim(v) });
-      return { opportunities: items.map((o) => ({ id: o.id, name: o.name, category: o.category, status: o.status, score: o.overall, confidence: o.confidence, labels: o.labels.text || null, evidence: o.evidenceCount, sources: o.domains })) };
+      const all = await (await import("../os/opportunities.ts")).listRanked(db, { status: v.status ? String(v.status) : undefined, limit: 100 });
+      const items = sortOpportunities(v.model ? all.filter((o) => o.models.includes(String(v.model))) : all, String(v.sort ?? "score")).slice(0, lim(v));
+      return { opportunities: items.map((o) => ({ id: o.id, name: o.name, category: o.category, status: o.status, score: o.overall, confidence: o.confidence, labels: o.labels.text || null, days_to_first_dollar: o.daysToFirstDollar, revenue_models: o.models, evidence: o.evidenceCount, sources: o.domains })) };
     }
     case "opportunity_detail": {
       const d = await (await import("../os/views.ts")).opportunityDetail(db, String(v.opportunity_id));
@@ -188,12 +190,20 @@ async function readTool(name: string, v: Record<string, string | number>, ctx: T
       return r.ventures === null ? { error: "data unavailable: revenue could not be read" } : r;
     }
     case "ai_cost_summary": {
-      const c = await (await import("../os/views.ts")).costView(db, ctx.now);
-      if (c.today === null) return { error: "data unavailable: the AI usage ledger could not be read" };
-      return { today: c.today, month: c.month, budget: c.budget, by_task: c.byTask, per_opportunity: c.perOpportunity?.slice(0, 5) };
+      const views = await import("../os/views.ts");
+      const c = await views.costView(db, ctx.now);
+      if (c.today === null || c.month === null) return { error: "data unavailable: the AI usage ledger could not be read" };
+      const r = await views.revenueView(db, ctx.now);
+      const monthRevenue = r.totals?.thisMonth ?? null;
+      return {
+        today: c.today, month: c.month, budget: c.budget, by_task: c.byTask, per_opportunity: c.perOpportunity?.slice(0, 5),
+        revenue_this_month: monthRevenue,
+        // null when there is no revenue yet: a ratio over $0 would be meaningless
+        ai_cost_per_revenue_dollar: monthRevenue ? Math.round((c.month.costUsd / monthRevenue) * 10000) / 10000 : null,
+      };
     }
     case "what_next":
-      return whatNext(db, ctx.now);
+      return (await import("../os/next.ts")).whatNext(db, ctx.now);
     case "query_experiments": {
       const f: [string, "eq", string][] = v.status ? [["status", "eq", String(v.status)]] : [];
       const rows = await db.select("experiments", "id,name,status,hypothesis,success_metric,target,budget_usd,result_note,started_at,ended_at,opportunity_id", f, "started_at.desc", lim(v));
@@ -250,26 +260,16 @@ async function loadOne(db: Db, table: string, select: string, id: string): Promi
   return (await db.select<Record<string, unknown>>(table, select, [["id", "eq", id]], undefined, 1))[0] ?? null;
 }
 
-const DECISION_AFTER_DAYS = 7;
+type Sortable = { overall: number | null; confidence: number; daysToFirstDollar: number | null; createdAt: string; labels: { tier: number } };
 
-/** Attention list for the Money OS. Ordering and thresholds are code; the model only phrases the result. */
-async function whatNext(db: Db, now: number) {
-  const { listRanked } = await import("../os/opportunities.ts");
-  const { effectiveConfig } = await import("../os/settings.ts");
-  const { spentToday } = await import("../os/usage.ts");
-  const cutoff = new Date(now - DECISION_AFTER_DAYS * 86_400_000).toISOString();
-  const waiting = await db.select("experiments", "id,name,status,target,started_at", [["status", "eq", "validating"], ["started_at", "lte", cutoff]], "started_at.asc", 5);
-  const ranked = await listRanked(db, { limit: 100 });
-  const best = ranked.filter((o) => o.overall !== null).slice(0, 3);
-  const unresearched = ranked.filter((o) => o.status === "discovered").sort((a, b) => b.evidenceCount - a.evidenceCount || b.domains - a.domains).slice(0, 3);
-  const cfg = await effectiveConfig(db);
-  const spent = await spentToday(db, now, cfg);
-  return {
-    experiments_needing_decision: waiting.map((e) => ({ ...e, note: `validating for more than ${DECISION_AFTER_DAYS} days: decide validated or killed` })),
-    best_opportunities: best.map((o) => ({ id: o.id, name: o.name, score: o.overall, confidence: o.confidence, labels: o.labels.text || null, status: o.status })),
-    research_next: unresearched.map((o) => ({ id: o.id, name: o.name, evidence: o.evidenceCount, sources: o.domains })),
-    ai_budget_left_today: spent === null ? null : Math.max(0, Math.round((cfg.budgets.per_day_usd - spent) * 100) / 100),
-  };
+/** Re-sorts the code ranking for a question; unknown values always sort last, never guessed. */
+export function sortOpportunities<T extends Sortable>(items: T[], sort: string): T[] {
+  const last = (x: number | null, dir: 1 | -1) => (x === null ? Number.POSITIVE_INFINITY : dir * x);
+  const out = [...items];
+  if (sort === "fastest") out.sort((a, b) => last(a.daysToFirstDollar, 1) - last(b.daysToFirstDollar, 1) || last(a.overall, -1) - last(b.overall, -1));
+  else if (sort === "confidence") out.sort((a, b) => b.confidence - a.confidence || last(a.overall, -1) - last(b.overall, -1));
+  else if (sort === "newest") out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return out; // "score": listRanked order
 }
 
 /** Checks a Money OS write against stored data and describes exactly what confirming will do. Executes nothing. */
@@ -312,7 +312,7 @@ async function describeMoneyOs(name: string, v: Record<string, string | number>,
 }
 
 /** Executes a confirmed Money OS action. Inputs are re-validated; ids are re-checked against the database. */
-async function executeMoneyOs(tool: string, v: Record<string, string | number>, actionId: string, ctx: ToolCtx & { db: Db }): Promise<string> {
+async function executeMoneyOs(tool: string, v: Record<string, string | number>, actionId: string, ctx: ToolCtx & { db: Db }, actor: "ultron" | "owner" = "ultron"): Promise<string> {
   const db = ctx.db;
   const { logActivity } = await import("../os/usage.ts");
   const stamp = new Date(ctx.now).toISOString();
@@ -341,7 +341,7 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     if (opp && ["discovered", "researched", "validation_ready"].includes(String(opp.status))) {
       await db.update("opportunities", [["id", "eq", String(opp.id)]], { status: "validating", updated_at: stamp });
     }
-    await logActivity(db, "ultron", "experiment_created", `${String(v.name)} (action ${actionId}, experiment ${row.id})`);
+    await logActivity(db, actor, "experiment_created", `${String(v.name)} (action ${actionId}, experiment ${row.id})`);
     return "Experiment created and marked validating.";
   }
   if (tool === "set_experiment_status") {
@@ -351,7 +351,7 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     if (v.result_note) patch.result_note = v.result_note;
     if (v.status === "killed") patch.ended_at = stamp;
     await db.update("experiments", [["id", "eq", String(e.id)]], patch);
-    await logActivity(db, "ultron", "experiment_status", `${String(e.name)}: ${String(e.status)} -> ${String(v.status)} (action ${actionId})`);
+    await logActivity(db, actor, "experiment_status", `${String(e.name)}: ${String(e.status)} -> ${String(v.status)} (action ${actionId})`);
     return `Experiment is now ${String(v.status)}.`;
   }
   if (tool === "kill_opportunity") {
@@ -359,7 +359,7 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     if (!o) throw new Error("opportunity no longer exists");
     if (o.status === "killed") throw new Error("already killed");
     await db.update("opportunities", [["id", "eq", String(o.id)]], { status: "killed", updated_at: stamp });
-    await logActivity(db, "ultron", "opportunity_killed", `${String(o.name)}: ${String(v.reason)} (action ${actionId})`);
+    await logActivity(db, actor, "opportunity_killed", `${String(o.name)}: ${String(v.reason)} (action ${actionId})`);
     return "Opportunity killed. It stays stored and is hidden from the ranking.";
   }
   if (tool === "record_revenue") {
@@ -373,6 +373,28 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     return `Recorded ${money(v.amount_usd)} for ${String(v.venture)}.`;
   }
   throw new Error(`unknown write tool ${tool}`);
+}
+
+/** Money OS changes the owner can make directly from the /os screens (each behind a confirm dialog there). */
+export const OWNER_ACTIONS = ["create_experiment", "set_experiment_status", "kill_opportunity", "record_revenue"] as const;
+
+/**
+ * A change the signed-in owner made by tapping in /os: the same validation, stored-data checks and execution as a
+ * confirmed ULTRON action, logged with actor "owner". Radar and research have their own routes (they spend money).
+ */
+export async function runOwnerAction(tool: string, input: unknown, ctx: ToolCtx): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+  if (!(OWNER_ACTIONS as readonly string[]).includes(tool)) return { ok: false, error: "unknown action" };
+  const db = ctx.db;
+  if (!db) return { ok: false, error: UNAVAILABLE };
+  const v = validateToolInput(tool, input);
+  if (!v.ok) return { ok: false, error: v.error };
+  const check = await describeMoneyOs(tool, v.value, db, ctx.now);
+  if ("error" in check) return { ok: false, error: check.error };
+  try {
+    return { ok: true, message: await executeMoneyOs(tool, v.value, "os", { ...ctx, db }, "owner") };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message.slice(0, 300) };
+  }
 }
 
 /** Runs a confirmed action. Called only by the confirm route after the gate has claimed the row. */

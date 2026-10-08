@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import type { Db } from "../jarvis/db.ts";
 import type { Dimension, Labels, Proposal, Ranked } from "./score.ts";
 import { column, confidence, labels, overallScore, rank, subScoresFromRow } from "./score.ts";
+import { validateModels } from "./monetization.ts";
 
 export const EVIDENCE_KINDS = ["demand", "trend", "competition", "pricing", "affiliate", "audience", "other"] as const;
 export type EvidenceKind = (typeof EVIDENCE_KINDS)[number];
@@ -124,7 +125,10 @@ const toNum = (v: unknown): number | null => {
   return typeof x === "number" && Number.isFinite(x) ? x : null;
 };
 
-export type RankedOpportunity = Ranked<{ id: string; slug: string; name: string; category: string; status: string; evidenceCount: number; domains: number }>;
+export type RankedOpportunity = Ranked<{
+  id: string; slug: string; name: string; category: string; status: string; evidenceCount: number; domains: number;
+  daysToFirstDollar: number | null; validationDifficulty: number | null; monetization: string[]; models: string[]; createdAt: string;
+}>;
 
 /** Labels for one stored row (uses the stored, code-computed overall score and confidence). */
 export function labelsForRow(r: Record<string, unknown>): { overall: number | null; confidence: number; labels: Labels } {
@@ -144,7 +148,7 @@ export function labelsForRow(r: Record<string, unknown>): { overall: number | nu
 export async function listRanked(db: Db, opts: { status?: string; limit?: number } = {}): Promise<RankedOpportunity[]> {
   const status = opts.status && (OPP_STATUSES as readonly string[]).includes(opts.status) ? opts.status : null;
   const rows = await db.select<Record<string, unknown>>(
-    "opportunities", "id,slug,name,category,status,overall_score,confidence,evidence_count,evidence_domains,validation_difficulty,est_days_to_first_dollar",
+    "opportunities", "id,slug,name,category,status,overall_score,confidence,evidence_count,evidence_domains,validation_difficulty,est_days_to_first_dollar,monetization,monetization_models,created_at",
     status ? [["status", "eq", status]] : [], "overall_score.desc.nullslast", 500,
   );
   const items = rows
@@ -152,6 +156,10 @@ export async function listRanked(db: Db, opts: { status?: string; limit?: number
     .map((r) => ({
       id: String(r.id), slug: String(r.slug), name: String(r.name), category: String(r.category), status: String(r.status),
       evidenceCount: toNum(r.evidence_count) ?? 0, domains: toNum(r.evidence_domains) ?? 0,
+      daysToFirstDollar: toNum(r.est_days_to_first_dollar), validationDifficulty: toNum(r.validation_difficulty),
+      monetization: Array.isArray(r.monetization) ? (r.monetization as unknown[]).map(String) : [],
+      models: validateModels(r.monetization_models).filter((m) => m.fit >= 6).map((m) => m.model),
+      createdAt: String(r.created_at ?? ""),
       ...labelsForRow(r),
     }));
   return rank(items).slice(0, Math.max(1, Math.min(opts.limit ?? 20, 100)));

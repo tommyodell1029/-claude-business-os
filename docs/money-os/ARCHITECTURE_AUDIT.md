@@ -46,3 +46,22 @@ Nothing is classified REMOVE.
 3. **Research sources.** Reddit, TikTok and YouTube have API terms; no HTML scraping (CLAUDE.md hard rule). Phase 1 research uses the Anthropic web search tool (no new vendor, cloud-only, per-search cost known) plus pages it returns. Other sources come behind the same source interface later, each through the acquisition gate.
 4. **Cost.** All Jarvis/ULTRON chat runs on `small` (Haiku), per `config/models.yaml`. Research can use more tokens than chat; it gets its own budget and cache.
 5. **Security.** One owner account; every Money OS API route requires the Jarvis session and the origin check; service key stays server-side; tool inputs keep the fixed-shape validation.
+
+## Revised master prompt (2026-10-08): delta audit
+The owner re-issued the master prompt with more detail after Phase 1 shipped (slices 1–6). The repository was re-audited against it rather than rebuilt; the existing design already matches its principles: code before AI, cache, budgets, structured state, no fake state, and confirm-gated writes.
+
+| Revised prompt asks for | State before slice 7 | Action |
+|---|---|---|
+| Monetization Analysis: revenue models, recurring/affiliate/digital product/SaaS potential, speed to first dollar | Sub-scores only (recurring, affiliate, speed); no per-model fit | Built: research proposes fits from a fixed list of 14 models, validated in code, stored only with grounded evidence (`opportunities.monetization_models`) |
+| Validator: cheapest realistic experiment | Not stored | Built: `opportunities.cheapest_validation` (method from a fixed list, cost, days) |
+| Opportunity database: search, filter, sort by score, category, status, monetization, confidence, speed | Status filter only | Built: in-browser search, filters and sorts over the code-ranked list |
+| Dashboard: highest-potential opportunity and recommended next action | Top 3 list only | Built: "Next move" from fixed rules in `lib/os/next.ts` (shared with ULTRON `what_next`) |
+| Experiment manager and revenue recording on screen | ULTRON only | Built: `/os` forms behind confirm dialogs, sharing ULTRON's validation (`/api/jarvis/os/action`) |
+| "AI cost per dollar of revenue", "launch in 48 hours", "recurring revenue potential" | Not answerable | Built: `ai_cost_summary` ratio (null with no revenue), `top_opportunities` sort `fastest` and `model` filter |
+| Emergency stop (§52) | Budgets only | Built early (cheap and protects spend): `os_settings.ai_paused` refuses every model call; Settings switch; logged |
+| Approval levels (§51) | Phase 1 is effectively level 3 (every change needs the owner) | Documented for Phase 2 |
+| Competitor Replication Lab (§6) | Competition and pricing evidence per opportunity | Documented for Phase 2; ULTRON answers competitor questions from stored evidence meanwhile |
+| Ponytail (§31) | Not evaluated | Phase 2, measured like every other tool |
+| Multi-venture, CFO, scale/kill, content/affiliate/product/SaaS engines, StarNet visual state | `venture` field on revenue; per-venture revenue/profit | Phase 2 (unchanged) |
+
+Nothing was deleted or replaced. The agency systems (voice agent, notify, lead gen, outreach, Stripe webhook) are untouched.

@@ -15,21 +15,38 @@ export const LIMITS = BASE.editable_budgets as Record<EditableKey, { min: number
 const isKey = (k: unknown): k is EditableKey => typeof k === "string" && (EDITABLE_KEYS as readonly string[]).includes(k);
 const inRange = (k: EditableKey, v: number): boolean => Number.isFinite(v) && v >= LIMITS[k].min && v <= LIMITS[k].max;
 
-/** The config with the owner's stored overrides applied. Unreadable table or bad rows -> the yaml defaults. */
-export async function effectiveConfig(db: Db | null): Promise<OsConfig> {
+export type EffectiveConfig = OsConfig & { aiPaused: boolean };
+
+/**
+ * The config with the owner's stored overrides applied. Unreadable table or bad rows -> the yaml defaults.
+ * `aiPaused` is the emergency stop: when set, every model call is refused before it is made.
+ */
+export async function effectiveConfig(db: Db | null): Promise<EffectiveConfig> {
   const budgets = { ...BASE.budgets };
+  let aiPaused = false;
   if (db) {
     try {
       const rows = await db.select<{ key: string; value: number | string }>("os_settings", "key,value", [], undefined, 20);
       for (const r of rows) {
         const v = Number(r.value);
-        if (isKey(r.key) && inRange(r.key, v)) budgets[r.key] = v;
+        if (r.key === "ai_paused") aiPaused = v === 1;
+        else if (isKey(r.key) && inRange(r.key, v)) budgets[r.key] = v;
       }
     } catch {
       // keep defaults
     }
   }
-  return { ...BASE, budgets };
+  return { ...BASE, budgets, aiPaused };
+}
+
+/** Emergency stop on/off. Logged; takes effect on the next model call (in-flight calls finish and are logged). */
+export async function setAiPaused(db: Db, email: string, paused: boolean, now: number): Promise<boolean> {
+  const at = new Date(now).toISOString();
+  const value = paused ? 1 : 0;
+  const updated = await db.update("os_settings", [["key", "eq", "ai_paused"]], { value, updated_at: at, updated_by: email });
+  if (!updated.length) await db.insert("os_settings", { key: "ai_paused", value, updated_at: at, updated_by: email });
+  await logActivity(db, "owner", paused ? "ai_stopped" : "ai_resumed", paused ? "Emergency stop: all AI calls refused until resumed" : "AI calls resumed");
+  return (await effectiveConfig(db)).aiPaused;
 }
 
 export type SettingsPatch = Partial<Record<EditableKey, number>>;

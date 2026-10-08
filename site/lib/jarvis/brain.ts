@@ -72,6 +72,10 @@ export async function runTurn(messages: ChatMessage[], ctx: ToolCtx): Promise<{ 
   const dayBefore = await spentToday(ctx.db, ctx.now, osCfg); // read once; this request's spend is added locally
   let turnSpent = 0;
 
+  if (osCfg.aiPaused) {
+    await logActivity(ctx.db, "system", "budget_stop", "jarvis_chat refused: AI is stopped (emergency stop in /os Settings)");
+    return { reply: `AI is stopped, ${address}. Resume it in Money OS Settings when you're ready.`, pending, tools: used };
+  }
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
     const verdict = checkBudget(dayBefore, turnSpent, osCfg);
     if (!verdict.ok) {

@@ -78,6 +78,7 @@ Existing Jarvis tools (calls, leads, outreach, briefing) stay, so one assistant 
 | 4 | Research engine + cache + Money Radar sweep | Opus | Anthropic web search enabled for the org's API key (Console setting) |
 | 5 | ULTRON tools + confirm-gated writes; Settings | Opus | — |
 | 6 | Mobile pass (Playwright iPhone + iPad viewports), deploy, live smoke test, `PHASE_1_COMPLETE.md` | Opus (checkpoint audit) | owner opens `/os` on iPhone + iPad |
+| 7 | Revised master prompt (2026-10-08) gaps: Monetization Analysis + cheapest validation (from research), Opportunity search/filter/sort, "Next move" + highest-potential opportunity on Command, `/os` forms for experiments, status, kill and revenue, AI cost per revenue dollar, fastest-to-revenue sort, emergency stop | Opus | migration `20261008000005` |
 
 ## Tests (definition of done)
 Unit: scoring math and labels, dedupe/normalize, budget refusal, cache hits, router never returns an unlisted model, tool input validation, revenue/profit sums, `DATA UNAVAILABLE` rendering.

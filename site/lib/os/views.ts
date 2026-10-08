@@ -8,6 +8,8 @@ import { DIMENSIONS, explain, subScoresFromRow } from "./score.ts";
 import type { Dimension } from "./score.ts";
 import { dayKey } from "./usage.ts";
 import { EDITABLE_KEYS, LIMITS, effectiveConfig } from "./settings.ts";
+import { monetizationView } from "./monetization.ts";
+import { whatNext } from "./next.ts";
 
 type Row = Record<string, unknown>;
 const TZ = (OS_CONFIG as unknown as { timezone: string }).timezone;
@@ -46,6 +48,7 @@ export async function opportunityDetail(db: Db, id: string) {
     audience: r.audience ?? null, monetization: r.monetization ?? [], validationDifficulty: r.validation_difficulty ?? null,
     daysToFirstDollar: r.est_days_to_first_dollar ?? null, updatedAt: r.updated_at,
     ...labelsForRow(r),
+    monetizationAnalysis: monetizationView(r),
     scores: DIMENSIONS.map((d) => ({ dimension: d, value: s[d] ?? null, reason: reasons[d] ?? null })),
     why: explain(s, reasons),
     evidence,
@@ -144,14 +147,16 @@ export async function activityView(db: Db) {
 /** Settings: effective budgets (yaml + owner overrides), yaml defaults, edit limits, prices, scoring, cache. No secrets. */
 export async function settingsView(db: Db | null = null) {
   const c = OS_CONFIG as unknown as Row;
-  const budgets = (await effectiveConfig(db)).budgets;
+  const eff = await effectiveConfig(db);
+  const budgets = eff.budgets;
   return {
+    aiPaused: eff.aiPaused,
     timezone: c.timezone, budgets, defaults: c.budgets, editable: EDITABLE_KEYS.map((k) => ({ name: k, ...LIMITS[k] })),
     canEdit: db !== null, prices: c.prices, webSearchUsd: c.web_search_usd, cache: c.cache, score: c.score,
   };
 }
 
-export const VIEWS = ["opportunities", "opportunity", "experiments", "revenue", "cost", "activity", "settings"] as const;
+export const VIEWS = ["opportunities", "opportunity", "experiments", "revenue", "cost", "activity", "settings", "next"] as const;
 export type View = (typeof VIEWS)[number];
 
 export async function loadView(view: string, db: Db | null, q: URLSearchParams, now: number): Promise<{ status: number; body: unknown }> {
@@ -167,6 +172,10 @@ export async function loadView(view: string, db: Db | null, q: URLSearchParams, 
     case "experiments": return { status: 200, body: { ok: true, ...(await experimentsView(db)) } };
     case "revenue": return { status: 200, body: { ok: true, ...(await revenueView(db, now)) } };
     case "cost": return { status: 200, body: { ok: true, ...(await costView(db, now)) } };
+    case "next": {
+      const n = await safe(() => whatNext(db, now));
+      return n ? { status: 200, body: { ok: true, ...n } } : { status: 200, body: { ok: true, recommended: null, top_opportunity: null } };
+    }
     default: return { status: 200, body: { ok: true, ...(await activityView(db)) } };
   }
 }

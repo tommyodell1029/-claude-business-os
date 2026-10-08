@@ -233,3 +233,21 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - Accepted, documented risks: concurrent-run budget overshoot (≤ 1 run) and continuation search allowance (run cap still applies).
 - `docs/money-os/PHASE_1_COMPLETE.md`: Definition of Done table with verification, measured costs ($0.29 to date), known issues, owner test list, Phase 2 scope. Only open item: the owner opens `/os` on the iPad.
 - Tests: site 129/129, typecheck, lint, build + client bundle check clean.
+
+## Money OS slice 7: revised master prompt gaps: 2026-10-08 (orchestrator, Opus)
+- The owner re-issued the master prompt with more detail. It was re-audited against Phase 1 rather than rebuilt (delta table in `docs/money-os/ARCHITECTURE_AUDIT.md`).
+- Monetization Analysis:
+  - Research now proposes revenue-model fits (14 fixed models, 0–10 with reasons) and a cheapest validation plan (12 fixed methods, cost, days).
+  - Code validates them and stores them only with grounded evidence (`lib/os/monetization.ts`; columns `monetization_models`, `cheapest_validation`).
+  - Shown on the opportunity detail with recurring/affiliate/digital product/SaaS potential and "without building software".
+- Command "Next move": fixed rules in `lib/os/next.ts` (stop → stale experiment → start experiment on the top researched opportunity → research → Radar), plus the highest-potential opportunity. Shared with ULTRON `what_next`.
+- Opportunities: in-browser search, filters (category, label, money model) and sorts (score, fastest to first $, confidence, newest).
+- `/os` forms behind confirm dialogs: new experiment (also from an opportunity), experiment status + result note, kill opportunity, record revenue. All go through `POST /api/jarvis/os/action`, which shares ULTRON's validation and execution (`runOwnerAction`, four tools only) and is logged with actor owner.
+- ULTRON:
+  - `top_opportunities` takes `sort` (fastest, confidence, newest) and `model` filter.
+  - `ai_cost_summary` adds AI cost per revenue dollar (null with no revenue).
+  - Persona covers monetization, validation and competitor questions from stored data.
+- Emergency stop: `os_settings.ai_paused`; Settings "Stop all AI" refuses every ULTRON, Radar and research call before it is made; logged.
+- Migration `20261008000005_monetization_and_stop.sql` applied (two columns added; `os_settings` key and value checks widened).
+- Docs: `PHASE_1_PLAN.md` (slice 7), `PHASE_2_PLAN.md` (Ponytail, approval levels, emergency stop, observability, Competitor Replication Lab), `PHASE_1_COMPLETE.md` rewritten to the revised §47/§48.
+- Tests: site 137/137 (8 new in `lib/os/monetization.test.ts`), typecheck, lint, build + client bundle check. Playwright iPhone/iPad: every screen and every new form open, no horizontal scroll, inputs 44 px, no page errors.
