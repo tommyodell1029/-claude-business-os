@@ -167,3 +167,9 @@ C6 still needs the owner's package prices. C8 weekday window kept at 5–6 PM as
 
 ## Docs from §116 not yet written
 Written only when the thing they describe exists, so no empty stubs: ARCHITECTURE, AGENTS, AGENT_EVALUATION, AI_MODEL_ROUTING, AI_SECURITY, OBSERVABILITY, INTEGRATIONS, DATABASE (currently `agents/notify/README.md` and `leadgen/README.md`), SECURITY, DEPLOYMENT, OPERATIONS, OFFER_CATALOG (currently `config/offerings.yaml`), COMPLIANCE, TESTING, DISASTER_RECOVERY, BUSINESS_CONTINUITY, OWNER_GUIDE, REVENUE_ENGINE, INCIDENT_RESPONSE, DATA_RETENTION, DEPENDENCY_MANAGEMENT, LOCAL_NODE.
+
+## Voice receptionist wind-down: 2026-10-08 (owner decision)
+- Outreach: planner stop switch `sending.paused_by_owner` (tested; live dry run for 2026-10-13 → paused). No first touches or follow-ups. `/outreach-daily` still syncs Gmail and reports replies; a positive reply from the 9 prospects emailed Oct 6–7 is handled as a sale (owner direction: no decline emails).
+- Stripe live: 6 products archived (`lp_tier_launch/growth/scale`, `lp_addon_bilingual_es/extra_number/gbp_setup`); 0 subscriptions existed. Restore the needed product with `active=true` before a checkout.
+- Site: homepage replaced with a neutral contact page (old page in `legacy/site-home-receptionist/`); nav and metadata no longer mention receptionists. Terms, privacy, `/onboard`, `/jarvis`, Stripe webhook, Twilio inbound + transfer routes unchanged. Websites for local businesses dropped (`available: false`).
+- Kept running on purpose (to serve a positive reply): Pipecat agent `lp-receptionist`, demo number +19044568829 and its webhook, Deepgram, ElevenLabs (owner keeps it for content), notify, onboarding scripts.

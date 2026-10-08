@@ -1,6 +1,7 @@
 # LaunchPad Local — operating manual for Claude Code
 
 AI agency, Jacksonville FL (launchpadlocal.org). Core: **inbound** AI phone receptionists for local businesses. Also: websites for local businesses + add-ons. Prices APPROVED 2026-10-01 in `config/offerings.yaml` (founding pricing for first 5 clients, then standard; founding = setup paid, next month free). Only `available: true` items may be sold.
+**2026-10-08 owner decision: voice receptionist wound down.** No new outreach (`sending.paused_by_owner` in `leadgen/config.yaml`), homepage neutral, Stripe products archived, websites dropped. The voice agent, onboarding, terms/privacy, Stripe webhook and `/outreach-daily` reply sync stay live only to serve the 9 prospects already emailed (Oct 6–7) if one replies positively; then restore the needed Stripe product and proceed. Do not draft decline emails. New build: Money OS (`docs/money-os/`).
 Specs: takeover spec (T0–T9) + Master Build Specification (revenue-first agency OS, 2026-09-27). Status, phase map and open spec conflicts: `docs/BUILD_STATUS.md`. Revenue path: `docs/FIRST_DOLLAR_PLAN.md`. New repos/platforms: `docs/REPOSITORY_ACQUISITION.md` gate first. This file is the short version. Keep it short.
 
 ## Output mode
@@ -64,7 +65,7 @@ Revenue > fulfillment > repeatability > automation > polish. No new framework/pl
 - Added: 6 sales skills (from ai-sales-team-claude, adapted) + 5 web design skills (from claudedesignskills, unmodified).
 - T3 ✅ voice agent code (agents/, clients/demo.yaml); live tests need keys.
 - T6 ✅ site live at https://www.launchpadlocal.org (apex 308 → www; also launchpad-site-ten.vercel.app) as of 2026-10-04: landing, /terms, /privacy, /api/lead, /jarvis, /onboard; prices from offerings.yaml; demo number hidden behind SHOW_DEMO_PHONE. Stripe webhook stays on the vercel.app URL (no redirect).
-- Stripe 🟢 LIVE 2026-10-04 (live catalog + live webhook; sandbox E2E passed). Checkouts: `new_checkout.py ... --live` only when a client says yes (`docs/BUILD_STATUS.md` Stripe).
+- Stripe 🟢 LIVE 2026-10-04 (live catalog + live webhook; sandbox E2E passed). 2026-10-08: all 6 receptionist products archived (0 subscriptions); restore with `active=true` if a prospect buys. Checkouts: `new_checkout.py ... --live` only when a client says yes (`docs/BUILD_STATUS.md` Stripe).
 - T4 2026-10-04: call fixes (filler, double goodbye, natural times, uncovered question → message) + token-locked phone path (`/api/twilio/inbound`, `websocket_auth = "token"`) LIVE 2026-10-07 (deployment 19be686d; no-token WS → 403; `min_agents = 0`, ~5 s cold start). Next: test calls 2–8, then SHOW_DEMO_PHONE.
 - T4 🟡 site on Vercel (`launchpad-site-ten.vercel.app`); transfer route verified live 2026-10-01; 2026-10-02 Pipecat agent `lp-receptionist` deployed + Ready with all secrets, demo number +19044568829 pointed at TwiML Bin `lp-demo-inbound` (verified via API). Pending: 8 live test calls (`ops/twilio/T4_TEST_CALLS.md`) + Opus checkpoint audit. Details: `docs/BUILD_STATUS.md` T4.
 - T5 🟡 `agents/notify/` (Supabase + Resend + flagged SMS), `scripts/new_client.py`, `ops/onboarding.md` built + tested offline, Supabase smoke insert OK 2026-10-03; Pipecat secrets + redeploy + live call pending (`docs/BUILD_STATUS.md` T5).
