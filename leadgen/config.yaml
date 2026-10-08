@@ -100,5 +100,6 @@ sending:
   complaints_acknowledged: []    # outreach_events ids of complaints the owner reviewed; any other complaint pauses all sending
   require_verified_decision_maker: true   # first touches only to verified decision-maker emails (2026-10-06)
   topup_send_days: 3             # keep enough eligible new prospects for this many upcoming send days
+  paused_by_owner: "2026-10-08 owner is winding down the voice receptionist business; no new emails or follow-ups"
 replies:
   owner_flag_classes: [positive, interested, question, pricing, meeting]

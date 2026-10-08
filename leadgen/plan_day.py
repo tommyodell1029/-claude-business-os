@@ -74,6 +74,8 @@ def daily_cap(target: date, cfg: dict) -> int:
 
 def pause_reason(events: list[dict], now: datetime, cfg: dict) -> str | None:
     s = cfg["sending"]
+    if s.get("paused_by_owner"):         # owner stop switch: nothing is planned (first touches or follow-ups)
+        return f"paused by owner: {s['paused_by_owner']}"
     acked = set(s.get("complaints_acknowledged") or [])
     complaints = [e for e in events if e.get("event_type") == "complaint" and e.get("id") not in acked]
     if complaints:

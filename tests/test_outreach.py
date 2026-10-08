@@ -15,6 +15,7 @@ from leadgen.db import SnapshotStore, sql_literal  # noqa: E402
 from leadgen.draft import OPT_OUT, DraftError  # noqa: E402
 
 CFG = source.load_config()
+CFG = {**CFG, "sending": {**CFG["sending"], "paused_by_owner": None}}   # planner logic is tested unpaused
 ADDR = "1 Test Way, Jacksonville, FL 32202"
 ENV = {"MAILING_ADDRESS": ADDR}
 ET = ZoneInfo("America/New_York")
@@ -224,6 +225,13 @@ class PlanTests(unittest.TestCase):
         old = [sent("p1", 0, et(2026, 8, 1)), {"id": "b", "prospect_id": "p1", "event_type": "bounce",
                                                "created_at": et(2026, 8, 2).isoformat()}]
         self.assertIsNone(plan_day.pause_reason(old, TUE, CFG))                # outside the 30-day window
+
+    def test_owner_pause_plans_nothing(self):
+        cfg = {**CFG, "sending": {**CFG["sending"], "paused_by_owner": "winding down"}}
+        ps = [prospect(1), prospect(2, status="in_sequence")]
+        res = plan_day.plan(store(ps, [sent("p2", 0, et(2026, 10, 6))]), ENV, cfg, now=et(2026, 10, 13, 9))
+        self.assertEqual((res["status"], res["drafted"]), ("paused", []))
+        self.assertIn("paused by owner", res["reason"])
 
     def test_pause_on_any_complaint(self):
         evs = [sent("p1", 0, et(2026, 9, 1)), {"id": "c1", "prospect_id": "p1", "event_type": "complaint"}]
