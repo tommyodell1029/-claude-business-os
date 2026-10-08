@@ -180,3 +180,10 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - `site/lib/os/usage.ts`: token counts from the API `usage` object (estimated from text length when absent, flagged), cost from config prices (unknown model → top listed rate, flagged), daily spend from `ai_cost_daily`, pure budget check, best-effort ledger and activity writes.
 - Jarvis (`site/lib/jarvis/brain.ts`) now reads today's spend once per request, refuses before any model call once the day or per-request budget is reached (logs `budget_stop` to `activity`), and writes one `ai_usage` row per model call (failed calls too).
 - Tests: site 94/94 (10 new in `lib/os/usage.test.ts`), typecheck, lint, build and client-bundle check clean; Python 283 OK.
+
+## Money OS slice 2: 2026-10-08 (orchestrator, Opus)
+- `config/money_os.yaml` `score`: weights for the 15 dimensions, inverted "bad" dimensions, confidence targets, label thresholds (HIGH SCORE ≥ 7.0; STRONG EVIDENCE = confidence ≥ 0.6 and ≥ 3 source domains; FAST VALIDATION = validation difficulty ≤ 3 and ≤ 14 days to first dollar).
+- `site/lib/os/score.ts` (pure code): overall = weighted mean of known sub-scores only; confidence = coverage × evidence strength (count, distinct domains, freshness); nested labels; ranking (tier → score → confidence); `validateProposal` (the model may only propose 0–10 sub-scores with a reason; unknown fields and out-of-range values rejected; no reason → unknown; it can never set the overall score); `explain` for "why did this score highly?" from stored numbers and reasons.
+- `site/lib/os/opportunities.ts`: create (deduped by slug), evidence (http(s) links only, tracking params stripped, content-hash dedupe, future dates clamped), apply proposal, rescore, ranked list (killed hidden by default). Migration `20261008000002` adds `opportunities.evidence_domains` (applied).
+- Not wired to any route yet (screens = slice 3, ULTRON tools = slice 5); nothing to deploy.
+- Tests: site 102/102 (8 new in `lib/os/score.test.ts`), typecheck, lint, build clean. `ai_usage` has 0 rows so far (no Jarvis use since the slice 1 deploy).

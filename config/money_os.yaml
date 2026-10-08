@@ -30,3 +30,34 @@ web_search_usd: null
 
 cache:
   research_ttl_days: 14
+
+# Opportunity scoring (site/lib/os/score.ts). The model may only PROPOSE 0-10 sub-scores, each with a one-line
+# reason grounded in stored evidence; code validates them and computes everything below. A sub-score without a
+# reason is treated as unknown, and unknown dimensions are left out of the score (never guessed).
+score:
+  # Relative weights. "Bad" dimensions are listed under `inverted` and scored as 10 - value.
+  weights:
+    demand: 3
+    monetization: 2.5
+    speed: 2                      # speed to first revenue
+    trend: 1.5
+    recurring: 1.5
+    competition: 1.5
+    acquisition_difficulty: 1.5
+    affiliate: 1
+    content: 1
+    automation: 1
+    startup_cost: 1
+    tech_difficulty: 1
+    retention: 1
+    market_size: 1
+    defensibility: 0.5
+  inverted: [competition, startup_cost, tech_difficulty, acquisition_difficulty]
+  confidence:
+    evidence_target: 6            # evidence rows for full evidence strength
+    domain_target: 4              # distinct source domains for full evidence strength
+    recency_days: 90              # evidence older than this counts as stale
+  labels:
+    high_score_min: 7.0
+    strong_evidence: { min_confidence: 0.6, min_domains: 3 }
+    fast_validation: { max_validation_difficulty: 3, max_days_to_first_dollar: 14 }

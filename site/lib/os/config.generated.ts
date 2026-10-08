@@ -31,5 +31,46 @@ export const OS_CONFIG = {
   "web_search_usd": null,
   "cache": {
     "research_ttl_days": 14
+  },
+  "score": {
+    "weights": {
+      "demand": 3,
+      "monetization": 2.5,
+      "speed": 2,
+      "trend": 1.5,
+      "recurring": 1.5,
+      "competition": 1.5,
+      "acquisition_difficulty": 1.5,
+      "affiliate": 1,
+      "content": 1,
+      "automation": 1,
+      "startup_cost": 1,
+      "tech_difficulty": 1,
+      "retention": 1,
+      "market_size": 1,
+      "defensibility": 0.5
+    },
+    "inverted": [
+      "competition",
+      "startup_cost",
+      "tech_difficulty",
+      "acquisition_difficulty"
+    ],
+    "confidence": {
+      "evidence_target": 6,
+      "domain_target": 4,
+      "recency_days": 90
+    },
+    "labels": {
+      "high_score_min": 7,
+      "strong_evidence": {
+        "min_confidence": 0.6,
+        "min_domains": 3
+      },
+      "fast_validation": {
+        "max_validation_difficulty": 3,
+        "max_days_to_first_dollar": 14
+      }
+    }
   }
 } as const;
