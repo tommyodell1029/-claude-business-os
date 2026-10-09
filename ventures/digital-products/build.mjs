@@ -237,7 +237,7 @@ function planHtml(key) {
         const [t, body] = pick(v.pack, v.n);
         return `<div class="card"><div class="cardhead"><span class="id">${esc(v.id)}</span><span class="where">${esc(v.title)}</span></div><ol class="steps"><li><b>0-3 s, on-screen text:</b> "${esc(t)} in 30 seconds"</li><li><b>3-8 s:</b> paste this prompt with your example details filled in: <span class="mono">${esc(body)}</span></li><li><b>8-25 s:</b> scroll through the AI's real answer.</li><li><b>25-30 s, say:</b> "There are 30 of these in my pack. Link in bio."</li></ol></div>`;
       }).join("")}`
-    : `<h2 class="sec">Pinterest pin copy</h2><p class="note">Upload the pin images from the <b>pins</b> folder. Link every pin to its Etsy listing. Two pins per planner, posted on different days.</p>${P.posts.map((p) => `<div class="card"><div class="cardhead"><span class="id">${esc(p.id)}</span><span class="where">${esc(p.title)}</span></div><p><b>Pin A title:</b> ${esc(p.pinA.title)}<br><b>Description:</b> ${esc(p.pinA.description)}</p><p><b>Pin B title:</b> ${esc(p.pinB.title)}<br><b>Description:</b> ${esc(p.pinB.description)}</p></div>`).join("")}`;
+    : `<h2 class="sec">Pinterest pin copy</h2><p class="note">Upload the pin images from the <b>pins</b> folder. Link every pin to its Etsy listing. Two pins per planner, posted on different days.</p>${P.posts.map((p) => `<div class="card"><div class="cardhead"><span class="id">${esc(p.id)}</span><span class="where">${esc(p.title)}</span></div><p><b>Link (both pins):</b> ${esc(p.link)}</p><p><b>Pin A title:</b> ${esc(p.pinA.title)}<br><b>Description:</b> ${esc(p.pinA.description)}</p><p><b>Pin B title:</b> ${esc(p.pinB.title)}<br><b>Description:</b> ${esc(p.pinB.description)}</p></div>`).join("")}`;
   const metric = isPrompts ? ["Date", "Post ID", "Where (group / app)", "Link to post", "Views", "Sales"] : ["Date", "Post / pin", "Where", "Link", "Etsy views", "Sales"];
   const rules = isPrompts
     ? [["3+ sales across the packs", "Target hit. Mark the experiment validated. Raise the best seller to $19 and make a 4th pack for the audience that bought."],
@@ -272,7 +272,7 @@ ul.dos { padding-left: 16pt; margin: 0 0 10pt; } ul.dos li { margin-bottom: 4pt;
 <section class="page cover"><div><div class="band"></div><div class="pill">${isPrompts ? "Gumroad · Oct 8 to Oct 22, 2026" : "Etsy + Pinterest · Oct 8 to Oct 22, 2026"}</div><h1 style="margin-top:16pt">${esc(P.title)}</h1>
 <div class="sub">${isPrompts ? "Goal: 3 sales across the three $12 prompt packs in 14 days. Every post gives away one genuinely useful prompt, then mentions the pack." : "Goal: 3 sales across the five planners in 14 days. Pinterest brings planner buyers; groups and short videos add the first visitors."}</div></div>
 <div><div style="font:700 8pt Inter;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8pt">Inside</div><ul><li>Rules that keep posts welcome</li><li>14-day calendar with checkboxes</li><li>${P.posts.length} ready-to-post texts</li><li>${isPrompts ? "3 video scripts" : "Pinterest pin copy (pin images in the pins folder)"}</li><li>Results tracker</li><li>Day 14 decision rules</li></ul></div>
-<div class="note">Replace [GUMROAD LINK] / [ETSY LINK] with your real links before posting. Record every sale in Money OS → Revenue so the experiment shows real numbers.</div></section>
+<div class="note">Your real ${isPrompts ? "Gumroad" : "Etsy"} links are already in every post. Record every sale in Money OS → Revenue so the experiment shows real numbers.</div></section>
 <div class="flow">
 <h2 class="sec">Rules that keep posts welcome</h2>
 <ul class="dos"><li><b>Read each group's rules first.</b> Many only allow promotion on certain days or in a pinned thread. Follow them; a ban costs more than one post.</li>
@@ -358,7 +358,7 @@ if (what === "listings" || what === "all") {
       "## Listing details", "- Type: Digital files · Who made it: I did · What is it: A finished product · When was it made: 2020-2026 (or the current range Etsy shows)",
       "- Category: type \"planner\" and pick Etsy's suggested calendars & planners category (exact names change; use the closest match)",
       "- Disclose AI use where Etsy's listing form or creativity standards ask for it (the description below already says so).",
-      `- Suggested price: $${L.price} (owner decides)`, "", "## Title", "```", L.title, "```", "", "## Tags (13)", "```", L.tags.join(", "), "```", "", "## Description", "```", L.description, "```", ""].join("\n");
+      `- Suggested price: $${L.price} (owner decides)`, `- Live listing: ${L.url}`, "", "## Title", "```", L.title, "```", "", "## Tags (13)", "```", L.tags.join(", "), "```", "", "## Description", "```", L.description, "```", ""].join("\n");
     writeFileSync(`${OUT}listings/etsy-${pl.slug}.md`, md);
   }
   for (const pk of PACKS) {
@@ -366,7 +366,7 @@ if (what === "listings" || what === "all") {
     const md = [`# Gumroad product: ${pk.title}`, "", "Gumroad > Products > New product > Digital product.", "",
       "## Files to upload as the product", `- \`prompts/${pk.slug}/${pk.slug}.pdf\``, `- \`prompts/${pk.slug}/${pk.slug}.txt\``, "",
       "## Images", `- Cover: \`listing-images/gumroad/${pk.slug}/cover-1280x720.jpg\` (add \`preview-1280x720.jpg\` as a second cover image)`, `- Thumbnail: \`listing-images/gumroad/${pk.slug}/thumbnail-600x600.jpg\``, "",
-      `## Name`, "```", pk.title, "```", "", `## Suggested price`, `$${G.price} (owner decides)`, "", "## Summary (one line)", "```", G.summary, "```", "", "## Description", "```", gumroadDescription(pk, promptCount(pk)), "```", ""].join("\n");
+      `## Name`, "```", pk.title, "```", "", `## Suggested price`, `$${G.price} (owner decides)`, "", "## Live product", G.url, "", "## Summary (one line)", "```", G.summary, "```", "", "## Description", "```", gumroadDescription(pk, promptCount(pk)), "```", ""].join("\n");
     writeFileSync(`${OUT}listings/gumroad-${pk.slug}.md`, md);
   }
   console.log("listing sheets written");

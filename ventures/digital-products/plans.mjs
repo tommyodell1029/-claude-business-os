@@ -3,7 +3,7 @@
 // never claim sales, reviews or results we do not have. Group and subreddit self-promotion rules come first.
 import { PACKS } from "./prompts.mjs";
 import { PLANNERS } from "./planners.mjs";
-import { LISTINGS } from "./listings.mjs";
+import { GUMROAD, LISTINGS } from "./listings.mjs";
 
 const pick = (slug, n) => {
   const pk = PACKS.find((p) => p.slug === slug);
@@ -28,9 +28,9 @@ const promptPosts = [
   { id: "E4", pack: ET, where: "Etsy seller groups, Instagram", hook: "Not sure what photos your listing needs? This builds a 10-shot list you can do with a phone:", n: 12 },
 ];
 const CTA = {
-  [SB]: "I put 30 prompts like this (quote follow-ups, missed-call texts, service pages, review requests) into a $12 pack: [GUMROAD LINK]",
-  [RE]: "That's part of a $12 pack I made: 30 prompts for listings, social posts, buyer and seller emails and video scripts, with fair housing guardrails: [GUMROAD LINK]",
-  [ET]: "I have 30 more for titles, descriptions, photo shot lists and buyer messages in a $12 pack: [GUMROAD LINK]",
+  [SB]: `I put 30 prompts like this (quote follow-ups, missed-call texts, service pages, review requests) into a $12 pack: ${GUMROAD[SB].url}`,
+  [RE]: `That's part of a $12 pack I made: 30 prompts for listings, social posts, buyer and seller emails and video scripts, with fair housing guardrails: ${GUMROAD[RE].url}`,
+  [ET]: `I have 30 more for titles, descriptions, photo shot lists and buyer messages in a $12 pack: ${GUMROAD[ET].url}`,
 };
 function postText(p) {
   const pk = PACKS.find((x) => x.slug === p.pack);
@@ -84,8 +84,8 @@ const plannerPosts = PLANNERS.map((pl, i) => {
   const L = LISTINGS[pl.slug];
   return {
     id: `P${i + 1}`, slug: pl.slug, title: pl.title, where: a.groups,
-    text: `${L.heroLine}\n\nI made an undated printable for this: ${pl.pages.slice(1).map((p) => p.name.toLowerCase()).join(", ")}. US Letter and A4, print as many as you need.\n\nIt's $${L.price} on Etsy if it helps: [ETSY LINK]`,
-    video: a.angle,
+    text: `${L.heroLine}\n\nI made an undated printable for this: ${pl.pages.slice(1).map((p) => p.name.toLowerCase()).join(", ")}. US Letter and A4, print as many as you need.\n\nIt's $${L.price} on Etsy if it helps: ${L.url}`,
+    video: a.angle, link: L.url,
     pinA: { title: pl.title.slice(0, 100), description: `${L.heroLine} Undated printable PDF, US Letter and A4, instant download.`.slice(0, 500) },
     pinB: { title: `${pl.pages.length - 1} printable pages: ${pl.title}`.slice(0, 100), description: `What's inside: ${pl.pages.slice(1).map((p) => p.name).join(", ")}. Instant download.`.slice(0, 500) },
   };

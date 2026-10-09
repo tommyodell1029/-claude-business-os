@@ -17,6 +17,7 @@ Copy each field into Etsy (Shop Manager > Listings > Add a listing).
 - Category: type "planner" and pick Etsy's suggested calendars & planners category (exact names change; use the closest match)
 - Disclose AI use where Etsy's listing form or creativity standards ask for it (the description below already says so).
 - Suggested price: $6.99 (owner decides)
+- Live listing: https://launchpadlocal.etsy.com/listing/4591584552/service-business-planner-printable-job
 
 ## Title
 ```

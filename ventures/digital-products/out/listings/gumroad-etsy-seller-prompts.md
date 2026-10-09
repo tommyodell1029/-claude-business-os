@@ -18,6 +18,9 @@ Etsy Seller Listing & SEO Prompts
 ## Suggested price
 $12 (owner decides)
 
+## Live product
+https://launchpadprompts.gumroad.com/l/isnqzy
+
 ## Summary (one line)
 ```
 30 fill-in-the-blank AI prompts for Etsy titles and all 13 tags, descriptions, photo shot lists, shop setup, buyer messages and Pinterest.

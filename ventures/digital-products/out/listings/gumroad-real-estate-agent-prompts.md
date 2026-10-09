@@ -18,6 +18,9 @@ Real Estate Agent Listing & Social Prompts
 ## Suggested price
 $12 (owner decides)
 
+## Live product
+https://launchpadprompts.gumroad.com/l/khfgia
+
 ## Summary (one line)
 ```
 30 fill-in-the-blank AI prompts for listings, social posts, buyer and seller emails, video scripts and client conversations, with fair housing guardrails.

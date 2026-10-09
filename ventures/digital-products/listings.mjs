@@ -2,7 +2,7 @@
 // Rules: only true features of the files, no review/sales/"best seller" claims, digital-download wording, and an
 // AI-assistance disclosure (Etsy requires disclosure when AI tools helped create a design). Prices are SUGGESTIONS
 // from the stored research (printables average about $4.93; niche planners price ~30% higher; Gumroad niche packs
-// $12-$49); the owner sets the final price.
+// $12-$49); the owner sets the final price. `url` = the live listing (owner, 2026-10-08), tracking params stripped.
 
 const AI_NOTE = "Designed by me with the help of AI tools, then checked page by page.";
 const DIGITAL = [
@@ -20,6 +20,7 @@ const STEPS = ["Buy and download the PDFs from your Etsy account (Purchases and 
 
 export const LISTINGS = {
   "adhd-college-planner": {
+    url: "https://launchpadlocal.etsy.com/listing/4591568415/adhd-planner-for-college-students",
     heroLine: "Brain dump, pick your top 3, block your time, and never miss a due date.",
     heroPages: [4, 3, 5], detailPage: 4,
     detailPoints: ["Top 3 that make the day count", "Hour-by-hour time blocks, 8 am to 9 pm", "Brain dump space to park distractions", "Focus-block tracker and one daily win"],
@@ -33,6 +34,7 @@ export const LISTINGS = {
     ) + "\n• This planner is an organizing tool, not medical advice or treatment.",
   },
   "teacher-lesson-planner": {
+    url: "https://launchpadlocal.etsy.com/listing/4591588572/teacher-planner-printable-undated-weekly",
     heroLine: "Weekly lesson plans for six periods, plus grading, parent contacts and a ready sub sheet.",
     heroPages: [3, 7, 2], detailPage: 3,
     detailPoints: ["Six periods or subjects, Monday to Friday", "Weekly priorities, meetings and duties", "Copies-to-make checklist", "Unit and week fields at the top"],
@@ -46,6 +48,7 @@ export const LISTINGS = {
     ),
   },
   "small-business-budget-kit": {
+    url: "https://launchpadlocal.etsy.com/listing/4591574433/small-business-budget-planner-printable",
     heroLine: "Plan the month, track cash in and out, set aside taxes and see your real profit.",
     heroPages: [2, 3, 7], detailPage: 2,
     detailPoints: ["Income, fixed and variable costs", "Planned vs actual columns", "Monthly totals with tax set-aside", "Notes for what to change next month"],
@@ -59,6 +62,7 @@ export const LISTINGS = {
     ) + "\n• For organizing your numbers only; not tax, legal or accounting advice.",
   },
   "family-command-center": {
+    url: "https://launchpadlocal.etsy.com/listing/4591582208/family-planner-printable-weekly-family",
     heroLine: "Everyone's schedule, meals and groceries, chores and appointments in one place.",
     heroPages: [3, 2, 4], detailPage: 3,
     detailPoints: ["Breakfast, lunch and dinner for 7 days", "Grocery list sorted by store section", "Build the list straight from the meal plan", "Fits on one fridge-ready page"],
@@ -72,6 +76,7 @@ export const LISTINGS = {
     ),
   },
   "service-business-planner": {
+    url: "https://launchpadlocal.etsy.com/listing/4591584552/service-business-planner-printable-job",
     heroLine: "Schedule jobs, track every lead and quote, chase invoices and get more reviews.",
     heroPages: [2, 3, 7], detailPage: 7,
     detailPoints: ["Leads, quotes, jobs and money in", "Where your leads came from", "Wins and problems to fix", "Supplies to reorder and next week's goals"],
@@ -88,14 +93,17 @@ export const LISTINGS = {
 
 export const GUMROAD = {
   "local-service-business-prompts": {
+    url: "https://launchpadprompts.gumroad.com/l/zsgmtt",
     price: "12",
     summary: "30 fill-in-the-blank AI prompts that write your Google posts, review replies, quote follow-ups, website pages and repeat-business messages.",
   },
   "real-estate-agent-prompts": {
+    url: "https://launchpadprompts.gumroad.com/l/khfgia",
     price: "12",
     summary: "30 fill-in-the-blank AI prompts for listings, social posts, buyer and seller emails, video scripts and client conversations, with fair housing guardrails.",
   },
   "etsy-seller-prompts": {
+    url: "https://launchpadprompts.gumroad.com/l/isnqzy",
     price: "12",
     summary: "30 fill-in-the-blank AI prompts for Etsy titles and all 13 tags, descriptions, photo shot lists, shop setup, buyer messages and Pinterest.",
   },

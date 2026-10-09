@@ -18,6 +18,9 @@ Local Service Business Marketing Prompts
 ## Suggested price
 $12 (owner decides)
 
+## Live product
+https://launchpadprompts.gumroad.com/l/zsgmtt
+
 ## Summary (one line)
 ```
 30 fill-in-the-blank AI prompts that write your Google posts, review replies, quote follow-ups, website pages and repeat-business messages.
