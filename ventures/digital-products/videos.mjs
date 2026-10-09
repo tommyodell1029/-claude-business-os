@@ -2,6 +2,10 @@
 // product: real planner pages, the real prompts. Prompt videos fill the prompt with clearly labelled EXAMPLE details
 // and show an example AI answer (labelled as such). Voiceovers were generated in ElevenLabs (voice "Maya") and are
 // read from out/videos/audio/<id>.mp3. Needs Playwright + an ffmpeg binary (FFMPEG env var).
+// `node videos.mjs --ugc [id]` builds the UGC versions instead: an AI talking-head presenter (ElevenLabs flow
+// "LaunchPad UGC videos (v4 + Aurora)", Creatify Aurora + eleven_v4 voice) speaks the hook on camera, labelled
+// "AI-generated" on screen, then the video cuts to the real product scenes while the rest of the voiceover plays.
+// The presenter speaks as the maker, never as a customer. Inputs: out/videos/ugc/<id>-face.mp4 + <id>-rest.mp3.
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -51,6 +55,19 @@ const PROMPT_VIDEOS = [
   },
 ];
 
+// What the presenter says on camera (hook) and over the product scenes (rest). Tags are eleven_v4 delivery cues.
+export const UGC_SCRIPTS = {
+  V1: ["[excited] Okay, if you run a service business and you HATE writing review replies… try this.", "[warmly] I wrote a prompt where you paste in the review, and the AI gives you three replies. It thanks them by name, mentions the actual job, and keeps it under sixty words. I put thirty prompts like this in one pack. It's $12, and the link's in my bio."],
+  V2: ["[curious] Agents… if you use ChatGPT for your listings, are you giving it the fair housing rules first?", "[warmly] I built a prompt that writes your MLS description from your facts only. No made-up features, and nothing like \"perfect for families.\" It's one of thirty prompts in my real estate pack. It's $12, link in my bio."],
+  V3: ["[excited] Etsy sellers… here's how I get all thirteen tags in one go.", "[warmly] One prompt, and you get thirteen tags, each under twenty characters, mixing what it is, who it's for, and the occasion. There are thirty more for titles, descriptions, and buyer messages in my Etsy seller pack. It's $12, link in my bio."],
+  P1: ["[warmly] If your brain has forty tabs open… this one's for you.", "[warmly] I made a college planner that starts with a brain dump. Then you pick just three things, block out your time, and keep every due date in one place. [excited] It's undated and printable, and it's on my Etsy. Link in my bio."],
+  P2: ["[excited] Teachers! I made a planner that fits your whole week on one page.", "Six periods, Monday to Friday, plus your meetings, duties, and copies to make. [warmly] You also get a grading tracker, a parent contact log, and a sub sheet that's ready when you need it. It's on my Etsy, link in my bio."],
+  P3: ["[curious] Running a small business and never quite sure where the money went?", "[warmly] I made a printable budget kit. Plan the month, track every dollar in and out, set money aside for taxes, and see your real profit on one page. It's on my Etsy, link in my bio."],
+  P4: ["[laughs] Who has practice tonight? What's for dinner? Whose turn is it to do the dishes?", "[warmly] I made a family command center so it's all on one page. The weekly schedule, a meal plan with a grocery list, a chore chart, and important contacts. Print it every week. Link's in my bio."],
+  P5: ["[curious] Do you run a cleaning, lawn care, or contracting business? Every missed lead is lost money.", "[warmly] I made a weekly planner that tracks every call, follows up on your quotes, chases invoices, and shows your week in numbers. It's on my Etsy, link in my bio."],
+};
+const spoken = (s) => s.replace(/\[[a-z ]+\]\s*/g, "");
+
 const PLANNER_VIDEOS = PLANNERS.map((pl, i) => ({ id: `P${i + 1}`, pl, L: LISTINGS[pl.slug] }));
 
 const shell = (palette, body) => `<!doctype html><html><head><meta charset="utf-8"><style>${css("letter", palette)}
@@ -89,17 +106,53 @@ function assemble(segs, audio, file, seconds) {
   rmSync(list);
 }
 
+const UGC = process.argv.includes("--ugc");
+const UGC_DIR = `${OUT}ugc/`;
+function ugcInputs(id) {
+  const face = `${UGC_DIR}${id}-face.mp4`, rest = `${UGC_DIR}${id}-rest.mp3`;
+  return existsSync(face) && existsSync(rest) ? { face, rest } : null;
+}
+
+/** UGC cut: labelled talking-head hook (its own audio), then the product segments over the rest of the voiceover. */
+async function finishUgc(browser, id, palette, { face, rest }, segs, restSeconds, file) {
+  const tmp = `${OUT}tmp/${id}`;
+  const overlay = `<!doctype html><html><head><meta charset="utf-8"><style>${css("letter", palette)}
+html,body{width:${W}px;height:${H}px;margin:0;background:transparent!important}
+.ai{position:absolute;top:110px;left:60px;font:700 30px Inter;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(20,24,30,.62);border-radius:999px;padding:14px 28px}
+.cap{position:absolute;left:70px;right:70px;bottom:330px;text-align:center}
+.cap span{font:800 58px/1.3 Inter;color:#fff;background:rgba(20,24,30,.72);border-radius:18px;padding:10px 22px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+</style></head><body><div class="ai">AI-generated presenter</div><div class="cap"><span>${esc(spoken(UGC_SCRIPTS[id][0]))}</span></div></body></html>`;
+  const p = await browser.newPage({ viewport: { width: W, height: H } });
+  await p.setContent(overlay, { waitUntil: "load" });
+  await p.evaluate(() => document.fonts.ready);
+  await p.screenshot({ path: `${tmp}/ugc-overlay.png`, omitBackground: true });
+  await p.close();
+  const faceSeg = `${tmp}/ugc-face.mp4`;
+  execFileSync(FF, ["-y", "-loglevel", "error", "-i", face, "-i", `${tmp}/ugc-overlay.png`, "-filter_complex",
+    `[0:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,fps=${FPS}[b];[b][1:v]overlay=0:0,format=yuv420p[v]`,
+    "-map", "[v]", "-an", "-c:v", "libx264", "-preset", "medium", "-crf", "20", faceSeg]);
+  const faceSeconds = audioSeconds(faceSeg);
+  const list = `${file}.txt`;
+  execFileSync("bash", ["-c", `printf "${[faceSeg, ...segs].map((s) => `file '${s}'`).join("\\n")}\\n" > '${list}'`]);
+  execFileSync(FF, ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-i", face, "-i", rest, "-filter_complex",
+    `[1:a]atrim=0:${faceSeconds.toFixed(2)},apad=whole_dur=${faceSeconds.toFixed(2)}[h];[h][2:a]concat=n=2:v=0:a=1,apad[a]`,
+    "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-t", (faceSeconds + restSeconds).toFixed(2), "-movflags", "+faststart", file]);
+  rmSync(list);
+}
+
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium" });
-const only = process.argv[2];
+const only = process.argv.slice(2).find((a) => !a.startsWith("--"));
+if (UGC) mkdirSync(UGC_DIR, { recursive: true });
 
 for (const v of PROMPT_VIDEOS) {
   if (only && only !== v.id) continue;
   const audio = `${OUT}audio/${v.id}.mp3`;
-  if (!existsSync(audio)) { console.log(`${v.id}: no voiceover yet, skipped`); continue; }
+  const ugc = UGC ? ugcInputs(v.id) : null;
+  if (UGC ? !ugc : !existsSync(audio)) { console.log(`${v.id}: no ${UGC ? "UGC clips" : "voiceover"} yet, skipped`); continue; }
   const pk = pack(v.slug);
   const tmp = `${OUT}tmp/${v.id}`; mkdirSync(tmp, { recursive: true });
   const [title] = prompt(v.slug, v.n);
-  const total = audioSeconds(audio) + 0.7;
+  const total = audioSeconds(ugc ? ugc.rest : audio) + 0.7;
   await still(browser, shell(pk.palette, `
     <div style="position:absolute;left:90px;right:90px;top:520px">
       <div class="chip">${esc(pk.short)}</div>
@@ -125,21 +178,23 @@ for (const v of PROMPT_VIDEOS) {
     </div>
     <img class="paper" src="${b64(cover)}" style="position:absolute;width:700px;left:190px;top:560px;transform:rotate(-2deg)">
     <div class="bar">$12 · Link in bio</div>`), `${tmp}/4.png`);
-  const t1 = 2.6, t2 = 5.4, t4 = 4.6, t3 = Math.max(4, total - t1 - t2 - t4);
-  const segs = [[1, t1], [2, t2], [3, t3], [4, t4]].map(([n, s]) => { const f = `${tmp}/${n}.mp4`; segment(`${tmp}/${n}.png`, s, f); return f; });
-  assemble(segs, audio, `${OUT}${v.id}-${v.slug}.mp4`, t1 + t2 + t3 + t4);
+  const t1 = ugc ? 0 : 2.6, t2 = 5.4, t4 = 4.6, t3 = Math.max(4, total - t1 - t2 - t4);
+  const segs = [[1, t1], [2, t2], [3, t3], [4, t4]].filter(([, s]) => s > 0).map(([n, s]) => { const f = `${tmp}/${n}.mp4`; segment(`${tmp}/${n}.png`, s, f); return f; });
+  if (ugc) await finishUgc(browser, v.id, pk.palette, ugc, segs, t2 + t3 + t4, `${UGC_DIR}${v.id}-${v.slug}-ugc.mp4`);
+  else assemble(segs, audio, `${OUT}${v.id}-${v.slug}.mp4`, t1 + t2 + t3 + t4);
   console.log(`${v.id} done (${total.toFixed(1)}s)`);
 }
 
 for (const v of PLANNER_VIDEOS) {
   if (only && only !== v.id) continue;
   const audio = `${OUT}audio/${v.id}.mp3`;
-  if (!existsSync(audio)) { console.log(`${v.id}: no voiceover yet, skipped`); continue; }
+  const ugc = UGC ? ugcInputs(v.id) : null;
+  if (UGC ? !ugc : !existsSync(audio)) { console.log(`${v.id}: no ${UGC ? "UGC clips" : "voiceover"} yet, skipped`); continue; }
   const { pl, L } = v;
   const tmp = `${OUT}tmp/${v.id}`; mkdirSync(tmp, { recursive: true });
   const pagesDir = fileURLToPath(new URL(`./out/planners/${pl.slug}/pages/`, import.meta.url));
   const pages = readdirSync(pagesDir).sort().map((f) => `${pagesDir}${f}`);
-  const total = audioSeconds(audio) + 0.7;
+  const total = audioSeconds(ugc ? ugc.rest : audio) + 0.7;
   await still(browser, shell(pl.palette, `
     <div style="position:absolute;left:90px;right:90px;top:460px">
       <div class="chip">Printable · Undated</div>
@@ -159,13 +214,14 @@ for (const v of PLANNER_VIDEOS) {
     </div>
     <img class="paper" src="${b64(pages[0])}" style="position:absolute;width:640px;left:220px;top:640px;transform:rotate(-2deg)">
     <div class="bar">On Etsy · Link in bio</div>`), `${tmp}/5.png`);
-  const t1 = 3, t5 = 4, tp = Math.max(2.5, (total - t1 - t5) / show.length);
+  const t1 = ugc ? 0 : 3, t5 = 4, tp = Math.max(2.5, (total - t1 - t5) / show.length);
   const segs = [];
   const add = (png, s) => { const f = png.replace(/\.png$/, ".mp4"); segment(png, s, f); segs.push(f); };
-  add(`${tmp}/1.png`, t1);
+  if (t1) add(`${tmp}/1.png`, t1);
   show.forEach((_, k) => add(`${tmp}/p${k}.png`, tp));
   add(`${tmp}/5.png`, t5);
-  assemble(segs, audio, `${OUT}${v.id}-${pl.slug}.mp4`, t1 + t5 + tp * show.length);
+  if (ugc) await finishUgc(browser, v.id, pl.palette, ugc, segs, t5 + tp * show.length, `${UGC_DIR}${v.id}-${pl.slug}-ugc.mp4`);
+  else assemble(segs, audio, `${OUT}${v.id}-${pl.slug}.mp4`, t1 + t5 + tp * show.length);
   console.log(`${v.id} done (${total.toFixed(1)}s)`);
 }
 
