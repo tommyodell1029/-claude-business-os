@@ -84,3 +84,15 @@ No AI-generated footage is used, so the product shown is always the real file.
 Edit `planners.mjs`, `prompts.mjs` or `listings.mjs`, then run `npm install` (Playwright, pinned) and `node build.mjs all`. It uses the Chromium at `/opt/pw-browsers/chromium`, or set `CHROMIUM_PATH`.
 
 Fonts: Inter and DM Serif Display, SIL Open Font License (`fonts/OFL-*.txt`), embedded in the PDFs, which the license allows.
+
+### UGC versions (`out/videos/ugc/`)
+
+The same 8 videos, remade in a UGC style (about 16–21 s each). An AI-generated presenter speaks the hook to camera, then the video cuts to the real product scenes while she voices the rest.
+- The presenter is AI-generated. The image is gpt-image-2.5 and the talking head is Creatify Aurora at 720p. Her voice is eleven_v4, voice "Maya".
+- Each video carries an "AI-generated presenter" label on screen while she is visible.
+- She speaks as the maker ("I made…") and never as a customer, and she makes no claims about sales or reviews.
+- Cost: the talking heads came to about 39k ElevenLabs credits, roughly $7. The v4 voice was free during the promotion.
+- The ElevenLabs flow is "LaunchPad UGC videos (v4 + Aurora)". Each video has two source files: `<id>-face.mp4` (the hook clip) and `<id>-rest.mp3` (the rest of the voiceover). The scripts are in `UGC_SCRIPTS` in `videos.mjs`.
+- Many platforms require you to turn on their own AI-content label when you post these (TikTok: "AI-generated content"; Instagram: "AI info"; YouTube: "altered or synthetic content").
+
+To rebuild, run `FFMPEG=<path to ffmpeg> node videos.mjs --ugc [V1|P3|…]`.
