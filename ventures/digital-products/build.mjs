@@ -269,7 +269,7 @@ table.cal tr { break-inside: avoid; }
 .rule { display: grid; grid-template-columns: 1.7in 1fr; gap: 10pt; border-bottom: 0.75pt solid var(--faint); padding: 8pt 0; break-inside: avoid; } .rule b { color: var(--accent); }
 ul.dos { padding-left: 16pt; margin: 0 0 10pt; } ul.dos li { margin-bottom: 4pt; }
 </style></head><body>
-<section class="page cover"><div><div class="band"></div><div class="pill">${isPrompts ? "Gumroad · Oct 8 to Oct 22, 2026" : "Etsy + Pinterest · 14 days from launch"}</div><h1 style="margin-top:16pt">${esc(P.title)}</h1>
+<section class="page cover"><div><div class="band"></div><div class="pill">${isPrompts ? "Gumroad · Oct 8 to Oct 22, 2026" : "Etsy + Pinterest · Oct 8 to Oct 22, 2026"}</div><h1 style="margin-top:16pt">${esc(P.title)}</h1>
 <div class="sub">${isPrompts ? "Goal: 3 sales across the three $12 prompt packs in 14 days. Every post gives away one genuinely useful prompt, then mentions the pack." : "Goal: 3 sales across the five planners in 14 days. Pinterest brings planner buyers; groups and short videos add the first visitors."}</div></div>
 <div><div style="font:700 8pt Inter;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8pt">Inside</div><ul><li>Rules that keep posts welcome</li><li>14-day calendar with checkboxes</li><li>${P.posts.length} ready-to-post texts</li><li>${isPrompts ? "3 video scripts" : "Pinterest pin copy (pin images in the pins folder)"}</li><li>Results tracker</li><li>Day 14 decision rules</li></ul></div>
 <div class="note">Replace [GUMROAD LINK] / [ETSY LINK] with your real links before posting. Record every sale in Money OS → Revenue so the experiment shows real numbers.</div></section>

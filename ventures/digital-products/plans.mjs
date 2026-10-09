@@ -93,6 +93,6 @@ const plannerPosts = PLANNERS.map((pl, i) => {
 
 export const PLANS = {
   prompts: { title: "Prompt Packs: 14-Day Content Plan", short: "Prompt packs", palette: { accent: "#2b4c7e", tint: "#e6ecf5" }, calendar: promptCalendar, posts: promptPosts.map((p) => ({ ...p, text: postText(p) })), videos: videoScripts, startLabel: (i) => day(i) },
-  planners: { title: "Etsy Planners: 14-Day Content Plan", short: "Etsy planners", palette: { accent: "#2f7d4f", tint: "#e6f3ea" }, calendar: plannerCalendar, posts: plannerPosts, startLabel: (i) => `Day ${i + 1}  ·  ____` },
+  planners: { title: "Etsy Planners: 14-Day Content Plan", short: "Etsy planners", palette: { accent: "#2f7d4f", tint: "#e6f3ea" }, calendar: plannerCalendar, posts: plannerPosts, startLabel: (i) => day(i === plannerCalendar.length - 1 ? 14 : i) },
 };
 export { pick };
