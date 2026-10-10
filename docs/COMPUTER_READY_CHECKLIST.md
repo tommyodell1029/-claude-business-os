@@ -11,7 +11,7 @@ The owner moves Oct 24–25 or Oct 31–Nov 1, 2026, and gets the Dell then. Fin
 - [ ] Tell Claude what you changed in the Etsy listings, so the listing sheets match the live shop.
 
 ## 2. Close out Money OS Phase 1
-- [ ] Open launchpadlocal.org/os on the iPad once and check that it loads and you can sign in. This is the last Phase 1 check.
+- [x] Open launchpadlocal.org/os on the iPad once (done 2026-10-10) and check that it loads and you can sign in. This is the last Phase 1 check.
 - [ ] Sign off `docs/money-os/PHASE_1_COMPLETE.md` by telling Claude "Phase 1 signed off".
 - [ ] Keep using ULTRON and /os daily. Phase 2 decisions (for example local vs cloud AI) need about 30 days of data, which runs from Oct 8 to about Nov 7. If the computer arrives earlier, setup and J2 can start right away, and the data-driven decisions wait until Nov 7.
 

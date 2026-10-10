@@ -52,7 +52,7 @@ Phase 2 (StarNet, Ollama, OmniRoute, Ponytail, Caveman, the agent system) has **
 | Accept ULTRON commands | ✅ | Live on the owner's iPhone: top opportunities answered from data; Radar run through ULTRON after "yes". |
 | Display real activity | ✅ | Activity tab reads `activity` rows written by code (sweeps, research, budget stops, settings, experiments, kills, revenue). |
 | Work on iPhone | ✅ | Owner used `/os` and ULTRON on iPhone. Playwright 390×844: all screens and forms, no horizontal scroll, tap targets ≥ 44 px, no page errors. |
-| Work on iPad | 🟡 | Playwright 820×1180 passes the same checks. **The owner still needs to open `/os` on the iPad once.** |
+| Work on iPad | ✅ | Playwright 820×1180 passes the same checks. The owner opened `/os` on the iPad on 2026-10-10 and it loaded. |
 | Deploy through Vercel | ✅ | Every slice deployed to production from the branch and checked live. |
 | Preserve data | ✅ | Additive migrations only; nothing deleted; agency tables untouched. |
 | Pass basic security checks | ✅ | Checkpoint audit (slice 6) plus slice 7 routes: owner session on every route, origin check on every write, input validation, no secrets in the client bundle. |
