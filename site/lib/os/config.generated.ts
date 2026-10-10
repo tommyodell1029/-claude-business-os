@@ -135,5 +135,17 @@ export const OS_CONFIG = {
       "max_videos": 40,
       "max_opportunities": 6
     }
+  },
+  "revenue_sync": {
+    "gumroad": {
+      "venture": "Prompt packs (Gumroad)",
+      "experiment_id": "a90685aa-39a7-40fd-8836-c23a9884801c",
+      "since": "2026-10-08",
+      "max_pages": 10
+    }
+  },
+  "experiments": {
+    "default_window_days": 14,
+    "extend_days": 7
   }
 } as const;

@@ -10,6 +10,7 @@ import { dayKey } from "./usage.ts";
 import { EDITABLE_KEYS, LIMITS, effectiveConfig } from "./settings.ts";
 import { monetizationView } from "./monetization.ts";
 import { whatNext } from "./next.ts";
+import { experimentChecks } from "./decide.ts";
 
 type Row = Record<string, unknown>;
 const TZ = (OS_CONFIG as unknown as { timezone: string }).timezone;
@@ -59,7 +60,8 @@ export async function experimentsView(db: Db) {
   const items = await safe(() => db.select<Row>("experiments", "id,name,status,hypothesis,success_metric,target,budget_usd,started_at,ended_at,result_note,opportunity_id", [], "started_at.desc", 100));
   const byStatus: Record<string, number> = {};
   for (const e of items ?? []) byStatus[String(e.status)] = (byStatus[String(e.status)] ?? 0) + 1;
-  return { items, byStatus: items ? byStatus : null };
+  const checks = await safe(async () => Object.fromEntries((await experimentChecks(db, Date.now())).map((c) => [c.id, c])));
+  return { items, byStatus: items ? byStatus : null, checks };
 }
 
 /**

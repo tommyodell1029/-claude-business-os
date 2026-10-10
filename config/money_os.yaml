@@ -125,3 +125,19 @@ social_radar:
     max_tokens: 2000
     max_videos: 40
     max_opportunities: 6
+
+# Marketplace sales sync (site/lib/os/gumroad.ts). Official Gumroad API v2, token in GUMROAD_ACCESS_TOKEN (Vercel only),
+# sent as an Authorization header. Read-only on Gumroad; writes one revenue_entries row per sale, keyed by Gumroad's
+# sale id so re-running never double-counts. Refunded or charged-back sales are recorded at $0 with a note.
+revenue_sync:
+  gumroad:
+    venture: Prompt packs (Gumroad)
+    experiment_id: a90685aa-39a7-40fd-8836-c23a9884801c   # "3 Gumroad products" experiment, started 2026-10-08
+    since: "2026-10-08"
+    max_pages: 10
+
+# Experiment decision helper (site/lib/os/decide.ts). Code-only: compares recorded sales with the number in the
+# experiment's target ("3 sales in 14 days"). Mirrors the Day 14 rules in the content-plan PDFs.
+experiments:
+  default_window_days: 14
+  extend_days: 7

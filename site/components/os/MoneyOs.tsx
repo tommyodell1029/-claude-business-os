@@ -384,6 +384,34 @@ function OpportunityDetail({ id, nonce, onBack }: { id: string; nonce: number; o
   );
 }
 
+/** Gumroad sales sync: pulls new sales into revenue (official API, read-only, free, never double-counts). */
+function GumroadSync({ onDone }: { onDone: () => void }) {
+  const info = useView("gumroad", 0);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ text: string; bad?: boolean } | null>(null);
+  const run = async () => {
+    setBusy(true);
+    setNote(null);
+    const r = await post("os/gumroad", {});
+    const b = r.body;
+    if (r.status === 200 && b.ok) setNote({ text: `${b.seen} sales checked · ${b.added} new ($${Number(b.addedUsd ?? 0).toFixed(2)}) · ${b.alreadyHad} already recorded${Number(b.refundsMarked) ? ` · ${b.refundsMarked} refunds set to $0` : ""}${Number(b.skipped) ? ` · ${b.skipped} unreadable skipped` : ""}` });
+    else setNote({ text: String(b.error ?? `HTTP ${r.status}`), bad: true });
+    setBusy(false);
+    onDone();
+  };
+  return (
+    <div className="os-card">
+      <h3 className="os-h3">Gumroad sales</h3>
+      <Shell load={info}>
+        {(d) => d.tokenConfigured
+          ? <><p className="os-dim">Pulls new Gumroad sales into Revenue and the prompt-pack experiment. Free, and safe to tap any time.</p><button className="os-btn" disabled={busy} onClick={() => void run()}>{busy ? "Syncing…" : "Sync Gumroad sales"}</button></>
+          : <p className="os-warn">The Gumroad access token is not set in Vercel yet.</p>}
+      </Shell>
+      {note ? <p className={`os-line${note.bad ? " os-warn" : ""}`}>{note.text}</p> : null}
+    </div>
+  );
+}
+
 function Experiments({ nonce }: { nonce: number }) {
   const [bump, setBump] = useState(0);
   const load = useView("experiments", nonce * 1000 + bump);
@@ -398,6 +426,7 @@ function Experiments({ nonce }: { nonce: number }) {
             <div className="os-stats">
               {["validating", "validated", "live", "killed"].map((s) => <Stat key={s} label={s} value={String(by[s] ?? 0)} />)}
             </div>
+            <GumroadSync onDone={() => setBump((b) => b + 1)} />
             <div className="os-card"><h3 className="os-h3">New experiment</h3><NewExperimentForm onDone={() => setBump((b) => b + 1)} /></div>
             {!items.length ? <p className="os-dim">No experiments yet. Start one here, from an opportunity, or ask ULTRON.</p> : items.map((e) => (
               <div key={String(e.id)} className="os-card">
@@ -405,6 +434,16 @@ function Experiments({ nonce }: { nonce: number }) {
                 {e.hypothesis ? <p>{String(e.hypothesis)}</p> : null}
                 <div className="os-meta">Metric: {String(e.success_metric ?? "not set")} · Target: {String(e.target ?? "not set")} · Budget {usd(Number(e.budget_usd))} · started {when(e.started_at)}</div>
                 {e.result_note ? <p className="os-dim">{String(e.result_note)}</p> : null}
+                {(() => {
+                  const c = ((d.checks ?? {}) as Record<string, Any>)[String(e.id)];
+                  if (!c) return null;
+                  const sug = c.suggestion as { action: string; text: string };
+                  return (
+                    <p className={`os-line${sug.action === "validated" ? " os-good" : sug.action === "review_traffic" || sug.action === "extend" ? " os-warn" : ""}`}>
+                      <strong>Day {String(c.day)} of {String(c.windowDays)} · {String(c.sales)}{c.targetSales === null ? "" : ` of ${String(c.targetSales)}`} sales</strong> · {sug.text}
+                    </p>
+                  );
+                })()}
                 <ExperimentStatus id={String(e.id)} current={String(e.status)} onDone={() => setBump((b) => b + 1)} />
               </div>
             ))}

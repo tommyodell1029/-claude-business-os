@@ -37,6 +37,7 @@ body:has(.os) { background: var(--bg, #0b1117); }
 .os-meta { color: var(--dim); font-size: 13px; margin-top: 2px; }
 .os-dim { color: var(--dim); }
 .os-warn { color: var(--warn); font-weight: 600; }
+.os-good { color: var(--accent); font-weight: 600; }
 .os-score { font: 700 18px ui-monospace, Menlo, monospace; color: var(--accent); white-space: nowrap; }
 .os-trunc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 

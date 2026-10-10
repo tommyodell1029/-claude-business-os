@@ -283,3 +283,17 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - Problem: YouTube's US/English settings only bias its search, so about half the top videos were Hindi.
   - Fix: code now keeps only English videos (the channel's declared language, or else a title that is at least 90% Latin letters).
   - Results per search raised from 15 to 25. YouTube charges the same per search, so a sweep now uses at most 804 quota units.
+
+## Money OS: Gumroad sales sync + experiment decision helper: 2026-10-10 (orchestrator, Opus)
+- **Gumroad sync** (`site/lib/os/gumroad.ts`):
+  - What it does: owner-triggered (the /os Experiments tab button or a confirmed ULTRON `sync_gumroad_sales`), using the official Gumroad API v2 `GET /v2/sales`.
+  - Token: sent as a Bearer header only, kept in `GUMROAD_ACCESS_TOKEN` in Vercel, and covered by the bundle check.
+  - Storage: one `revenue_entries` row per sale (source `marketplace`, `external_id` `gumroad:<id>`, `units` = quantity), linked to the prompt-pack experiment. Re-running never double-counts. Refunds and chargebacks are set to $0 with a note, and buyer emails are never stored.
+  - Limit: Gumroad's docs don't list the sale fields, so the code reads `price` (cents), `gumroad_fee`, `quantity`, `created_at`, `product_name`, `refunded`, `chargedback` and `disputed` defensively. A sale it can't read is counted as skipped. Check the first live sync result.
+- **Decision helper** (`site/lib/os/decide.ts`):
+  - What it does: code only, no model. It parses the number in each experiment's target ("3 sales in 14 days"), counts paid units and revenue, and suggests validated, wait, extend, review traffic or set target, mirroring the Day 14 rules in the content-plan PDFs.
+  - Views are not in Money OS, so that case says DATA UNAVAILABLE and points to Etsy Stats or Gumroad Analytics.
+  - Shown on: each /os Experiments card, ULTRON's `experiment_check` read tool, and the "What next" text.
+- **ULTRON:** `record_revenue` takes `units` (default 1).
+- **Migration** `20261010000002_revenue_sync.sql` (additive): adds `revenue_entries.external_id` (unique per source) and `units`, and widens the `jarvis_actions` tool check.
+- **Tests:** site 149/149 (6 new in `revenue_sync.test.ts`), Python OK, typecheck, lint and build clean, bundle check covers 17 names.

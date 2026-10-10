@@ -54,13 +54,15 @@ export const TOOLS: ToolSpec[] = [
   { name: "ai_cost_summary", kind: "read", description: "AI spend from the usage ledger: today, this month, the daily budget meter, and spend by task and by opportunity.", fields: {}, required: [] },
   { name: "what_next", kind: "read", description: "What needs the owner's attention in the Money OS, ranked by code: experiments waiting on a decision, the best scored opportunities, unresearched opportunities with the most evidence, and today's remaining AI budget.", fields: {}, required: [] },
   { name: "social_trends", kind: "read", description: "What people are watching on YouTube about making money online, from the last Social Radar sweep (official YouTube Data API): video title, channel, views, age in days, views per day, comments and link, fastest-growing first. Numbers are the API's own counts. at = when the sweep ran; an empty list means no sweep yet.", fields: { limit }, required: [] },
+  { name: "experiment_check", kind: "read", description: "Decision check for experiments, computed in code: recorded sales (units) and revenue against the number in the target, day X of the window, deadline, and a suggested next step (validated, wait, extend, review traffic). Omit experiment_id for every open experiment. It only suggests; changing status still needs set_experiment_status and the owner's confirmation. Views/traffic are not in Money OS.", fields: { experiment_id: { type: "uuid", description: "One experiment id, or omit for all open ones." } }, required: [] },
   { name: "radar_sweep", kind: "write", description: "Propose a Money Radar web search for new opportunities in one category. It costs money (web searches plus tokens, within the AI budgets), so it does NOT run until the owner confirms. A recent identical sweep is reused for free.", fields: { category: { type: "enum", values: RADAR_KEYS, description: "The Radar category." } }, required: ["category"] },
   { name: "social_radar", kind: "write", description: "Propose a Social Radar sweep: searches YouTube (official API) for what people watch about making money online, saves the videos with their real view counts, then groups them into opportunities with the videos as evidence. Uses YouTube quota and a small model call, so it does NOT run until the owner confirms. A sweep from the last 24 hours is reused for free unless fresh is yes.", fields: { fresh: { type: "enum", values: ["yes", "no"], description: "yes to ignore a recent cached sweep (default no)." } }, required: [] },
+  { name: "sync_gumroad_sales", kind: "write", description: "Propose pulling new sales from Gumroad (official API, read-only) into Money OS revenue, linked to the prompt-pack experiment. Free; re-running never double-counts. Does NOT run until the owner confirms.", fields: {}, required: [] },
   { name: "research_opportunity", kind: "write", description: "Propose web research on one opportunity (evidence plus proposed sub-scores; the score itself is computed in code). Costs money, so it does NOT run until the owner confirms. Results from the last 14 days are reused for free unless fresh is yes.", fields: { opportunity_id: { type: "uuid", description: "The opportunity id." }, fresh: { type: "enum", values: ["yes", "no"], description: "yes to ignore a recent cached result (default no)." } }, required: ["opportunity_id"] },
   { name: "create_experiment", kind: "write", description: "Propose a new Money OS experiment (status validating). Does NOT execute until the owner confirms. Use only details the owner gave; never invent targets or budgets.", fields: { name: { type: "text", min: 1, max: 160, description: "Short experiment name." }, opportunity_id: { type: "uuid", description: "The opportunity it tests, if any." }, hypothesis: { type: "text", min: 1, max: 1000, description: "What we believe will happen." }, success_metric: { type: "text", min: 1, max: 300, description: "How success is measured." }, target: { type: "text", min: 1, max: 300, description: "The number that counts as success." }, budget_usd: { type: "number", min: 0, max: 10000, description: "Money budget in USD (default 0)." } }, required: ["name"] },
   { name: "set_experiment_status", kind: "write", description: "Propose changing an experiment's status, with an optional result note. Does NOT execute until the owner confirms.", fields: { experiment_id: { type: "uuid", description: "The experiment id from query_experiments." }, status: { type: "enum", values: EXP_STATUS, description: "The new status." }, result_note: { type: "text", min: 1, max: 2000, description: "What happened, in plain English." } }, required: ["experiment_id", "status"] },
   { name: "kill_opportunity", kind: "write", description: "Propose marking an opportunity as killed (it stays stored, hidden from the ranking). Does NOT execute until the owner confirms.", fields: { opportunity_id: { type: "uuid", description: "The opportunity id." }, reason: { type: "text", min: 1, max: 500, description: "Why it is being killed." } }, required: ["opportunity_id", "reason"] },
-  { name: "record_revenue", kind: "write", description: "Propose recording revenue the owner reports (not Stripe; Stripe payments are counted automatically). Does NOT execute until the owner confirms. Use only amounts the owner stated.", fields: { venture: { type: "text", min: 1, max: 80, description: "Which venture earned it." }, amount_usd: { type: "number", min: 0, max: 100000, description: "Amount received in USD." }, cost_usd: { type: "number", min: 0, max: 100000, description: "Direct cost in USD (default 0)." }, source: { type: "enum", values: REVENUE_SOURCE, description: "manual, affiliate, marketplace or other." }, occurred_on: { type: "date", description: "Date received, YYYY-MM-DD (default today)." }, product: { type: "text", min: 1, max: 160, description: "What was sold." }, experiment_id: { type: "uuid", description: "The experiment it belongs to, if any." }, note: { type: "text", min: 1, max: 500, description: "Optional note." } }, required: ["venture", "amount_usd", "source"] },
+  { name: "record_revenue", kind: "write", description: "Propose recording revenue the owner reports (not Stripe; Stripe payments are counted automatically). Does NOT execute until the owner confirms. Use only amounts the owner stated.", fields: { venture: { type: "text", min: 1, max: 80, description: "Which venture earned it." }, amount_usd: { type: "number", min: 0, max: 100000, description: "Amount received in USD." }, cost_usd: { type: "number", min: 0, max: 100000, description: "Direct cost in USD (default 0)." }, source: { type: "enum", values: REVENUE_SOURCE, description: "manual, affiliate, marketplace or other." }, occurred_on: { type: "date", description: "Date received, YYYY-MM-DD (default today)." }, product: { type: "text", min: 1, max: 160, description: "What was sold." }, experiment_id: { type: "uuid", description: "The experiment it belongs to, if any." }, units: { type: "integer", min: 1, max: 1000, description: "How many sales this amount covers (default 1)." }, note: { type: "text", min: 1, max: 500, description: "Optional note." } }, required: ["venture", "amount_usd", "source"] },
   { name: "outreach_review", kind: "write", description: "Propose approving or skipping one pending outreach draft. Does NOT execute: it creates a pending action the owner must confirm by saying yes or tapping Confirm within two minutes. Approving never sends the email; sending stays a separate owner step.", fields: { event_id: { type: "uuid", description: "The id of the pending draft row from query_outreach." }, decision: { type: "enum", values: ["approve", "skip"], description: "approve or skip." } }, required: ["event_id", "decision"] },
   { name: "memory_add", kind: "write", description: "Propose saving a note or preference for the owner. Does NOT execute until the owner confirms.", fields: { note: { type: "text", min: 1, max: 1000, description: "The note, in plain English." }, kind: { type: "enum", values: ["note", "preference"], description: "note (default) or preference." } }, required: ["note"] },
 ];
@@ -206,6 +208,11 @@ async function readTool(name: string, v: Record<string, string | number>, ctx: T
     }
     case "what_next":
       return (await import("../os/next.ts")).whatNext(db, ctx.now);
+    case "experiment_check": {
+      const checks = await (await import("../os/decide.ts")).experimentChecks(db, ctx.now, v.experiment_id ? String(v.experiment_id) : undefined);
+      if (v.experiment_id && !checks.length) return { error: "no experiment with that id" };
+      return { experiments: checks.map((c) => ({ id: c.id, name: c.name, status: c.status, target: c.target, day: c.day, window_days: c.windowDays, deadline: c.deadline, days_left: c.daysLeft, sales_recorded: c.sales, target_sales: c.targetSales, revenue_usd: c.revenueUsd, suggestion: c.suggestion.action, note: c.suggestion.text })) };
+    }
     case "social_trends": {
       const r = await (await import("../os/social.ts")).latestSignals(db, lim(v));
       if (!r) return { error: "data unavailable: Social Radar sweeps could not be read" };
@@ -288,6 +295,7 @@ async function describeMoneyOs(name: string, v: Record<string, string | number>,
     const worst = worstCase(model(R.role, "os"), R.max_searches, R.max_tokens, 2000);
     return { summary: `Run Money Radar on ${R.categories[String(v.category)]}: up to ${R.max_searches} web searches, at most about ${money(worst)} (free if a sweep from the last 14 days exists).` };
   }
+  if (name === "sync_gumroad_sales") return { summary: "Pull new Gumroad sales into Money OS revenue (official API, read-only, free; sales already recorded are skipped)." };
   if (name === "social_radar") {
     const social = await import("../os/social.ts");
     const st = await social.socialStatus(db, {}, now);
@@ -319,7 +327,7 @@ async function describeMoneyOs(name: string, v: Record<string, string | number>,
     const day = String(v.occurred_on ?? todayLocal(now));
     if (day > todayLocal(now)) return { error: "occurred_on cannot be in the future" };
     if (v.experiment_id && !(await loadOne(db, "experiments", "id", String(v.experiment_id)))) return { error: "no experiment with that id" };
-    return { summary: `Record ${money(v.amount_usd)} revenue${v.cost_usd ? ` (cost ${money(v.cost_usd)})` : ""} for ${clip(String(v.venture), 80)} from ${String(v.source)} on ${day}${v.product ? `, product: ${clip(String(v.product), 80)}` : ""}.` };
+    return { summary: `Record ${money(v.amount_usd)} revenue${v.units && Number(v.units) > 1 ? ` (${v.units} sales)` : ""}${v.cost_usd ? ` (cost ${money(v.cost_usd)})` : ""} for ${clip(String(v.venture), 80)} from ${String(v.source)} on ${day}${v.product ? `, product: ${clip(String(v.product), 80)}` : ""}.` };
   }
   return { error: `unknown write tool ${name}` };
 }
@@ -340,6 +348,11 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     const r = await research.researchOpportunity(rctx, String(v.opportunity_id), { force: v.fresh === "yes" });
     if (!r.ok) throw new Error(r.error ?? "research failed");
     return `${r.cached ? "Reused recent research: " : ""}${r.evidenceAdded} evidence items saved, ${r.evidenceDropped} unsupported claims dropped, ${r.scored} dimensions scored. Cost ${money(r.spentUsd)}.`;
+  }
+  if (tool === "sync_gumroad_sales") {
+    const r = await (await import("../os/gumroad.ts")).syncGumroad(db, ctx.env, ctx.fetchImpl, ctx.now);
+    if (!r.ok) throw new Error(r.error ?? "gumroad sync failed");
+    return `Gumroad: ${r.seen} sales checked, ${r.added} new recorded (${money(r.addedUsd)}), ${r.alreadyHad} already recorded${r.refundsMarked ? `, ${r.refundsMarked} refunds set to $0` : ""}${r.skipped ? `, ${r.skipped} unreadable skipped` : ""}.`;
   }
   if (tool === "social_radar") {
     const r = await (await import("../os/social.ts")).socialRadar({ db, env: ctx.env, fetchImpl: ctx.fetchImpl, now: ctx.now }, { force: v.fresh === "yes" });
@@ -386,7 +399,7 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     if (day > todayLocal(ctx.now)) throw new Error("occurred_on cannot be in the future");
     await db.insert("revenue_entries", {
       venture: v.venture, experiment_id: v.experiment_id ?? null, source: v.source, product: v.product ?? null,
-      amount_usd: v.amount_usd, cost_usd: v.cost_usd ?? 0, occurred_on: day, note: v.note ?? null,
+      amount_usd: v.amount_usd, cost_usd: v.cost_usd ?? 0, units: v.units ?? 1, occurred_on: day, note: v.note ?? null,
     });
     await logActivity(db, "owner", "revenue_recorded", `${money(v.amount_usd)} for ${String(v.venture)} on ${day} (action ${actionId})`);
     return `Recorded ${money(v.amount_usd)} for ${String(v.venture)}.`;

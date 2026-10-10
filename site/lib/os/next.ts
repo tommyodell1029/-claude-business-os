@@ -6,6 +6,7 @@ import { monetizationView } from "./monetization.ts";
 import { listRanked } from "./opportunities.ts";
 import { effectiveConfig } from "./settings.ts";
 import { spentToday } from "./usage.ts";
+import { experimentChecks } from "./decide.ts";
 
 export const DECISION_AFTER_DAYS = 7;
 
@@ -30,7 +31,10 @@ export async function whatNext(db: Db, now: number) {
 
   let action: NextAction = { kind: "none", text: "Nothing needs a decision right now.", targetId: null };
   if (cfg.aiPaused) action = { kind: "resume_ai", text: "AI is stopped. Resume it in Settings to research or run Radar.", targetId: null };
-  else if (waiting[0]) action = { kind: "decide_experiment", text: `Decide on "${String(waiting[0].name)}": it has been validating for over ${DECISION_AFTER_DAYS} days. Mark it validated or killed.`, targetId: String(waiting[0].id) };
+  else if (waiting[0]) {
+    const c = (await experimentChecks(db, now, String(waiting[0].id)).catch(() => []))[0];
+    action = { kind: "decide_experiment", text: `"${String(waiting[0].name)}": ${c ? c.suggestion.text : `validating for over ${DECISION_AFTER_DAYS} days. Mark it validated or killed.`}`, targetId: String(waiting[0].id) };
+  }
   else if (top && ["researched", "validation_ready"].includes(String(top.status))) {
     const v = top.cheapestValidation as { description: string } | null;
     action = { kind: "start_experiment", text: `Start a validation experiment for "${String(top.name)}"${v ? `: ${v.description}` : "."}`, targetId: String(top.id) };
