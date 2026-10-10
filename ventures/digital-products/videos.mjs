@@ -6,6 +6,10 @@
 // "LaunchPad UGC videos (v4 + Aurora)", Creatify Aurora + eleven_v4 voice) speaks the hook on camera, labelled
 // "AI-generated" on screen, then the video cuts to the real product scenes while the rest of the voiceover plays.
 // The presenter speaks as the maker, never as a customer. Inputs: out/videos/ugc/<id>-face.mp4 + <id>-rest.mp3.
+// `node videos.mjs --story [id]` builds the animated story versions: a 15 s Kling 3 clip (Higgsfield; struggle -> a
+// friend mentions the product -> calmer day, native lip-synced dialogue) labelled "Animated dramatization ·
+// AI-generated", then the real product end card. No sales, money or results claims in any script.
+// Input: out/videos/story/<id>-clip.mp4 (end cards come from the normal build's tmp stills).
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -140,8 +144,45 @@ html,body{width:${W}px;height:${H}px;margin:0;background:transparent!important}
   rmSync(list);
 }
 
+const STORY = process.argv.includes("--story");
+const STORY_DIR = `${OUT}story/`;
+
+/** Story cut: labelled animated clip with its own dialogue, then ~3.5 s of the real end card. */
+async function buildStory(browser, id, palette, endPng, file) {
+  const clip = `${STORY_DIR}${id}-clip.mp4`;
+  if (!existsSync(clip)) { console.log(`${id}: no story clip yet, skipped`); return; }
+  if (!existsSync(endPng)) { console.log(`${id}: run the normal build first (end card missing)`); return; }
+  const tmp = `${OUT}tmp/${id}`;
+  const p = await browser.newPage({ viewport: { width: W, height: H } });
+  await p.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>${css("letter", palette)}
+html,body{width:${W}px;height:${H}px;margin:0;background:transparent!important}
+.ai{position:absolute;top:110px;left:60px;font:700 28px Inter;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(20,24,30,.6);border-radius:999px;padding:12px 26px}
+</style></head><body><div class="ai">Animated dramatization · AI-generated</div></body></html>`, { waitUntil: "load" });
+  await p.evaluate(() => document.fonts.ready);
+  await p.screenshot({ path: `${tmp}/story-overlay.png`, omitBackground: true });
+  await p.close();
+  const clipSeg = `${tmp}/story-clip.mp4`, endSeg = `${tmp}/story-end.mp4`, END = 3.5;
+  execFileSync(FF, ["-y", "-loglevel", "error", "-i", clip, "-i", `${tmp}/story-overlay.png`, "-filter_complex",
+    `[0:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,fps=${FPS}[b];[b][1:v]overlay=0:0,format=yuv420p[v];[0:a]aresample=44100,aformat=channel_layouts=stereo[a]`,
+    "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-c:a", "aac", "-b:a", "160k", clipSeg]);
+  segment(endPng, END, `${tmp}/story-end-v.mp4`);
+  execFileSync(FF, ["-y", "-loglevel", "error", "-i", `${tmp}/story-end-v.mp4`, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+    "-t", String(END), "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", endSeg]);
+  execFileSync(FF, ["-y", "-loglevel", "error", "-i", clipSeg, "-i", endSeg, "-filter_complex",
+    "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]", "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "20",
+    "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", file]);
+  console.log(`${id} story done`);
+}
+
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium" });
 const only = process.argv.slice(2).find((a) => !a.startsWith("--"));
+if (STORY) {
+  mkdirSync(STORY_DIR, { recursive: true });
+  for (const v of PROMPT_VIDEOS) if (!only || only === v.id) await buildStory(browser, v.id, pack(v.slug).palette, `${OUT}tmp/${v.id}/4.png`, `${STORY_DIR}${v.id}-${v.slug}-story.mp4`);
+  for (const v of PLANNER_VIDEOS) if (!only || only === v.id) await buildStory(browser, v.id, v.pl.palette, `${OUT}tmp/${v.id}/5.png`, `${STORY_DIR}${v.id}-${v.pl.slug}-story.mp4`);
+  await browser.close();
+  process.exit(0);
+}
 if (UGC) mkdirSync(UGC_DIR, { recursive: true });
 
 for (const v of PROMPT_VIDEOS) {
