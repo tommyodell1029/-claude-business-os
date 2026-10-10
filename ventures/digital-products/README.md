@@ -102,3 +102,14 @@ The owner's preferred format (2026-10-10). Each one is about 18.5 s: a 15 s 3D-a
 - The skits were made with Kling 3 Pro on Higgsfield, which generates the dialogue lip-synced. Each costs 37.5 Higgsfield credits, 300 for all 8.
 - Every skit carries an on-screen "Animated dramatization · AI-generated" label. The scripts make no claims about sales, money or results. The "after" scene only shows the task done and the character calmer.
 - To rebuild, run `FFMPEG=<path to ffmpeg> node videos.mjs --story [id]`. It needs `out/videos/story/<id>-clip.mp4`, plus the normal build's end-card stills in `out/videos/tmp/`.
+- The raw Kling clips are not in git because they're too large. They stay in the Higgsfield library, under these job IDs:
+  - V1: `32053136-7917-408b-8269-b8d752a45ded`
+  - V2: `b990d146-d561-431a-9bd8-b88e1279ca96`
+  - V3: `6cd38af4-2849-4314-b4b6-08e8a67049db`
+  - P1: `cb8d0a2f-07ac-469d-9c70-d4e7e247ad2b`
+  - P2: `d9a7ddb6-0873-448c-a7d8-6b0ea2aa2eb9`
+  - P3: `a5fa5b28-f941-49ee-8b04-37dd78691620`
+  - P4: `d54ff766-cbed-408f-ad30-78f7e8f3c3a7`
+  - P5: `be9d1c69-2bc5-4acf-b472-36b32b20c216`
+
+  To rebuild a video, download its clip to `out/videos/story/<id>-clip.mp4`.

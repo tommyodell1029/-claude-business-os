@@ -4,3 +4,4 @@ out/*.zip
 out/.built
 out/videos/tmp/
 out/videos/*.txt
+out/videos/story/*-clip.mp4
