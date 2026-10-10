@@ -2,6 +2,14 @@
 
 Phase 2 upgrades the Phase 1 system in place. Same database, same `/os` app, same ULTRON. Nothing in Phase 1 is thrown away. Phase 2 starts only when the owner has the computer and says "begin Phase 2", and only after `PHASE_1_COMPLETE.md` is signed off.
 
+## Owner override 2026-10-10: slice 1 started early
+The owner started Phase 2 slice 1 (Social Radar, the RADAR agent's first sweep source) before these entry conditions were met. The rest of Phase 2 still waits for them.
+- **Built:** Social Radar runs on the official YouTube Data API v3 only (`site/lib/os/social.ts`; config `social_radar` in `config/money_os.yaml`; table `social_sweeps`).
+- **Owner-triggered:** it runs from the `/os` button or a confirmed ULTRON `social_radar` action, never on a schedule.
+- **Real numbers only:** the views, comments and views per day shown come from YouTube. The model only groups videos into ideas and cites them by index, and code writes the evidence lines.
+- **Limits:** a daily cap of 2,000 units (YouTube's free quota is 10,000), a 24-hour cache, and the same AI budgets and emergency stop as the rest of Money OS.
+- **Not built:** TikTok (no official business search API) and Instagram (needs a Meta app plus Graph API hashtag search). Logged-in browsing or scraping of any platform stays forbidden.
+
 ## Entry conditions
 1. Phase 1 Definition of Done met and verified on iPhone and iPad.
 2. At least 30 days of Phase 1 data: opportunities, research runs, `ai_usage` rows. Phase 2 decisions (local vs cloud model, routing) are made from this data, not from guesses.

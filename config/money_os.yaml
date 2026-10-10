@@ -97,3 +97,31 @@ research:
   role: small
   max_searches: 5
   max_tokens: 3000
+
+# Social Radar (Phase 2 slice 1, site/lib/os/social.ts): what people watch about making money online, from the
+# official YouTube Data API v3 only (no scraping; TikTok/Instagram have no usable official search API for us).
+# Free quota is 10,000 units/day per Google project: search.list = 100 units, videos.list = 1 unit per 50 videos.
+# One sweep = queries x 100 + ceil(videos / 50) units. A sweep newer than cache_hours is reused for free.
+# Every number shown (views, comments, views per day) comes from the API; the model only groups videos into ideas.
+social_radar:
+  cache_hours: 24
+  youtube:
+    daily_units_cap: 2000
+    window_days: 30
+    per_query: 15
+    region: US
+    language: en
+    queries:
+      - side hustle ideas
+      - make money online
+      - passive income ideas
+      - make money with AI
+      - online business ideas
+      - digital products to sell
+      - work from home jobs
+      - small business ideas
+  analysis:
+    role: small
+    max_tokens: 2000
+    max_videos: 40
+    max_opportunities: 6

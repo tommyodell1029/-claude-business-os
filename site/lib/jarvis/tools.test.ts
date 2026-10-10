@@ -37,7 +37,7 @@ test("no tool can send, call, delete, touch DNS or Stripe, or run SQL", () => {
   const names = TOOLS.map((t) => t.name).join(" ");
   assert.doesNotMatch(names, /send|call_out|dial|delete|dns|stripe|sql|confirm/i);
   assert.deepEqual(TOOLS.filter((t) => t.kind === "write").map((t) => t.name).sort(), [
-    "create_experiment", "kill_opportunity", "memory_add", "outreach_review", "radar_sweep", "record_revenue", "research_opportunity", "set_experiment_status",
+    "create_experiment", "kill_opportunity", "memory_add", "outreach_review", "radar_sweep", "record_revenue", "research_opportunity", "set_experiment_status", "social_radar",
   ]);
   for (const t of anthropicTools()) assert.equal(t.input_schema.additionalProperties, false);
 });

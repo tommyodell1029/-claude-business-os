@@ -109,5 +109,31 @@ export const OS_CONFIG = {
     "role": "small",
     "max_searches": 5,
     "max_tokens": 3000
+  },
+  "social_radar": {
+    "cache_hours": 24,
+    "youtube": {
+      "daily_units_cap": 2000,
+      "window_days": 30,
+      "per_query": 15,
+      "region": "US",
+      "language": "en",
+      "queries": [
+        "side hustle ideas",
+        "make money online",
+        "passive income ideas",
+        "make money with AI",
+        "online business ideas",
+        "digital products to sell",
+        "work from home jobs",
+        "small business ideas"
+      ]
+    },
+    "analysis": {
+      "role": "small",
+      "max_tokens": 2000,
+      "max_videos": 40,
+      "max_opportunities": 6
+    }
   }
 } as const;

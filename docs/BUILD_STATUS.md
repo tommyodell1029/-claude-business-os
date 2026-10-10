@@ -262,3 +262,20 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - 4 Etsy images per planner and 3 Gumroad images per pack, all rendered from the real pages.
   - Listing sheets: titles checked against Etsy's 140-character limit; 13 tags each, all within 20 characters.
 - Claude cannot open the shops or publish; the owner uploads. Experiment start dates move to the go-live date when the owner says so.
+
+## Money OS Phase 2 slice 1: Social Radar (YouTube): 2026-10-10 (orchestrator, Opus)
+- The owner started it early (owner override, recorded in `docs/money-os/PHASE_2_PLAN.md`). `YOUTUBE_API_KEY` is set in Vercel by the owner.
+- **Engine** (`site/lib/os/social.ts`): one sweep runs, in order:
+  1. 8 configured YouTube searches (last 30 days, sorted by views).
+  2. Real statistics for every video found.
+  3. A `social_sweeps` row with the videos.
+  4. One `small` model call without web search. The model only groups videos into opportunities (category `youtube_trends`), citing them by list index. Code writes each evidence line from the API numbers.
+- **Guards:**
+  - a 2,000-unit daily quota cap, counted from stored sweeps
+  - the AI budgets and emergency stop
+  - a 24-hour cache
+  - the API key travels in a header, never in a URL
+  - citations that point outside the video list are dropped
+- **ULTRON:** a `social_trends` read tool and a confirm-gated `social_radar` write tool. Migration `20261010000001_social_radar.sql` adds the table and widens the `jarvis_actions` tool check.
+- **/os:** the Opportunities tab gets a "Social Radar · YouTube" card with a cost and quota confirm, plus the 10 fastest-growing videos with links.
+- **Tests:** site 142/142 (5 new in `social.test.ts`), Python 283 OK, typecheck and lint clean, production build OK, client bundle check now covers 16 names including `YOUTUBE_API_KEY`.

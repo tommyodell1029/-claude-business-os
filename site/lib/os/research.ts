@@ -147,7 +147,8 @@ export async function searchCall(
         headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
         body: JSON.stringify({
           model: modelId, max_tokens: o.maxTokens, system: o.system, messages,
-          tools: [{ type: "web_search_20250305", name: "web_search", max_uses: o.maxSearches }],
+          // maxSearches 0 = a plain model call on data we already hold (Social Radar analysis): no tool at all
+          tools: o.maxSearches > 0 ? [{ type: "web_search_20250305", name: "web_search", max_uses: o.maxSearches }] : undefined,
         }),
         signal: AbortSignal.timeout(left),
       });

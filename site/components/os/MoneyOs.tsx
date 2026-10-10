@@ -154,6 +154,66 @@ function RadarPanel({ onDone }: { onDone: () => void }) {
   );
 }
 
+type Signal = { id: string; title: string; channel: string; url: string; query: string; ageDays: number; views: number; comments: number | null; viewsPerDay: number };
+const compact = (n: unknown) => (typeof n === "number" ? new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n) : UNAVAILABLE);
+
+/** Social Radar: what people watch on YouTube about making money online (official API counts only). */
+function SocialPanel({ onDone }: { onDone: () => void }) {
+  const [nonce, setNonce] = useState(0);
+  const info = useView("social", nonce);
+  const [running, setRunning] = useState(false);
+  const [note, setNote] = useState<{ text: string; bad?: boolean } | null>(null);
+  const run = async (d: Any) => {
+    const used = typeof d.unitsToday === "number" ? `${d.unitsToday} of ${d.dailyUnitsCap}` : "unknown";
+    if (!window.confirm(`Social Radar runs ${list<string>(d.queries)?.length ?? 0} YouTube searches (${d.plannedUnits} free-quota units; ${used} used today) and one AI call, worst case about $${Number(d.worstCaseUsd).toFixed(3)}. A sweep from the last ${d.cacheHours} hours is reused for free. Run it?`)) return;
+    setRunning(true);
+    setNote(null);
+    const r = await post("os/social", {});
+    const b = r.body;
+    if (r.status === 200 && b.ok) {
+      setNote({ text: `${b.cached ? "Reused today's sweep ($0). " : ""}${b.videos} videos · ${b.created} new opportunities, ${b.existing} known, ${b.evidenceAdded} evidence${Number(b.dropped) ? `, ${b.dropped} unsupported dropped` : ""} · $${Number(b.spentUsd ?? 0).toFixed(3)} · ${b.quotaUnits} quota units` });
+    } else {
+      setNote({ text: String(b.error ?? `HTTP ${r.status}`), bad: true });
+    }
+    setRunning(false);
+    setNonce((n) => n + 1);
+    onDone();
+  };
+  return (
+    <div className="os-card">
+      <h3 className="os-h3">Social Radar · YouTube</h3>
+      <Shell load={info}>
+        {(d) => {
+          const latest = (d.latest ?? null) as { at: string | null; signals: Signal[] } | null;
+          return (
+            <>
+              <p className="os-dim">What people watch about making money online in the last {String(d.windowDays)} days, from the official YouTube API. Views and comments are YouTube&apos;s own counts; AI only groups the videos into ideas.</p>
+              {!d.keyConfigured ? <p className="os-warn">The YouTube API key is not set in Vercel yet.</p> : (
+                <button className="os-btn" disabled={running} onClick={() => void run(d)}>{running ? "Running…" : "Run Social Radar"}</button>
+              )}
+              {note ? <p className={`os-line${note.bad ? " os-warn" : ""}`}>{note.text}</p> : null}
+              {latest === null ? <p className="os-warn">{UNAVAILABLE}</p> : latest.signals.length ? (
+                <>
+                  <p className="os-meta">Fastest-growing videos · sweep {when(latest.at)}</p>
+                  {latest.signals.slice(0, 10).map((x) => {
+                    const href = safeHref(x.url);
+                    return (
+                      <p key={x.id} className="os-line">
+                        {href ? <a href={href} target="_blank" rel="noopener noreferrer">{x.title}</a> : x.title}
+                        <br /><span className="os-meta">{x.channel} · {compact(x.views)} views in {x.ageDays}d (~{compact(x.viewsPerDay)}/day){x.comments === null ? "" : ` · ${compact(x.comments)} comments`} · “{x.query}”</span>
+                      </p>
+                    );
+                  })}
+                </>
+              ) : <p className="os-dim">No sweep yet.</p>}
+            </>
+          );
+        }}
+      </Shell>
+    </div>
+  );
+}
+
 const SORTS = [["score", "Score"], ["fastest", "Fastest to $"], ["confidence", "Confidence"], ["newest", "Newest"]] as const;
 const LABEL_FILTERS = [["", "Any label"], ["high", "HIGH SCORE"], ["strong", "+ STRONG EVIDENCE"], ["fast", "+ FAST VALIDATION"]] as const;
 
@@ -181,6 +241,7 @@ function Opportunities({ nonce, onOpen }: { nonce: number; onOpen: (id: string) 
   return (
     <>
       <RadarPanel onDone={() => setBump((b) => b + 1)} />
+      <SocialPanel onDone={() => setBump((b) => b + 1)} />
       <div className="os-filters" role="group" aria-label="Filter by status">
         {statuses.map((s) => (
           <button key={s || "all"} className={`os-pill${status === s ? " on" : ""}`} onClick={() => setStatus(s)}>{s ? s.replace(/_/g, " ") : "all active"}</button>

@@ -53,7 +53,9 @@ export const TOOLS: ToolSpec[] = [
   { name: "revenue_summary", kind: "read", description: "Revenue, cost and profit by venture: live Stripe payments (test-mode excluded) plus recorded revenue entries, with this month's total.", fields: {}, required: [] },
   { name: "ai_cost_summary", kind: "read", description: "AI spend from the usage ledger: today, this month, the daily budget meter, and spend by task and by opportunity.", fields: {}, required: [] },
   { name: "what_next", kind: "read", description: "What needs the owner's attention in the Money OS, ranked by code: experiments waiting on a decision, the best scored opportunities, unresearched opportunities with the most evidence, and today's remaining AI budget.", fields: {}, required: [] },
+  { name: "social_trends", kind: "read", description: "What people are watching on YouTube about making money online, from the last Social Radar sweep (official YouTube Data API): video title, channel, views, age in days, views per day, comments and link, fastest-growing first. Numbers are the API's own counts. at = when the sweep ran; an empty list means no sweep yet.", fields: { limit }, required: [] },
   { name: "radar_sweep", kind: "write", description: "Propose a Money Radar web search for new opportunities in one category. It costs money (web searches plus tokens, within the AI budgets), so it does NOT run until the owner confirms. A recent identical sweep is reused for free.", fields: { category: { type: "enum", values: RADAR_KEYS, description: "The Radar category." } }, required: ["category"] },
+  { name: "social_radar", kind: "write", description: "Propose a Social Radar sweep: searches YouTube (official API) for what people watch about making money online, saves the videos with their real view counts, then groups them into opportunities with the videos as evidence. Uses YouTube quota and a small model call, so it does NOT run until the owner confirms. A sweep from the last 24 hours is reused for free unless fresh is yes.", fields: { fresh: { type: "enum", values: ["yes", "no"], description: "yes to ignore a recent cached sweep (default no)." } }, required: [] },
   { name: "research_opportunity", kind: "write", description: "Propose web research on one opportunity (evidence plus proposed sub-scores; the score itself is computed in code). Costs money, so it does NOT run until the owner confirms. Results from the last 14 days are reused for free unless fresh is yes.", fields: { opportunity_id: { type: "uuid", description: "The opportunity id." }, fresh: { type: "enum", values: ["yes", "no"], description: "yes to ignore a recent cached result (default no)." } }, required: ["opportunity_id"] },
   { name: "create_experiment", kind: "write", description: "Propose a new Money OS experiment (status validating). Does NOT execute until the owner confirms. Use only details the owner gave; never invent targets or budgets.", fields: { name: { type: "text", min: 1, max: 160, description: "Short experiment name." }, opportunity_id: { type: "uuid", description: "The opportunity it tests, if any." }, hypothesis: { type: "text", min: 1, max: 1000, description: "What we believe will happen." }, success_metric: { type: "text", min: 1, max: 300, description: "How success is measured." }, target: { type: "text", min: 1, max: 300, description: "The number that counts as success." }, budget_usd: { type: "number", min: 0, max: 10000, description: "Money budget in USD (default 0)." } }, required: ["name"] },
   { name: "set_experiment_status", kind: "write", description: "Propose changing an experiment's status, with an optional result note. Does NOT execute until the owner confirms.", fields: { experiment_id: { type: "uuid", description: "The experiment id from query_experiments." }, status: { type: "enum", values: EXP_STATUS, description: "The new status." }, result_note: { type: "text", min: 1, max: 2000, description: "What happened, in plain English." } }, required: ["experiment_id", "status"] },
@@ -204,6 +206,11 @@ async function readTool(name: string, v: Record<string, string | number>, ctx: T
     }
     case "what_next":
       return (await import("../os/next.ts")).whatNext(db, ctx.now);
+    case "social_trends": {
+      const r = await (await import("../os/social.ts")).latestSignals(db, lim(v));
+      if (!r) return { error: "data unavailable: Social Radar sweeps could not be read" };
+      return { at: r.at, videos: r.signals.map((x) => ({ title: x.title, channel: x.channel, views: x.views, age_days: x.ageDays, views_per_day: x.viewsPerDay, comments: x.comments, search: x.query, url: x.url })) };
+    }
     case "query_experiments": {
       const f: [string, "eq", string][] = v.status ? [["status", "eq", String(v.status)]] : [];
       const rows = await db.select("experiments", "id,name,status,hypothesis,success_metric,target,budget_usd,result_note,started_at,ended_at,opportunity_id", f, "started_at.desc", lim(v));
@@ -281,6 +288,12 @@ async function describeMoneyOs(name: string, v: Record<string, string | number>,
     const worst = worstCase(model(R.role, "os"), R.max_searches, R.max_tokens, 2000);
     return { summary: `Run Money Radar on ${R.categories[String(v.category)]}: up to ${R.max_searches} web searches, at most about ${money(worst)} (free if a sweep from the last 14 days exists).` };
   }
+  if (name === "social_radar") {
+    const social = await import("../os/social.ts");
+    const st = await social.socialStatus(db, {}, now);
+    const quota = st.unitsToday === null ? "quota use today unknown" : `${st.unitsToday} of ${st.dailyUnitsCap} YouTube units used today`;
+    return { summary: `Run Social Radar on YouTube: ${st.queries.length} searches (${st.plannedUnits} of the free daily quota units; ${quota}) plus one model call, at most about ${money(st.worstCaseUsd)}${v.fresh === "yes" ? " (fresh run)" : " (free if a sweep from the last 24 hours exists)"}.` };
+  }
   if (name === "research_opportunity" || name === "kill_opportunity" || (name === "create_experiment" && v.opportunity_id)) {
     const o = await loadOne(db, "opportunities", "id,name,status", String(v.opportunity_id));
     if (!o) return { error: "no opportunity with that id" };
@@ -327,6 +340,12 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     const r = await research.researchOpportunity(rctx, String(v.opportunity_id), { force: v.fresh === "yes" });
     if (!r.ok) throw new Error(r.error ?? "research failed");
     return `${r.cached ? "Reused recent research: " : ""}${r.evidenceAdded} evidence items saved, ${r.evidenceDropped} unsupported claims dropped, ${r.scored} dimensions scored. Cost ${money(r.spentUsd)}.`;
+  }
+  if (tool === "social_radar") {
+    const r = await (await import("../os/social.ts")).socialRadar({ db, env: ctx.env, fetchImpl: ctx.fetchImpl, now: ctx.now }, { force: v.fresh === "yes" });
+    if (!r.ok) throw new Error(r.error ?? "social radar failed");
+    const top = r.top.slice(0, 3).map((x) => `"${clip(x.title, 60)}" (${x.viewsPerDay.toLocaleString("en-US")} views/day)`).join("; ");
+    return `${r.cached ? "Reused today's sweep: " : ""}${r.videos} YouTube videos, ${r.created} new opportunities, ${r.existing} already known, ${r.evidenceAdded} evidence items. Fastest-growing: ${top || "none"}. Cost ${money(r.spentUsd)}, ${r.quotaUnits} quota units.`;
   }
   if (tool === "create_experiment") {
     let opp: Record<string, unknown> | null = null;
