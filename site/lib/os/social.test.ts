@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fakeDb } from "../jarvis/testkit.ts";
 import { OS_CONFIG } from "./config.generated.ts";
-import { CATEGORY, evidenceFor, latestSignals, plannedUnits, socialRadar, toSignal } from "./social.ts";
+import { CATEGORY, evidenceFor, isEnglish, latestSignals, plannedUnits, socialRadar, toSignal } from "./social.ts";
 
 const NOW = Date.parse("2026-10-10T16:00:00Z");
 const ENV = { ANTHROPIC_API_KEY: "test", YOUTUBE_API_KEY: "yt-secret-key" };
@@ -106,4 +106,14 @@ test("when every search fails, the failure is stored with the quota it used and 
   assert.match(String(r.error), /403 quotaExceeded/);
   assert.equal(fx.tables.social_sweeps[0].status, "failed");
   assert.equal(fx.tables.opportunities, undefined);
+});
+
+test("only English videos are kept: declared language first, then mostly-Latin titles", () => {
+  assert.equal(isEnglish({ defaultAudioLanguage: "en-US" }, "anything"), true);
+  assert.equal(isEnglish({ defaultAudioLanguage: "hi" }, "Small business ideas"), false);
+  assert.equal(isEnglish({}, "I Tried The LAZIEST Way to Make Money With AI"), true);
+  assert.equal(isEnglish({}, "नौकरी के भरोसे मत रहो! ये 8 Small Businesses करो"), false);
+  assert.equal(isEnglish({}, "💰📱"), false);
+  const hindi = { ...video("abcdefgh123", 1000, 2), snippet: { title: "कपड़ों के टुकड़ों से बना", channelTitle: "x", publishedAt: daysAgo(2) } };
+  assert.equal(toSignal(hindi, "q", NOW), null);
 });

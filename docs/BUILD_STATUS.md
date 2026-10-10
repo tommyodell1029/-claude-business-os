@@ -279,3 +279,7 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - **ULTRON:** a `social_trends` read tool and a confirm-gated `social_radar` write tool. Migration `20261010000001_social_radar.sql` adds the table and widens the `jarvis_actions` tool check.
 - **/os:** the Opportunities tab gets a "Social Radar · YouTube" card with a cost and quota confirm, plus the 10 fastest-growing videos with links.
 - **Tests:** site 142/142 (5 new in `social.test.ts`), Python 283 OK, typecheck and lint clean, production build OK, client bundle check now covers 16 names including `YOUTUBE_API_KEY`.
+- **First live sweep, 2026-10-10 (owner, /os):** 82 videos, 6 opportunities, 25 evidence items, $0.006, 802 quota units, no errors.
+  - Problem: YouTube's US/English settings only bias its search, so about half the top videos were Hindi.
+  - Fix: code now keeps only English videos (the channel's declared language, or else a title that is at least 90% Latin letters).
+  - Results per search raised from 15 to 25. YouTube charges the same per search, so a sweep now uses at most 804 quota units.

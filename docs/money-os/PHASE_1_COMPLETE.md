@@ -156,3 +156,6 @@ No new paid services. The site runs on the existing Vercel project (Hobby), the 
 4. **Control layer before any autonomy:** approval levels, a wider emergency stop and full observability, before any agent acts on its own.
 5. **Measure build tooling:** evaluate Ponytail and Caveman on real build tasks, and keep them only if they are net-positive.
 6. **StarNet as a worker:** re-run the acquisition gate. StarNet should be a worker that reads and writes the same Supabase tables, never a second system of record.
+
+## Sign-off
+Phase 1 was signed off by the owner on 2026-10-10, after the iPad check passed and the first live Social Radar sweep ran without errors.

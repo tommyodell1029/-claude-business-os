@@ -115,7 +115,7 @@ export const OS_CONFIG = {
     "youtube": {
       "daily_units_cap": 2000,
       "window_days": 30,
-      "per_query": 15,
+      "per_query": 25,
       "region": "US",
       "language": "en",
       "queries": [

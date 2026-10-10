@@ -7,12 +7,12 @@ The owner moves Oct 24–25 or Oct 31–Nov 1, 2026, and gets the Dell then. Fin
 - [ ] Oct 15, Day 7 review: write down Etsy Stats (views, favorites, sales per listing), Gumroad Analytics (views, sales per pack), and TikTok/IG/YouTube views per video.
 - [ ] Record every sale in /os → Settings → Record revenue (or tell ULTRON "record $X from Etsy").
 - [ ] Oct 22, Day 14 decision for both experiments, using the decision rules in the content-plan PDFs. Mark each one validated or killed in /os → Experiments, with a one-line result note.
-- [ ] Run Social Radar at least twice on different days, so there are trends to compare.
+- [ ] Run Social Radar at least twice on different days (first run 2026-10-10 ✅), so there are trends to compare.
 - [ ] Tell Claude what you changed in the Etsy listings, so the listing sheets match the live shop.
 
 ## 2. Close out Money OS Phase 1
 - [x] Open launchpadlocal.org/os on the iPad once (done 2026-10-10) and check that it loads and you can sign in. This is the last Phase 1 check.
-- [ ] Sign off `docs/money-os/PHASE_1_COMPLETE.md` by telling Claude "Phase 1 signed off".
+- [x] Sign off `docs/money-os/PHASE_1_COMPLETE.md` (done 2026-10-10) by telling Claude "Phase 1 signed off".
 - [ ] Keep using ULTRON and /os daily. Phase 2 decisions (for example local vs cloud AI) need about 30 days of data, which runs from Oct 8 to about Nov 7. If the computer arrives earlier, setup and J2 can start right away, and the data-driven decisions wait until Nov 7.
 
 ## 3. Accounts and logins (do on the phone now)

@@ -65,6 +65,7 @@ export function toSignal(item: unknown, query: string, now: number): Signal | nu
   const published = Date.parse(String(it?.snippet?.publishedAt ?? ""));
   const views = int(it?.statistics?.viewCount);
   if (!id || !title || !Number.isFinite(published) || views === null) return null;
+  if (!isEnglish(it.snippet ?? {}, title)) return null; // regionCode/relevanceLanguage only bias YouTube's search; this filters
   const ageDays = Math.max(1, Math.round((now - published) / 86_400_000));
   return {
     id, title, query,
@@ -74,6 +75,19 @@ export function toSignal(item: unknown, query: string, now: number): Signal | nu
     likes: int(it.statistics?.likeCount), comments: int(it.statistics?.commentCount),
     viewsPerDay: Math.round(views / ageDays),
   };
+}
+
+/**
+ * English-language video: YouTube's declared language when the channel set one, otherwise the title must be
+ * mostly Latin letters (drops Hindi, Arabic, etc. that YouTube still returns for US/en searches).
+ */
+export function isEnglish(snippet: Record<string, unknown>, title: string): boolean {
+  const lang = String(snippet.defaultAudioLanguage ?? snippet.defaultLanguage ?? "").toLowerCase();
+  if (lang) return lang === "en" || lang.startsWith("en-");
+  const letters = title.match(/\p{L}/gu) ?? [];
+  if (!letters.length) return false;
+  const latin = letters.filter((c) => /\p{Script=Latin}/u.test(c)).length;
+  return latin / letters.length >= 0.9;
 }
 
 const fmt = (n: number): string => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}k` : String(n));
