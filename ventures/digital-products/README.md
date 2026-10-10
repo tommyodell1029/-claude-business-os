@@ -96,3 +96,9 @@ The same 8 videos, remade in a UGC style (about 16–21 s each). An AI-generated
 - Many platforms require you to turn on their own AI-content label when you post these (TikTok: "AI-generated content"; Instagram: "AI info"; YouTube: "altered or synthetic content").
 
 To rebuild, run `FFMPEG=<path to ffmpeg> node videos.mjs --ugc [V1|P3|…]`.
+
+### Animated story versions (`out/videos/story/`) — use these first
+The owner's preferred format (2026-10-10). Each one is about 18.5 s: a 15 s 3D-animated skit, then the real product end card. In the skit, a character struggles with the problem, a friend mentions the product in general terms, and the character's day is calmer afterwards.
+- The skits were made with Kling 3 Pro on Higgsfield, which generates the dialogue lip-synced. Each costs 37.5 Higgsfield credits, 300 for all 8.
+- Every skit carries an on-screen "Animated dramatization · AI-generated" label. The scripts make no claims about sales, money or results. The "after" scene only shows the task done and the character calmer.
+- To rebuild, run `FFMPEG=<path to ffmpeg> node videos.mjs --story [id]`. It needs `out/videos/story/<id>-clip.mp4`, plus the normal build's end-card stills in `out/videos/tmp/`.

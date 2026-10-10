@@ -13,7 +13,7 @@
 - The TikTok bio has no AI note, so turn on "AI-generated content" for every video (More options → AI-generated content). On Instagram, turn on "AI info" when posting.
 
 ## Week 1 posting schedule (1 video a day, around 6–9 pm)
-Files: `out/videos/ugc/<file>`. Post the same video and caption on TikTok and Instagram Reels.
+Files: post the animated story versions, `out/videos/story/<id>-…-story.mp4`, which the owner prefers. The UGC versions in `out/videos/ugc/` are backups. Post the same video and caption on TikTok and Instagram Reels.
 
 ### Fri Oct 9: P4-family-command-center-ugc.mp4
 Who has practice tonight? 🙋 I made one page that holds the whole family week: schedule, meals + grocery list, chores and contacts. Undated, print it every week. Link in bio.
