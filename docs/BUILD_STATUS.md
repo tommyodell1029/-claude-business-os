@@ -297,3 +297,11 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
 - **ULTRON:** `record_revenue` takes `units` (default 1).
 - **Migration** `20261010000002_revenue_sync.sql` (additive): adds `revenue_entries.external_id` (unique per source) and `units`, and widens the `jarvis_actions` tool check.
 - **Tests:** site 149/149 (6 new in `revenue_sync.test.ts`), Python OK, typecheck, lint and build clean, bundle check covers 17 names.
+
+## Money OS experiment: Multiple Income Stream Blueprint pre-sale: 2026-10-11
+- The owner chose the format and channel: a pre-sale masterclass at $47, sold on Skool. The kit is in `ventures/income-blueprint/PRESALE_KIT.md`:
+  - honesty rules (no income claims, real status, refund if not delivered)
+  - offer and outline
+  - Skool setup steps and About copy
+  - 3 Shorts scripts
+- Decision helper: now reads "by <date>" targets, so "5 sales by October 29th" sets an Oct 29 deadline. Site tests 150/150.
