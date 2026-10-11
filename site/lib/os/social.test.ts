@@ -108,8 +108,10 @@ test("when every search fails, the failure is stored with the quota it used and 
   assert.equal(fx.tables.opportunities, undefined);
 });
 
-test("only English videos are kept: declared language first, then mostly-Latin titles", () => {
+test("only English videos are kept: declared language and mostly-Latin titles", () => {
   assert.equal(isEnglish({ defaultAudioLanguage: "en-US" }, "anything"), true);
+  assert.equal(isEnglish({ defaultAudioLanguage: "en" }, "AI से पैसे कमाने का सबसे आसान तरीका! | Make Money With AI"), false);
+  assert.equal(isEnglish({ defaultAudioLanguage: "en" }, "💰📱"), true);
   assert.equal(isEnglish({ defaultAudioLanguage: "hi" }, "Small business ideas"), false);
   assert.equal(isEnglish({}, "I Tried The LAZIEST Way to Make Money With AI"), true);
   assert.equal(isEnglish({}, "नौकरी के भरोसे मत रहो! ये 8 Small Businesses करो"), false);

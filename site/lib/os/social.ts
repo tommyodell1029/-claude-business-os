@@ -93,14 +93,15 @@ export function toSignal(item: unknown, query: string, now: number): Signal | nu
 }
 
 /**
- * English-language video: YouTube's declared language when the channel set one, otherwise the title must be
- * mostly Latin letters (drops Hindi, Arabic, etc. that YouTube still returns for US/en searches).
+ * English-language video: a declared non-English language is dropped, and the title must be mostly Latin letters
+ * (drops Hindi, Arabic, etc. that YouTube still returns for US/en searches, even when the channel declares English).
  */
 export function isEnglish(snippet: Record<string, unknown>, title: string): boolean {
   const lang = String(snippet.defaultAudioLanguage ?? snippet.defaultLanguage ?? "").toLowerCase();
-  if (lang) return lang === "en" || lang.startsWith("en-");
+  if (lang && !(lang === "en" || lang.startsWith("en-"))) return false;
   const letters = title.match(/\p{L}/gu) ?? [];
-  if (!letters.length) return false;
+  if (!letters.length) return !!lang; // emoji-only title: trust a declared English language
+  // the title is checked even when the channel declares English (Hindi titles marked "en" were seen 2026-10-11)
   const latin = letters.filter((c) => /\p{Script=Latin}/u.test(c)).length;
   return latin / letters.length >= 0.9;
 }
