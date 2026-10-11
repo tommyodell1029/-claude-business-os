@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fakeDb } from "../jarvis/testkit.ts";
 import { OS_CONFIG } from "./config.generated.ts";
-import { CATEGORY, evidenceFor, isEnglish, latestSignals, plannedUnits, socialRadar, toSignal } from "./social.ts";
+import { CATEGORY, evidenceFor, isEnglish, latestSignals, parseDuration, plannedUnits, socialRadar, toSignal } from "./social.ts";
 
 const NOW = Date.parse("2026-10-10T16:00:00Z");
 const ENV = { ANTHROPIC_API_KEY: "test", YOUTUBE_API_KEY: "yt-secret-key" };
@@ -78,7 +78,7 @@ test("a sweep stores videos, keeps only cited videos as evidence, and never puts
 });
 
 test("a recent sweep is reused for free; fresh runs again", async () => {
-  const fx = fakeDb({ social_sweeps: [{ id: "s1", source: "youtube", status: "ok", quota_units: 803, created_at: new Date(NOW - 3_600_000).toISOString(), signals: [toSignal(video("abcdefgh123", 1000, 2), "q", NOW)], result: { videos: 1 } }] });
+  const fx = fakeDb({ social_sweeps: [{ id: "s1", source: "youtube", mode: "all", status: "ok", quota_units: 803, created_at: new Date(NOW - 3_600_000).toISOString(), signals: [toSignal(video("abcdefgh123", 1000, 2), "q", NOW)], result: { videos: 1 } }] });
   const r = await socialRadar({ db: fx.db, env: ENV, fetchImpl: fakeFetch(), now: NOW });
   assert.ok(r.ok && r.cached);
   assert.equal(r.spentUsd, 0);
@@ -116,4 +116,53 @@ test("only English videos are kept: declared language first, then mostly-Latin t
   assert.equal(isEnglish({}, "💰📱"), false);
   const hindi = { ...video("abcdefgh123", 1000, 2), snippet: { title: "कपड़ों के टुकड़ों से बना", channelTitle: "x", publishedAt: daysAgo(2) } };
   assert.equal(toSignal(hindi, "q", NOW), null);
+});
+
+test("Shorts mode: searches short videos only, keeps what the API says is 3 minutes or less, and caches separately", async () => {
+  const fx = fakeDb();
+  const seen: { url: string; headers: Record<string, string> }[] = [];
+  const SQ = (OS_CONFIG as unknown as { social_radar: { shorts: { queries: string[] } } }).social_radar.shorts.queries;
+  const durations: Record<string, string> = { short1aaaa: "PT45S", short2aaaa: "PT2M59S", long0aaaaa: "PT3M30S", nodur0aaaa: "" };
+  const fetchImpl = (async (u: string, init: RequestInit = {}) => {
+    seen.push({ url: String(u), headers: (init.headers ?? {}) as Record<string, string> });
+    const url = new URL(String(u));
+    if (url.pathname.endsWith("/search")) return Response.json({ items: Object.keys(durations).map((videoId) => ({ id: { videoId } })) });
+    if (url.pathname.endsWith("/videos")) {
+      assert.match(url.searchParams.get("part") ?? "", /contentDetails/);
+      return Response.json({ items: (url.searchParams.get("id") ?? "").split(",").map((id) => ({ ...video(id, 50_000, 5), ...(durations[id] ? { contentDetails: { duration: durations[id] } } : {}) })) });
+    }
+    if (url.hostname === "api.anthropic.com") {
+      assert.match(JSON.parse(String(init.body)).messages[0].content, /YouTube Shorts/);
+      return Response.json({ stop_reason: "end_turn", usage: { input_tokens: 1000, output_tokens: 200 }, content: [{ type: "text", text: JSON.stringify({ opportunities: [{ name: "AI side hustle starter kit", problem: "p", audience: "a", videos: [0] }] }) }] });
+    }
+    throw new Error(`unexpected fetch ${u}`);
+  }) as unknown as typeof fetch;
+
+  const r = await socialRadar({ db: fx.db, env: ENV, fetchImpl, now: NOW }, { mode: "shorts" });
+  assert.ok(r.ok, r.error);
+  assert.equal(r.videos, 2);
+  assert.deepEqual(r.top.map((s) => s.id).sort(), ["short1aaaa", "short2aaaa"]);
+  assert.equal(r.top[0].url, `https://www.youtube.com/shorts/${r.top[0].id}`);
+  const searches = seen.filter((s) => s.url.includes("/search"));
+  assert.equal(searches.length, SQ.length);
+  for (const s of searches) assert.equal(new URL(s.url).searchParams.get("videoDuration"), "short");
+  assert.equal(fx.tables.social_sweeps[0].mode, "shorts");
+  assert.match(String(fx.tables.opportunity_evidence[0].claim), /^YouTube Short: /);
+
+  // a Shorts sweep does not satisfy the normal sweep's cache, and vice versa
+  const latestAll = await latestSignals(fx.db, 10, "all");
+  assert.deepEqual(latestAll?.signals, []);
+  fx.tables.social_sweeps[0].created_at = new Date(NOW).toISOString(); // the real table sets created_at
+  const again = await socialRadar({ db: fx.db, env: ENV, fetchImpl, now: NOW + 60_000 }, { mode: "shorts" });
+  assert.equal(again.cached, true);
+});
+
+test("durations are parsed from ISO 8601, never guessed", () => {
+  assert.equal(parseDuration("PT45S"), 45);
+  assert.equal(parseDuration("PT1M5S"), 65);
+  assert.equal(parseDuration("PT1H"), 3600);
+  assert.equal(parseDuration("P0D"), 0);
+  assert.equal(parseDuration("PT"), null);
+  assert.equal(parseDuration("45"), null);
+  assert.equal(parseDuration(undefined), null);
 });

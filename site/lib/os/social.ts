@@ -17,7 +17,8 @@ import { logActivity, usd } from "./usage.ts";
 import { model } from "../jarvis/models.ts";
 
 type YtCfg = { daily_units_cap: number; window_days: number; per_query: number; region: string; language: string; queries: string[] };
-type SocialCfg = { cache_hours: number; youtube: YtCfg; analysis: { role: string; max_tokens: number; max_videos: number; max_opportunities: number } };
+type ShortsCfg = { max_seconds: number; queries: string[] };
+type SocialCfg = { cache_hours: number; youtube: YtCfg; shorts: ShortsCfg; analysis: { role: string; max_tokens: number; max_videos: number; max_opportunities: number } };
 const CFG = (OS_CONFIG as unknown as { timezone: string; social_radar: SocialCfg });
 const S = CFG.social_radar;
 
@@ -30,11 +31,23 @@ const VIDEO_ID = /^[A-Za-z0-9_-]{6,20}$/;
 export type Signal = {
   id: string; title: string; channel: string; url: string; query: string;
   publishedAt: string; ageDays: number; views: number; likes: number | null; comments: number | null; viewsPerDay: number;
+  durationSec?: number | null; short?: boolean;
 };
 
+/** "all" = any length (the original sweep); "shorts" = YouTube Shorts only. Each mode has its own cache. */
+export type Mode = "all" | "shorts";
+export const queriesFor = (mode: Mode): string[] => (mode === "shorts" ? S.shorts.queries : S.youtube.queries);
+
 /** Units one sweep can use at most: every query searched, plus one videos.list call per 50 ids. */
-export function plannedUnits(cfg: YtCfg = S.youtube): number {
-  return cfg.queries.length * SEARCH_UNITS + Math.ceil((cfg.queries.length * cfg.per_query) / 50) * VIDEOS_UNITS_PER_50;
+export function plannedUnits(cfg: YtCfg = S.youtube, queries: string[] = cfg.queries): number {
+  return queries.length * SEARCH_UNITS + Math.ceil((queries.length * cfg.per_query) / 50) * VIDEOS_UNITS_PER_50;
+}
+
+/** ISO 8601 duration from videos.list contentDetails ("PT1M5S") -> seconds. null when unreadable. */
+export function parseDuration(v: unknown): number | null {
+  const m = typeof v === "string" ? /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(v) : null;
+  if (!m || v === "P" || v === "PT") return null;
+  return Number(m[1] ?? 0) * 86_400 + Number(m[2] ?? 0) * 3600 + Number(m[3] ?? 0) * 60 + Number(m[4] ?? 0);
 }
 
 /** Worst-case model cost of the grouping call (no web search). */
@@ -59,7 +72,7 @@ const int = (v: unknown): number | null => {
 
 /** One video from a videos.list item. null when the item lacks an id, a title, a publish date or a view count. */
 export function toSignal(item: unknown, query: string, now: number): Signal | null {
-  const it = item as { id?: unknown; snippet?: Record<string, unknown>; statistics?: Record<string, unknown> };
+  const it = item as { id?: unknown; snippet?: Record<string, unknown>; statistics?: Record<string, unknown>; contentDetails?: Record<string, unknown> };
   const id = typeof it?.id === "string" && VIDEO_ID.test(it.id) ? it.id : null;
   const title = typeof it?.snippet?.title === "string" ? it.snippet.title.replace(/\s+/g, " ").trim().slice(0, 200) : "";
   const published = Date.parse(String(it?.snippet?.publishedAt ?? ""));
@@ -67,10 +80,12 @@ export function toSignal(item: unknown, query: string, now: number): Signal | nu
   if (!id || !title || !Number.isFinite(published) || views === null) return null;
   if (!isEnglish(it.snippet ?? {}, title)) return null; // regionCode/relevanceLanguage only bias YouTube's search; this filters
   const ageDays = Math.max(1, Math.round((now - published) / 86_400_000));
+  const durationSec = it.contentDetails ? parseDuration(it.contentDetails.duration) : undefined;
   return {
     id, title, query,
     channel: typeof it.snippet?.channelTitle === "string" ? it.snippet.channelTitle.slice(0, 120) : "",
     url: `https://www.youtube.com/watch?v=${id}`,
+    ...(durationSec === undefined ? {} : { durationSec }),
     publishedAt: new Date(published).toISOString(), ageDays, views,
     likes: int(it.statistics?.likeCount), comments: int(it.statistics?.commentCount),
     viewsPerDay: Math.round(views / ageDays),
@@ -97,7 +112,7 @@ export function evidenceFor(s: Signal): EvidenceInput {
   const comments = s.comments === null ? "" : `, ${fmt(s.comments)} comments`;
   return {
     kind: "demand",
-    claim: `YouTube: "${s.title.slice(0, 120)}"${s.channel ? ` (${s.channel})` : ""} has ${fmt(s.views)} views in ${s.ageDays} days (about ${fmt(s.viewsPerDay)}/day)${comments}; found searching "${s.query}"`,
+    claim: `${s.short ? "YouTube Short" : "YouTube"}: "${s.title.slice(0, 120)}"${s.channel ? ` (${s.channel})` : ""} has ${fmt(s.views)} views in ${s.ageDays} days (about ${fmt(s.viewsPerDay)}/day)${comments}; found searching "${s.query}"`,
     source_url: s.url,
   };
 }
@@ -128,15 +143,15 @@ export type SocialResult = {
   top: Signal[];
 };
 
-async function lastOkSweep(db: Db): Promise<Record<string, unknown> | null> {
-  const rows = await db.select<Record<string, unknown>>("social_sweeps", "id,result,signals,created_at", [["source", "eq", "youtube"], ["status", "eq", "ok"]], "created_at.desc", 1);
+async function lastOkSweep(db: Db, mode: Mode): Promise<Record<string, unknown> | null> {
+  const rows = await db.select<Record<string, unknown>>("social_sweeps", "id,result,signals,created_at", [["source", "eq", "youtube"], ["mode", "eq", mode], ["status", "eq", "ok"]], "created_at.desc", 1);
   return rows[0] ?? null;
 }
 
 /** Latest stored videos, fastest-growing first. For the /os screen and ULTRON's social_trends read tool. */
-export async function latestSignals(db: Db, limit = 15): Promise<{ at: string | null; signals: Signal[] } | null> {
+export async function latestSignals(db: Db, limit = 15, mode: Mode = "all"): Promise<{ at: string | null; signals: Signal[] } | null> {
   try {
-    const row = await lastOkSweep(db);
+    const row = await lastOkSweep(db, mode);
     if (!row) return { at: null, signals: [] };
     const signals = (Array.isArray(row.signals) ? (row.signals as Signal[]) : []).slice().sort((a, b) => b.viewsPerDay - a.viewsPerDay).slice(0, limit);
     return { at: String(row.created_at), signals };
@@ -146,14 +161,17 @@ export async function latestSignals(db: Db, limit = 15): Promise<{ at: string | 
 }
 
 /** One Social Radar sweep. Owner-triggered (the /os button or a confirmed ULTRON action). */
-export async function socialRadar(ctx: Ctx, opts: { force?: boolean } = {}): Promise<SocialResult> {
+export async function socialRadar(ctx: Ctx, opts: { force?: boolean; mode?: Mode } = {}): Promise<SocialResult> {
+  const mode: Mode = opts.mode === "shorts" ? "shorts" : "all";
+  const shorts = mode === "shorts";
+  const label = shorts ? "YouTube Shorts" : "YouTube";
   const empty = { videos: 0, quotaUnits: 0, created: 0, existing: 0, evidenceAdded: 0, dropped: 0, spentUsd: 0, top: [] as Signal[] };
   const key = ctx.env.YOUTUBE_API_KEY?.trim();
   if (!key) return { ok: false, error: "YOUTUBE_API_KEY not set", ...empty };
   if ((await effectiveConfig(ctx.db)).aiPaused) return { ok: false, error: "AI is stopped (emergency stop); resume it in Settings", ...empty };
 
   if (!opts.force) {
-    const last = await lastOkSweep(ctx.db).catch(() => null);
+    const last = await lastOkSweep(ctx.db, mode).catch(() => null);
     if (last && Date.parse(String(last.created_at)) > ctx.now - S.cache_hours * 3_600_000) {
       const prev = (last.result ?? {}) as Partial<SocialResult>;
       const top = (Array.isArray(last.signals) ? (last.signals as Signal[]) : []).slice().sort((a, b) => b.viewsPerDay - a.viewsPerDay).slice(0, 10);
@@ -162,9 +180,10 @@ export async function socialRadar(ctx: Ctx, opts: { force?: boolean } = {}): Pro
   }
 
   const Y = S.youtube;
+  const Q = queriesFor(mode);
   const used = await unitsToday(ctx.db, ctx.now);
   if (used === null) return { ok: false, error: "could not read today's YouTube quota use", ...empty };
-  const planned = plannedUnits(Y);
+  const planned = plannedUnits(Y, Q);
   if (used + planned > Y.daily_units_cap) {
     await logActivity(ctx.db, "radar", "social_refused", `YouTube quota: ${used} used today + ${planned} planned would pass the ${Y.daily_units_cap} cap`);
     return { ok: false, error: `today's YouTube quota cap would be passed (${used} of ${Y.daily_units_cap} units used; a sweep needs ${planned})`, ...empty };
@@ -172,17 +191,18 @@ export async function socialRadar(ctx: Ctx, opts: { force?: boolean } = {}): Pro
 
   // 1) searches (100 units each, counted even when a request fails: Google may still bill it)
   const after = new Date(ctx.now - Y.window_days * 86_400_000).toISOString();
-  const searches = await Promise.all(Y.queries.map((q) => yt(ctx, key, "search", {
+  const searches = await Promise.all(Q.map((q) => yt(ctx, key, "search", {
     part: "snippet", type: "video", order: "viewCount", maxResults: String(Y.per_query), publishedAfter: after,
     regionCode: Y.region, relevanceLanguage: Y.language, safeSearch: "moderate", q,
+    ...(shorts ? { videoDuration: "short" } : {}), // "short" = under 4 minutes; the 3-minute Shorts limit is checked below
   })));
-  let units = Y.queries.length * SEARCH_UNITS;
+  let units = Q.length * SEARCH_UNITS;
   const queryOf = new Map<string, string>();
   for (const [i, s] of searches.entries()) {
     if (!s.ok) continue;
     for (const it of (Array.isArray(s.data.items) ? s.data.items : []) as { id?: { videoId?: unknown } }[]) {
       const vid = it?.id?.videoId;
-      if (typeof vid === "string" && VIDEO_ID.test(vid) && !queryOf.has(vid)) queryOf.set(vid, Y.queries[i]);
+      if (typeof vid === "string" && VIDEO_ID.test(vid) && !queryOf.has(vid)) queryOf.set(vid, Q[i]);
     }
   }
   const failed = searches.filter((s) => !s.ok) as { ok: false; error: string }[];
@@ -193,34 +213,41 @@ export async function socialRadar(ctx: Ctx, opts: { force?: boolean } = {}): Pro
   for (let i = 0; i < ids.length; i += 50) {
     const chunk = ids.slice(i, i + 50);
     units += VIDEOS_UNITS_PER_50;
-    const v = await yt(ctx, key, "videos", { part: "snippet,statistics", id: chunk.join(","), maxResults: "50" });
+    const v = await yt(ctx, key, "videos", { part: shorts ? "snippet,statistics,contentDetails" : "snippet,statistics", id: chunk.join(","), maxResults: "50" });
     if (!v.ok) { failed.push(v); continue; }
     for (const it of (Array.isArray(v.data.items) ? v.data.items : [])) {
       const s = toSignal(it, queryOf.get(String((it as { id?: unknown }).id)) ?? "", ctx.now);
-      if (s) signals.push(s);
+      if (!s) continue;
+      if (shorts) {
+        // only videos the API itself says are Shorts length; unknown length is dropped, never assumed
+        if (typeof s.durationSec !== "number" || s.durationSec < 1 || s.durationSec > S.shorts.max_seconds) continue;
+        s.short = true;
+        s.url = `https://www.youtube.com/shorts/${s.id}`;
+      }
+      signals.push(s);
     }
   }
   signals.sort((a, b) => b.viewsPerDay - a.viewsPerDay);
 
   if (!signals.length) {
     const error = failed.length ? failed[0].error : "no videos returned";
-    await ctx.db.insert("social_sweeps", { source: "youtube", status: "failed", queries: Y.queries, quota_units: units, video_count: 0, error: error.slice(0, 500) }).catch(() => null);
-    await logActivity(ctx.db, "radar", "social_failed", `YouTube: ${error} (${units} quota units)`);
+    await ctx.db.insert("social_sweeps", { source: "youtube", mode, status: "failed", queries: Q, quota_units: units, video_count: 0, error: error.slice(0, 500) }).catch(() => null);
+    await logActivity(ctx.db, "radar", "social_failed", `${label}: ${error} (${units} quota units)`);
     return { ok: false, error, ...empty, quotaUnits: units };
   }
 
   const sweep = await ctx.db.insert<{ id: string; created_at: string }>("social_sweeps", {
-    source: "youtube", status: "ok", queries: Y.queries, quota_units: units, video_count: signals.length, signals,
+    source: "youtube", mode, status: "ok", queries: Q, quota_units: units, video_count: signals.length, signals,
   });
 
   // 3) the model groups the fastest-growing videos into opportunity ideas, citing them by index only
   const A = S.analysis;
   const shown = signals.slice(0, A.max_videos);
-  const listing = shown.map((s, i) => `[${i}] "${s.title}" | ${s.channel} | ${fmt(s.views)} views in ${s.ageDays} days | ${s.comments === null ? "comments hidden" : `${fmt(s.comments)} comments`} | search: ${s.query}`).join("\n");
+  const listing = shown.map((s, i) => `[${i}] "${s.title}" | ${s.channel} | ${shorts ? `${s.durationSec}s | ` : ""}${fmt(s.views)} views in ${s.ageDays} days | ${s.comments === null ? "comments hidden" : `${fmt(s.comments)} comments`} | search: ${s.query}`).join("\n");
   const call = await searchCall(ctx, {
     task: "social_radar", role: A.role, maxSearches: 0, maxTokens: A.max_tokens, // per-run cap + daily budget apply
     system: "You analyze what people watch on YouTube about making money online, for a solo founder deciding what to sell. You are careful, factual and skeptical of hype.",
-    prompt: `These YouTube videos from the last ${Y.window_days} days were found with the official YouTube API, sorted by views per day:
+    prompt: `These ${shorts ? "YouTube Shorts (vertical videos up to 3 minutes)" : "YouTube videos"} from the last ${Y.window_days} days were found with the official YouTube API, sorted by views per day:
 ${listing}
 
 Group them into up to ${A.max_opportunities} specific business or product opportunities that this audience is clearly interested in and that a small company could sell to them (a kit, template, course, tool, service or done-for-you setup). Cite the videos that show the interest by their [index].
@@ -237,7 +264,7 @@ Rules:
   if (!call.ok) {
     const result = { ...out, ok: false, error: `videos saved; grouping failed: ${call.error}` };
     await ctx.db.update("social_sweeps", [["id", "eq", sweep.id]], { result: { ...result, top: undefined } }).catch(() => null);
-    await logActivity(ctx.db, "radar", "social_sweep", `YouTube: ${signals.length} videos saved, grouping failed (${call.error}), ${units} quota units, ${usd(call.spent)}`);
+    await logActivity(ctx.db, "radar", "social_sweep", `${label}: ${signals.length} videos saved, grouping failed (${call.error}), ${units} quota units, ${usd(call.spent)}`);
     return { ...result, sweepId: sweep.id, at: sweep.created_at };
   }
 
@@ -259,7 +286,7 @@ Rules:
   }
   const result: SocialResult = { ...out, ok: true, sweepId: sweep.id, at: sweep.created_at };
   await ctx.db.update("social_sweeps", [["id", "eq", sweep.id]], { result: { ...result, top: undefined } }).catch(() => null);
-  await logActivity(ctx.db, "radar", "social_sweep", `YouTube: ${signals.length} videos, ${out.created} new opportunities, ${out.existing} already known, ${out.evidenceAdded} evidence added, ${out.dropped} unsupported dropped, ${units} quota units, ${usd(call.spent)}`);
+  await logActivity(ctx.db, "radar", "social_sweep", `${label}: ${signals.length} videos, ${out.created} new opportunities, ${out.existing} already known, ${out.evidenceAdded} evidence added, ${out.dropped} unsupported dropped, ${units} quota units, ${usd(call.spent)}`);
   return result;
 }
 
@@ -275,5 +302,6 @@ export async function socialStatus(db: Db, env: Record<string, string | undefine
     worstCaseUsd: Math.round(analysisWorstCase() * 1000) / 1000,
     cacheHours: S.cache_hours,
     latest: await latestSignals(db, 15),
+    shorts: { queries: S.shorts.queries, maxSeconds: S.shorts.max_seconds, plannedUnits: plannedUnits(S.youtube, S.shorts.queries), latest: await latestSignals(db, 15, "shorts") },
   };
 }

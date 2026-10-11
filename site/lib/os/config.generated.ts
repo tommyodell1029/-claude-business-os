@@ -129,6 +129,19 @@ export const OS_CONFIG = {
         "small business ideas"
       ]
     },
+    "shorts": {
+      "max_seconds": 180,
+      "queries": [
+        "ai side hustle",
+        "make money with ai",
+        "ai side hustle for beginners",
+        "chatgpt side hustle",
+        "faceless channel ai",
+        "digital products with ai",
+        "ai tools to make money",
+        "side hustle ideas"
+      ]
+    },
     "analysis": {
       "role": "small",
       "max_tokens": 2000,

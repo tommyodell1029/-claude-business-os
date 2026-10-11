@@ -263,6 +263,13 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - Listing sheets: titles checked against Etsy's 140-character limit; 13 tags each, all within 20 characters.
 - Claude cannot open the shops or publish; the owner uploads. Experiment start dates move to the go-live date when the owner says so.
 
+## Social Radar Shorts mode: 2026-10-11 (orchestrator, Opus)
+- Owner asked to research what people watch in YouTube Shorts before starting the "AI Side Hustle Starter Kits" experiment.
+- New "Run Shorts radar" button on /os (and `mode: shorts` on ULTRON's `social_radar` / `social_trends`). Same official API, same 2,000-unit daily cap (a Shorts sweep is 8 searches = 804 units), its own 24-hour cache.
+- Search uses `videoDuration=short`; code keeps only videos whose API `contentDetails.duration` is 180 s or less (unknown length is dropped). Evidence lines start "YouTube Short:" and link to /shorts/<id>.
+- Queries in `config/money_os.yaml` → `social_radar.shorts`. Migration `20261011000001_social_shorts.sql` (adds `social_sweeps.mode`, default 'all') applied 2026-10-11.
+- Tests: site 152/152, typecheck and build clean.
+
 ## Money OS Phase 2 slice 1: Social Radar (YouTube): 2026-10-10 (orchestrator, Opus)
 - The owner started it early (owner override, recorded in `docs/money-os/PHASE_2_PLAN.md`). `YOUTUBE_API_KEY` is set in Vercel by the owner.
 - **Engine** (`site/lib/os/social.ts`): one sweep runs, in order:

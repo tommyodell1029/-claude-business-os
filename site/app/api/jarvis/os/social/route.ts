@@ -17,9 +17,9 @@ export const GET = withOwner(async (_req, { email }) => {
 
 export const POST = withOwner(async (req, { email }) => {
   if (!originAllowed(req, process.env)) return jsonResponse({ ok: false, error: "Forbidden." }, 403);
-  const body = (await readJson(req, 500)) as { force?: unknown } | undefined;
+  const body = (await readJson(req, 500)) as { force?: unknown; mode?: unknown } | undefined;
   const ctx = makeCtx(email);
   if (!ctx.db) return jsonResponse({ ok: false, error: "database not configured" }, 503);
-  const r = await socialRadar({ db: ctx.db, env: ctx.env, fetchImpl: ctx.fetchImpl, now: ctx.now }, { force: body?.force === true });
+  const r = await socialRadar({ db: ctx.db, env: ctx.env, fetchImpl: ctx.fetchImpl, now: ctx.now }, { force: body?.force === true, mode: body?.mode === "shorts" ? "shorts" : "all" });
   return jsonResponse(r, r.ok ? 200 : 502);
 });
