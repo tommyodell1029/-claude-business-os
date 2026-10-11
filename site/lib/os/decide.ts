@@ -15,12 +15,25 @@ export type Check = {
   sales: number; revenueUsd: number; entries: number; suggestion: Suggestion;
 };
 
-/** "3 sales in 14 days" -> { sales: 3, days: 14 }. Unknown parts are null, never guessed. */
-export function parseTarget(target: string | null | undefined): { sales: number | null; days: number | null } {
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/**
+ * "3 sales in 14 days" -> { sales: 3, days: 14 }; "5 sales by October 29th" -> { sales: 5, by: {month: 10, day: 29} }.
+ * Unknown parts are null, never guessed.
+ */
+export function parseTarget(target: string | null | undefined): { sales: number | null; days: number | null; by: { month: number; day: number } | null } {
   const t = String(target ?? "");
   const sales = /(\d{1,4})\s*(?:sales?|orders?|purchases?|customers?|buyers?)\b/i.exec(t);
   const days = /(\d{1,3})\s*days?\b/i.exec(t);
-  return { sales: sales ? Number(sales[1]) : null, days: days ? Number(days[1]) : null };
+  let by: { month: number; day: number } | null = null;
+  const named = /\bby\s+([a-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b/i.exec(t);
+  const numeric = /\bby\s+(\d{1,2})\/(\d{1,2})\b/.exec(t);
+  if (named) {
+    const m = MONTHS.indexOf(named[1].slice(0, 3).toLowerCase());
+    if (m >= 0) by = { month: m + 1, day: Number(named[2]) };
+  } else if (numeric) by = { month: Number(numeric[1]), day: Number(numeric[2]) };
+  if (by && (by.month < 1 || by.month > 12 || by.day < 1 || by.day > 31)) by = null;
+  return { sales: sales ? Number(sales[1]) : null, days: days ? Number(days[1]) : null, by };
 }
 
 export function suggest(c: Omit<Check, "suggestion">): Suggestion {
@@ -47,9 +60,17 @@ export async function experimentChecks(db: Db, now: number, id?: string): Promis
   const out: Check[] = [];
   for (const r of open) {
     const t = parseTarget(r.target as string | null);
-    const windowDays = t.days ?? E.default_window_days;
     const started = Date.parse(String(r.started_at));
-    const deadlineMs = started + windowDays * DAY;
+    let windowDays = t.days ?? E.default_window_days;
+    let deadlineMs = started + windowDays * DAY;
+    if (t.by && !t.days) {
+      // "by October 29": that date (16:00 UTC = midday in Jacksonville) in the start year, or the next year if it
+      // falls before the start
+      const y = new Date(started).getUTCFullYear();
+      deadlineMs = Date.UTC(y, t.by.month - 1, t.by.day, 16);
+      if (deadlineMs < started) deadlineMs = Date.UTC(y + 1, t.by.month - 1, t.by.day, 16);
+      windowDays = Math.max(1, Math.round((deadlineMs - started) / DAY));
+    }
     const entries = await db.select<{ units: number | string | null; amount_usd: number | string }>("revenue_entries", "units,amount_usd", [["experiment_id", "eq", String(r.id)]], undefined, 2000);
     const paid = entries.filter((e) => Number(e.amount_usd) > 0); // refunded sales are kept at $0 and do not count
     const base = {

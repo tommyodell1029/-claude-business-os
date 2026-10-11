@@ -64,10 +64,12 @@ test("sync refuses without a token and reports API errors without inventing sale
 });
 
 test("targets are parsed, never guessed", () => {
-  assert.deepEqual(parseTarget("3 sales in 14 days"), { sales: 3, days: 14 });
-  assert.deepEqual(parseTarget("At least 10 orders"), { sales: 10, days: null });
-  assert.deepEqual(parseTarget("get traction"), { sales: null, days: null });
-  assert.deepEqual(parseTarget(null), { sales: null, days: null });
+  assert.deepEqual(parseTarget("3 sales in 14 days"), { sales: 3, days: 14, by: null });
+  assert.deepEqual(parseTarget("At least 10 orders"), { sales: 10, days: null, by: null });
+  assert.deepEqual(parseTarget("5 sales by October 29th"), { sales: 5, days: null, by: { month: 10, day: 29 } });
+  assert.deepEqual(parseTarget("5 sales by 10/29"), { sales: 5, days: null, by: { month: 10, day: 29 } });
+  assert.deepEqual(parseTarget("get traction"), { sales: null, days: null, by: null });
+  assert.deepEqual(parseTarget(null), { sales: null, days: null, by: null });
 });
 
 test("suggestions follow the Day 14 rules", () => {
@@ -80,6 +82,14 @@ test("suggestions follow the Day 14 rules", () => {
   assert.match(z.text, /DATA UNAVAILABLE/);
   assert.equal(suggest({ ...base, targetSales: null }).action, "set_target");
   assert.equal(suggest({ ...base, status: "killed" }).action, "closed");
+});
+
+test("a 'by <date>' target sets the deadline to that date", async () => {
+  const fx = fakeDb({ experiments: [{ id: "e3", name: "Blueprint", status: "validating", target: "5 sales by October 29th", started_at: "2026-10-10T18:05:00Z" }] });
+  const [c] = await experimentChecks(fx.db, NOW);
+  assert.equal(c.deadline, "2026-10-29");
+  assert.equal(c.windowDays, 19);
+  assert.equal(c.daysLeft, 19);
 });
 
 test("checks count paid units per experiment and ignore refunds and closed experiments", async () => {
