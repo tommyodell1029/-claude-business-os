@@ -263,6 +263,11 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - Listing sheets: titles checked against Etsy's 140-character limit; 13 tags each, all within 20 characters.
 - Claude cannot open the shops or publish; the owner uploads. Experiment start dates move to the go-live date when the owner says so.
 
+## Focus change: Etsy planners only + AI influencer venture (owner, 2026-10-12)
+- Owner: keep only the Etsy planners. Reason: planners are easier to sell and market, and buyers can ask ChatGPT for prompts themselves. Experiments "AI prompt packs" (a90685aa) and "AI Side Hustle Starter Kit" (f56731bb) are killed with result notes, and their opportunities killed. Owner to unpublish the Gumroad products and remove them from Linktree. All prompt files are kept in the repo.
+- Owner: the Higgsfield AI influencer becomes his own venture. The opportunity is logged in Money OS (59e8c6c2); rules and open decisions are in `ventures/ai-influencer/README.md`.
+- Content plan rebuilt for planners only: `ventures/content/full-plan.mjs` → `out/full-content-plan.{pdf,md,csv}`. 15 planner problem-first Shorts (S13–S27) now have free slide versions (`carousels.mjs`), plus the 5 planner carousels, 15 pins and 8 group posts.
+
 ## Content push: 2026-10-12 (orchestrator, Opus)
 - Owner: Skool / Blueprint pre-sale on hold until one income stream has real numbers (experiment target + note updated in /os). Focus: content → views → Linktree clicks (Linktree holds Gumroad, Etsy and the social pages).
 - Built `ventures/content/`: 11 carousels from real product content (4 prompt carousels, 2 starter-kit, 5 planners) as 1080×1350 slides plus silent 1080×1920 Shorts slideshows, a 2-week schedule (1 carousel midday + 1 story video evening) and captions. No Higgsfield credits used.

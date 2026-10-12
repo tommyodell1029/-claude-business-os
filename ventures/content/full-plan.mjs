@@ -1,4 +1,6 @@
 // The full 4-week content plan (owner, 2026-10-12): every post with its text, in one calendar.
+// Owner 2026-10-12 (later): Etsy planners ONLY. Prompt packs and the starter kit are stopped, so the calendar uses
+// only planner carousels, planner videos, planner pins and planner group posts.
 // Videos (story videos already made + the 27 problem-first Shorts), carousels, Pinterest pins and group posts.
 // node ventures/content/full-plan.mjs -> out/full-content-plan.{pdf,md,csv} + out/pins/ (pin images to upload)
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -102,45 +104,36 @@ const GROUPS = [
     text: "Quote follow-up schedule that doesn't feel pushy:\n• Day 2: short text: \"just making sure the quote came through\"\n• Day 5: email answering common questions\n• Day 10: polite last check: \"no worries if the timing's not right\"\n\nNo fake deadlines. Do you follow up on quotes, or wait for them to call?" },
   { id: "G12", where: "Digital product / printable seller groups", product: "AI Starter Kit",
     text: "How I pick a launch price for a printable without guessing: search 8–10 similar listings, write down the prices, and price in the middle of the range. Leave room for a bundle later.\n\nThen I check what's included in the cheaper and pricier ones. What's your pricing method?" },
+  { id: "G13", where: "Teacher groups", product: "Teacher planner",
+    text: "How do you track grading without a spreadsheet open all day? I keep one page per class: assignment across the top, students down the side, a check or score in each box. At a glance I can see who's missing what before conferences.\n\nPaper people or gradebook-only people?" },
+  { id: "G14", where: "Parenting / family organization groups", product: "Family planner",
+    text: "What ended the \"it's not my turn!\" fights here: a chore chart on the fridge with names, days and checkboxes. Kids check their own box, and the chart (not me) decides whose turn it is.\n\nWhat chores do your kids do at what age?" },
+  { id: "G15", where: "Home service groups: cleaning, lawn care, contractors", product: "Service business planner",
+    text: "Simple lead habit: every call goes on one sheet the moment it comes in: name, number, what they need, and a box for \"called back\". End of day, anything without a check gets a call.\n\nHow do you keep track of leads when you're on a job all day?" },
+  { id: "G16", where: "Small business / self-employed groups", product: "Budget kit",
+    text: "End-of-month habit that changed how I see my business: one page with money in, money out, and what's actually left. Busy month ≠ profitable month, and you only see it when you write it down.\n\nDo you check profit monthly, quarterly, or at tax time?" },
 ];
 
 // ---------------------------------------------------------------- calendar (4 weeks)
 const S = Object.fromEntries(SHORTS.map((s) => [s.name.slice(0, 3), s]));
 const day = (d, carousel, video, pins, group = null, note = "") => ({ d, carousel, video, pins, group, note });
-const CAL = [
-  // week 1: videos already made + carousels
-  day("Mon Oct 13", "c01", ["V3"], ["PN01", "PN23"]),
-  day("Tue Oct 14", "c07", ["P1", "K1"], ["PN11", "PN24"], "G01"),
-  day("Wed Oct 15", "c04", ["V2"], ["PN06", "PN22"], null, "Day-7 review: send Claude views, saves, Linktree clicks, Etsy + Gumroad stats."),
-  day("Thu Oct 16", "c05", ["P3", "K2"], ["PN08", "PN26"], "G02"),
-  day("Fri Oct 17", "c11", ["P5"], ["PN19", "PN28"]),
-  day("Sat Oct 18", "c02", ["V1"], ["PN03", "PN21"], "G05"),
-  day("Sun Oct 19", "c06", ["P4"], ["PN10", "PN27"]),
-  // week 2: problem-first Shorts start
-  day("Mon Oct 20", "c08", ["S19"], ["PN15", "PN13"]),
-  day("Tue Oct 21", "c03", ["S01"], ["PN04", "PN29"], "G06"),
-  day("Wed Oct 22", "c09", ["S07"], ["PN16", "PN30"], null, "Day-14 decisions for the planner + prompt-pack experiments (Claude helps)."),
-  day("Thu Oct 23", "c10", ["S13"], ["PN17", "PN02"], "G03"),
-  day("Fri Oct 24", null, ["S04"], ["PN07"], null, "Possible moving weekend: schedule ahead or skip."),
-  day("Sat Oct 25", null, ["S16"], ["PN14"], null, "Possible moving weekend."),
-  day("Sun Oct 26", "c01", ["S25"], ["PN20", "PN05"], "G07", "Carousel repost: re-cut c01 with a new first slide only if it beat the others in week 1; otherwise repost your best one."),
+const CAR = ["c09", "c07", "c08", "c10", "c11"];
+const PINROT = ["PN15", "PN11", "PN13", "PN17", "PN19", "PN27", "PN16", "PN12", "PN14", "PN18", "PN20", "PN25", "PN24", "PN26", "PN28"];
+const EVE = [
+  // week 1
+  ["Mon Oct 13", "S19"], ["Tue Oct 14", "P1", "G05"], ["Wed Oct 15", "S13", null, "Day-7 review: send Claude views, saves, Linktree clicks and Etsy Stats."], ["Thu Oct 16", "P3", "G06"],
+  ["Fri Oct 17", "S25"], ["Sat Oct 18", "P4"], ["Sun Oct 19", "S15"],
+  // week 2
+  ["Mon Oct 20", "S16"], ["Tue Oct 21", "P5", "G07"], ["Wed Oct 22", "S22", null, "Day-14 decision for the planner experiment (Claude helps)."], ["Thu Oct 23", "S20", "G15"],
+  ["Fri Oct 24", "S26", null, "Possible moving weekend: schedule ahead or skip."], ["Sat Oct 25", "S14", null, "Possible moving weekend."], ["Sun Oct 26", "S17"],
   // week 3
-  day("Mon Oct 27", "c07", ["S10"], ["PN12", "PN09"]),
-  day("Tue Oct 28", "c02", ["S22"], ["PN18", "PN03"], "G04"),
-  day("Wed Oct 29", "c09", ["S08"], ["PN01", "PN25"]),
-  day("Thu Oct 30", "c05", ["S20"], ["PN15", "PN08"], "G10"),
-  day("Fri Oct 31", null, ["S02"], ["PN19"], null, "Possible moving weekend: schedule ahead or skip."),
-  day("Sat Nov 1", null, ["S14"], ["PN11"], null, "Possible moving weekend."),
-  day("Sun Nov 2", "c08", ["S17"], ["PN13", "PN10"], "G08"),
-  // week 4
-  day("Mon Nov 3", "c04", ["S05"], ["PN07", "PN22"]),
-  day("Tue Nov 4", "c06", ["S11"], ["PN10", "PN30"], "G12"),
-  day("Wed Nov 5", "c10", ["S23"], ["PN17", "PN26"]),
-  day("Thu Nov 6", "c03", ["S26"], ["PN05", "PN20"], "G11"),
-  day("Fri Nov 7", "c11", ["S09"], ["PN02", "PN28"], null, "30 days of Money OS data: Phase 2 decisions can start."),
-  day("Sat Nov 8", "c09", ["S21"], ["PN16", "PN27"], "G09"),
-  day("Sun Nov 9", "c01", ["S03"], ["PN04", "PN23"], null, "Plan the next 4 weeks with Claude from the real numbers. Backlog: S06, S12, S15, S18, S24, S27."),
+  ["Mon Oct 27", "S23"], ["Tue Oct 28", "S21", "G13"], ["Wed Oct 29", "S18"], ["Thu Oct 30", "S27", "G08"],
+  ["Fri Oct 31", "S24", null, "Possible moving weekend: schedule ahead or skip."], ["Sat Nov 1", "P2", null, "Possible moving weekend."], ["Sun Nov 2", "S19", null, "Repost: swap in your best performer so far if it isn't this one."],
+  // week 4: repeat the winners (Claude swaps in the top performers after Day 14)
+  ["Mon Nov 3", "S13"], ["Tue Nov 4", "S25", "G14"], ["Wed Nov 5", "S16"], ["Thu Nov 6", "S22", "G16"],
+  ["Fri Nov 7", "S20", null, "30 days of Money OS data: Phase 2 decisions can start."], ["Sat Nov 8", "S15"], ["Sun Nov 9", "S17", null, "Plan the next 4 weeks with Claude from the real numbers (and new planner ideas)."],
 ];
+const CAL = EVE.map(([d, v, g, note], i) => day(d, (i % 7 === 5 || i % 7 === 6) && /Oct 2[45]|Oct 31|Nov 1/.test(d) ? null : CAR[i % CAR.length], [v], [PINROT[(2 * i) % PINROT.length], PINROT[(2 * i + 1) % PINROT.length]], g ?? null, note ?? ""));
 
 // ---------------------------------------------------------------- pin images
 mkdirSync(`${OUT}pins`, { recursive: true });
@@ -152,11 +145,13 @@ const pinFile = (p) => {
   if (existsSync(src)) copyFileSync(src, dst);
   return `${p.id}.png`;
 };
-for (const p of PINS) p.file = pinFile(p);
+const USED = new Set(CAL.flatMap((c) => c.pins));
+for (const p of PINS) if (USED.has(p.id)) p.file = pinFile(p);
 
 // ---------------------------------------------------------------- render
 const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const vid = (id) => STORY[id] ? { kind: "Story video (ready)", ...STORY[id], name: `${id} · ${STORY[id].title}` } : { kind: "Problem-first Short (to make)", ...S[id], btn: S[id].link };
+const SDIR = (id) => { const sh = S[id]; const slug = { "Teacher Weekly Lesson Planner": "teacher-lesson-planner", "ADHD-Friendly College Planner": "adhd-college-planner", "Family Weekly Command Center": "family-command-center", "Small Business Monthly Budget Kit": "small-business-budget-kit", "Service Business Weekly Planner": "service-business-planner" }[sh.product]; return `${id.toLowerCase()}-${slug}`; };
+const vid = (id) => STORY[id] ? { kind: "Story video (ready)", ...STORY[id], name: `${id} · ${STORY[id].title}` } : { kind: "Problem-first Short (free slide version ready; Kling version optional)", ...S[id], file: `${SDIR(id)}/${SDIR(id)}-shorts.mp4`, btn: S[id].link };
 const pin = (id) => PINS.find((p) => p.id === id);
 const grp = (id) => GROUPS.find((g) => g.id === id);
 
@@ -210,7 +205,8 @@ table.ov{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:6pt} 
 <li><b>Pinterest:</b> 1–2 pins. Image files are in the pins folder; the link goes straight to the product.</li>
 <li><b>Group posts:</b> 2× a week. Post the value in full, add a link only where the rules allow.</li>
 <li><b>Every evening:</b> reply to every comment.</li></ul>
-<b>Videos:</b> "Story video (ready)" files are already made. "Problem-first Short (to make)" uses the video prompt in problem-shorts.pdf: Kling, 37.5 credits each, or ask Claude for the free slide version.<br>
+<b>Etsy planners only</b> (owner, Oct 12). Every post sends people to the Etsy shop through the Linktree.<br>
+<b>Videos:</b> "Story video (ready)" files are in digital-products/out/videos/story. Every problem-first Short has a free slide version ready (sNN-.../sNN-...-shorts.mp4). The Kling story version is optional (video prompt in problem-shorts.pdf, 37.5 credits).<br>
 <b>Rules:</b> one problem per post, no income or sales claims, label AI videos, never invent results.</div>
 ${overview}
 ${days}

@@ -12,6 +12,7 @@ import { PACKS } from "../digital-products/prompts.mjs";
 import { PLANNERS } from "../digital-products/planners.mjs";
 import { LISTINGS } from "../digital-products/listings.mjs";
 import { KIT, STARTER, TOOLS } from "../ai-starter-kit/kit.mjs";
+import { SHORTS } from "./problem-shorts.mjs";
 
 const { chromium } = createRequire(new URL("../digital-products/package.json", import.meta.url))("playwright");
 const FF = process.env.FFMPEG ?? "ffmpeg";
@@ -79,6 +80,21 @@ const C = [
     { k: "cta", t: planner(slug).title, s: "Undated printable on Etsy · link in bio" },
   ] })),
 ];
+
+// Free slide versions of the planner problem-first Shorts (S13-S27): the problem in their words -> the real planner
+// page that fixes it -> the Linktree button. No AI imagery, so no credits.
+const PSLUG = { "Teacher Weekly Lesson Planner": "teacher-lesson-planner", "ADHD-Friendly College Planner": "adhd-college-planner", "Family Weekly Command Center": "family-command-center",
+  "Small Business Monthly Budget Kit": "small-business-budget-kit", "Service Business Weekly Planner": "service-business-planner" };
+for (const sh of SHORTS.filter((x) => PSLUG[x.product])) {
+  const slug = PSLUG[sh.product];
+  const quote = /says[^:]*: "([^"]+)"/.exec(sh.video)?.[1] ?? sh.title;
+  const page = Number(/page (\d+)/.exec(sh.output)?.[1] ?? 3);
+  C.push({ id: `${sh.name.slice(0, 3).toLowerCase()}-${slug}`, palette: planner(slug).palette, short: true, slides: [
+    { k: "hook", t: sh.title, s: `“${quote}”` },
+    { k: "page", f: pages(slug, [page])[0] },
+    { k: "cta", t: planner(slug).title, s: "Undated printable on Etsy · link in bio" },
+  ] });
+}
 
 const mark = (s) => esc(s).replace(/\[([^\]]+)\]/g, "<mark>[$1]</mark>");
 const img = (f) => `data:image/png;base64,${readFileSync(f).toString("base64")}`;
