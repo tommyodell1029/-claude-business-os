@@ -1,5 +1,7 @@
 # Content engine: views → Linktree clicks (owner, 2026-10-12)
 
+> **Standing rule (owner, 2026-10-12): every video from here on is problem-first.** Each product is split into several narrow problem-solving Shorts (for example "Reply to a 1-star review without sounding defensive", "A prompt that writes an Etsy title in 10 seconds", "The one-page planner that stops the 'what's for dinner?' text chain"). Lead with the problem, show a quick output or before-and-after, then send people to the matching Linktree button. The 27 current briefs: `problem-shorts.mjs` → `out/problem-shorts.pdf`.
+
 **Goal for the next 2 weeks:** more views and more Linktree clicks. No new products. The Skool / Blueprint pre-sale is on hold until one income stream has real numbers to show (owner, 2026-10-12).
 
 **What we sell (all in the Linktree):** 3 prompt packs + the AI Side Hustle Starter Kit on Gumroad ($12 each), the free AI tools list, and 5 printable planners on Etsy.
