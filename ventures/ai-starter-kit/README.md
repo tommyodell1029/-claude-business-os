@@ -1,0 +1,12 @@
+# AI Side Hustle Starter Kit (Money OS experiment f56731bb, started 2026-10-11)
+
+- Why this product: `SHORTS_RESEARCH.md` (Social Radar Shorts sweep, 2026-10-11).
+- Content: `kit.mjs`. Build: `node ventures/ai-starter-kit/build.mjs` (reuses the digital-products fonts, styles and Playwright).
+- Output in `out/`:
+  - `ai-side-hustle-starter-kit.pdf` + `.txt`: the $12 kit (30 prompts, 7-day checklist, free tools list).
+  - `free-ai-tools-and-starter-prompts.pdf`: the free $0+ product that collects emails.
+  - `gumroad-listings.txt`: names, prices, summaries and descriptions to paste into Gumroad.
+  - `pages/*.png`: covers and preview images.
+- Upload bundle: `ai-starter-kit-upload.zip`.
+- Experiment: "3 sales in 14 days" (deadline 2026-10-25), $0 cash. Gumroad sync sends both products' sales to this experiment (`config/money_os.yaml` → `revenue_sync.gumroad.products`); free downloads are stored at $0 and never count as sales.
+- Rules: no income claims, AI-made videos labelled, every prompt tells the AI not to invent facts.

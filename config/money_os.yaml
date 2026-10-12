@@ -149,6 +149,15 @@ revenue_sync:
     experiment_id: a90685aa-39a7-40fd-8836-c23a9884801c   # "3 Gumroad products" experiment, started 2026-10-08
     since: "2026-10-08"
     max_pages: 10
+    # Products whose sales belong to a different experiment/venture (matched on the start of the Gumroad product
+    # name, case-insensitive). Free ($0) downloads are recorded at $0 and never count as sales.
+    products:
+      - name_starts_with: "AI Side Hustle Starter Kit"
+        venture: AI Starter Kit (Gumroad)
+        experiment_id: f56731bb-688b-4276-b10f-9e5d8034809c   # owner "go kit", 2026-10-11
+      - name_starts_with: "Free AI Tools List"
+        venture: AI Starter Kit (Gumroad)
+        experiment_id: f56731bb-688b-4276-b10f-9e5d8034809c
 
 # Experiment decision helper (site/lib/os/decide.ts). Code-only: compares recorded sales with the number in the
 # experiment's target ("3 sales in 14 days"). Mirrors the Day 14 rules in the content-plan PDFs.

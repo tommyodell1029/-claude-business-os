@@ -263,6 +263,13 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - Listing sheets: titles checked against Etsy's 140-character limit; 13 tags each, all within 20 characters.
 - Claude cannot open the shops or publish; the owner uploads. Experiment start dates move to the go-live date when the owner says so.
 
+## AI Side Hustle Starter Kit experiment: 2026-10-11 (orchestrator, Opus)
+- Owner: "go kit" and kill 3 noise opportunities (Small Manufacturing, Low-Capital Export/Resale, Physical Product Business Starter Templates). All 3 killed 2026-10-11, logged in activity.
+- Experiment `f56731bb-688b-4276-b10f-9e5d8034809c` "AI Side Hustle Starter Kit", target "3 sales in 14 days", $0, linked to opportunity "AI Side Hustle Starter Kits" (now validating).
+- Built `ventures/ai-starter-kit/`: $12 kit (30 prompts + 7-day checklist + free tools list), free tools list + 3 prompts, Gumroad listing text, preview images.
+- Gumroad sync routes sales by product name (`revenue_sync.gumroad.products`), so kit sales count for this experiment, not the prompt-pack one. Test added; site 153/153.
+- Owner next: publish both Gumroad products (free first), send both links.
+
 ## Social Radar Shorts mode: 2026-10-11 (orchestrator, Opus)
 - Owner asked to research what people watch in YouTube Shorts before starting the "AI Side Hustle Starter Kits" experiment.
 - New "Run Shorts radar" button on /os (and `mode: shorts` on ULTRON's `social_radar` / `social_trends`). Same official API, same 2,000-unit daily cap (a Shorts sweep is 8 searches = 804 units), its own 24-hour cache.

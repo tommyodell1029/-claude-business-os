@@ -154,7 +154,19 @@ export const OS_CONFIG = {
       "venture": "Prompt packs (Gumroad)",
       "experiment_id": "a90685aa-39a7-40fd-8836-c23a9884801c",
       "since": "2026-10-08",
-      "max_pages": 10
+      "max_pages": 10,
+      "products": [
+        {
+          "name_starts_with": "AI Side Hustle Starter Kit",
+          "venture": "AI Starter Kit (Gumroad)",
+          "experiment_id": "f56731bb-688b-4276-b10f-9e5d8034809c"
+        },
+        {
+          "name_starts_with": "Free AI Tools List",
+          "venture": "AI Starter Kit (Gumroad)",
+          "experiment_id": "f56731bb-688b-4276-b10f-9e5d8034809c"
+        }
+      ]
     }
   },
   "experiments": {

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fakeDb } from "../jarvis/testkit.ts";
 import { experimentChecks, parseTarget, suggest } from "./decide.ts";
-import { syncGumroad, toSale } from "./gumroad.ts";
+import { routeFor, syncGumroad, toSale } from "./gumroad.ts";
 
 const NOW = Date.parse("2026-10-10T16:00:00Z");
 const DAY = 86_400_000;
@@ -51,6 +51,12 @@ test("sync records each sale once, pages through, marks refunds at $0 and keeps 
   assert.deepEqual([again.added, again.alreadyHad, again.refundsMarked], [0, 1, 1]);
   assert.equal(fx.tables.revenue_entries.length, 3);
   assert.equal(fx.tables.revenue_entries.find((r) => r.external_id === "gumroad:s1aaaa")?.amount_usd, 0);
+});
+
+test("each product's sales go to its own experiment; unknown products use the default", () => {
+  assert.equal(routeFor("AI Side Hustle Starter Kit").experimentId, "f56731bb-688b-4276-b10f-9e5d8034809c");
+  assert.equal(routeFor("free ai tools list + 3 starter prompts").venture, "AI Starter Kit (Gumroad)");
+  assert.equal(routeFor("Etsy Seller AI Prompt Pack").experimentId, "a90685aa-39a7-40fd-8836-c23a9884801c");
 });
 
 test("sync refuses without a token and reports API errors without inventing sales", async () => {

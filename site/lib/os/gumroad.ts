@@ -7,7 +7,8 @@ import type { Db } from "../jarvis/db.ts";
 import { OS_CONFIG } from "./config.generated.ts";
 import { logActivity } from "./usage.ts";
 
-type GCfg = { venture: string; experiment_id: string | null; since: string; max_pages: number };
+type ProductRule = { name_starts_with: string; venture: string; experiment_id: string | null };
+type GCfg = { venture: string; experiment_id: string | null; since: string; max_pages: number; products?: ProductRule[] };
 const CFG = OS_CONFIG as unknown as { timezone: string; revenue_sync: { gumroad: GCfg } };
 const G = CFG.revenue_sync.gumroad;
 const API = "https://api.gumroad.com/v2/sales";
@@ -42,6 +43,13 @@ export function toSale(raw: unknown, tz: string = CFG.timezone): Sale | null {
     day: dayIn(new Date(created).toISOString(), tz),
     refunded: s.refunded === true || s.chargedback === true || (s.disputed === true && s.dispute_won !== true),
   };
+}
+
+/** Which venture/experiment a product's sales belong to: the first matching products rule, else the default. */
+export function routeFor(product: string, cfg: GCfg = G): { venture: string; experimentId: string | null } {
+  const p = product.toLowerCase();
+  const r = (cfg.products ?? []).find((x) => p.startsWith(x.name_starts_with.toLowerCase()));
+  return r ? { venture: r.venture, experimentId: r.experiment_id ?? null } : { venture: cfg.venture, experimentId: cfg.experiment_id ?? null };
 }
 
 /** Pulls every sale since the configured start date and records the new ones. Safe to run any number of times. */
@@ -82,8 +90,9 @@ export async function syncGumroad(db: Db, env: Record<string, string | undefined
       } else out.alreadyHad += 1;
       continue;
     }
+    const route = routeFor(s.product);
     await db.insert("revenue_entries", {
-      venture: G.venture, experiment_id: G.experiment_id ?? null, source: "marketplace", product: s.product,
+      venture: route.venture, experiment_id: route.experimentId, source: "marketplace", product: s.product,
       amount_usd: s.refunded ? 0 : s.amountUsd, cost_usd: s.refunded ? 0 : s.feeUsd, units: s.units, occurred_on: s.day,
       external_id: ext, note: s.refunded ? "Refunded or charged back on Gumroad (sync)" : "Gumroad sale (sync)",
     });
