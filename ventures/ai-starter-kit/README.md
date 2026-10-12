@@ -12,3 +12,4 @@
 - Experiment: "3 sales in 14 days" (deadline 2026-10-25), $0 cash. Gumroad sync sends both products' sales to this experiment (`config/money_os.yaml` → `revenue_sync.gumroad.products`); free downloads are stored at $0 and never count as sales.
 - Rules: no income claims, AI-made videos labelled, every prompt tells the AI not to invent facts.
 - Story Shorts: `videos.mjs` (K1 "twenty ideas", K2 "which AI app"), Kling 3 clips saved as `out/videos/<id>-clip.mp4`. Captions and schedule: `POSTING.md`.
+- Kling jobs (2026-10-12, 75 credits): K1 `554d12bc-caf0-4a7c-925b-4169cb217eda`, K2 `8adba088-2113-4264-86e8-4e9753a1a5ad`. Finals: `out/videos/K1-ai-starter-kit-story.mp4`, `K2-…` (18.5 s).
