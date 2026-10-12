@@ -4,6 +4,8 @@
 // claims, no "passive income", no results we do not have. Every prompt tells the AI not to invent facts.
 
 export const STORE = "https://launchpadprompts.gumroad.com";
+// Live 2026-10-12 (owner)
+export const LINKS = { free: "https://launchpadprompts.gumroad.com/l/free-ai-tools", kit: "https://launchpadprompts.gumroad.com/l/ai-starter-kit" };
 
 // Free AI tools for each step. Plans and limits change, so the PDF tells buyers to check each site; no prices are
 // stated as fact.
