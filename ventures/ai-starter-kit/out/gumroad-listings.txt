@@ -49,5 +49,12 @@ GOOD TO KNOW
 • Written with the help of AI tools and reviewed by me.
 
 AFTER BOTH ARE LIVE
-• In the free product's Gumroad "receipt" message, add: "Want the full 30-prompt kit? <paid product link>".
+• Paste this into the free product's Gumroad receipt message (Edit product → Receipt), with the real $12 link:
+
+Thanks for grabbing the free tools list! Start with prompt 1 tonight. It only takes about 10 minutes.
+
+When you're ready for the next steps (making the product, listing it and posting about it), the full AI Side Hustle Starter Kit has all 30 prompts plus a 7-day checklist, for $12:
+<PASTE $12 LINK>
+
+No pressure. The free list works on its own. Questions? Just reply to this email.
 • Send both links to Claude to add to the bio links and captions.
