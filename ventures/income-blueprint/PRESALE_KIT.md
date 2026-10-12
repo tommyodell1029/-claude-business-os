@@ -1,5 +1,7 @@
 # Multiple Income Streams with AI: pre-sale kit (Skool)
 
+> **On hold (owner, 2026-10-12):** the pre-sale starts only after one income stream (Etsy or Gumroad) has real numbers to show. The experiment in /os is marked on hold. The kit below is ready for when that happens; update the dates first.
+
 This kit supports the Money OS experiment "Multiple Income Stream Blueprint" (started 2026-10-10, target "5 sales by October 29th").
 
 **Owner decisions (2026-10-11):**

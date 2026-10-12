@@ -263,6 +263,10 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - Listing sheets: titles checked against Etsy's 140-character limit; 13 tags each, all within 20 characters.
 - Claude cannot open the shops or publish; the owner uploads. Experiment start dates move to the go-live date when the owner says so.
 
+## Content push: 2026-10-12 (orchestrator, Opus)
+- Owner: Skool / Blueprint pre-sale on hold until one income stream has real numbers (experiment target + note updated in /os). Focus: content → views → Linktree clicks (Linktree holds Gumroad, Etsy and the social pages).
+- Built `ventures/content/`: 11 carousels from real product content (4 prompt carousels, 2 starter-kit, 5 planners) as 1080×1350 slides plus silent 1080×1920 Shorts slideshows, a 2-week schedule (1 carousel midday + 1 story video evening) and captions. No Higgsfield credits used.
+
 ## AI Side Hustle Starter Kit experiment: 2026-10-11 (orchestrator, Opus)
 - Owner: "go kit" and kill 3 noise opportunities (Small Manufacturing, Low-Capital Export/Resale, Physical Product Business Starter Templates). All 3 killed 2026-10-11, logged in activity.
 - Experiment `f56731bb-688b-4276-b10f-9e5d8034809c` "AI Side Hustle Starter Kit", target "3 sales in 14 days", $0, linked to opportunity "AI Side Hustle Starter Kits" (now validating).
