@@ -302,6 +302,7 @@ export const SHORTS = [
 ];
 
 // ---------------------------------------------------------------- build the guide (Markdown + PDF)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
 const OUT = fileURLToPath(new URL("./out/", import.meta.url));
 mkdirSync(OUT, { recursive: true });
 const intro = `# Problem-First Shorts: 27 video briefs
@@ -372,3 +373,4 @@ await p.evaluate(() => document.fonts.ready);
 await p.pdf({ path: `${OUT}problem-shorts.pdf`, width: "8.5in", height: "11in", printBackground: true, preferCSSPageSize: true });
 await browser.close();
 console.log(`${SHORTS.length} shorts -> out/problem-shorts.md + .pdf`);
+}
