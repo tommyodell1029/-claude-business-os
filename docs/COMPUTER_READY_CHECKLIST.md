@@ -3,7 +3,7 @@
 The owner moves Oct 24–25 or Oct 31–Nov 1, 2026, and gets the Dell then. Finish this list before the computer build starts. Tick items off as they're done.
 
 ## 1. Before Oct 22 (the experiments end that day)
-- [ ] Post the remaining story videos on schedule: P2 Sun, V3 Mon, P1 Tue, V2 Wed, P3 Thu, P5 Fri.
+- [ ] Post the remaining story videos on schedule: P2 Sun ✅ (Oct 12), V3 Mon, P1 Tue + K1 (starter kit), V2 Wed, P3 Thu + K2 (starter kit), P5 Fri.
 - [ ] Oct 15, Day 7 review: write down Etsy Stats (views, favorites, sales per listing), Gumroad Analytics (views, sales per pack), and TikTok/IG/YouTube views per video.
 - [ ] Record every sale in /os → Settings → Record revenue (or tell ULTRON "record $X from Etsy").
 - [ ] Oct 22, Day 14 decision for both experiments, using the decision rules in the content-plan PDFs. Mark each one validated or killed in /os → Experiments, with a one-line result note.
