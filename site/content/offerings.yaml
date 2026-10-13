@@ -63,7 +63,44 @@ services:
     name: Websites for Local Businesses
     summary: Fast, mobile-first marketing website with a contact form and click-to-call, built and hosted for the client.
     price: { build: 1497, build_with_growth_or_scale: 997, hosting_maintenance_monthly: 49 }
-    available: false            # DROPPED by owner 2026-10-08 (not offered)
+    available: false            # DROPPED by owner 2026-10-08; replaced by website_starter below (2026-10-13)
+  # Owner 2026-10-13 (ULTRON business launch): the first offer to validate. Price and niche are test hypotheses.
+  website_starter:
+    name: One-Page Business Website
+    summary: A professional, mobile-friendly one-page website for a local service business, with click-to-call, a working contact form and basic on-page SEO.
+    price: { build: 499, maintenance_monthly: 49 }
+    available: true
+    target_niches: [plumbing, hvac]
+    includes:
+      - Mobile-responsive design
+      - Clear service descriptions
+      - Click-to-call buttons
+      - Contact form that emails you (delivery tested before launch)
+      - Basic on-page SEO (title, description, headings, local business details)
+      - One revision round
+      - Deployment help (on your domain or ours)
+      - A short handoff guide
+    delivery: "3-5 business days after we receive your content, photos, approvals and access"
+    payment: "50% deposit before work starts; the remaining 50% before launch or handoff"
+    excludes:
+      - Logo or brand design
+      - Copywriting beyond the one page (we draft from your details; you approve)
+      - Professional photography or paid stock photos
+      - Online booking, payments, e-commerce or customer logins
+      - Ongoing changes after launch (that's the maintenance plan)
+      - Domain registration fees and third-party subscriptions
+      - Guaranteed rankings, traffic, leads or revenue
+    maintenance:
+      name: Website Care Plan
+      price_monthly: 49
+      includes:
+        - Hosting on our account
+        - Up to 30 minutes of small text or photo updates a month
+        - Contact form check each month
+        - Fixes if something we built breaks
+      excludes:
+        - New pages or redesigns (quoted separately)
+      terms: "Month-to-month. Cancel anytime by email."
 
 # ---------------------------------------------------------------- add-ons
 addons:

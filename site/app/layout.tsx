@@ -2,10 +2,15 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import "./globals.css";
+import { loadOfferings, usd, websiteOffer } from "../lib/offerings.ts";
+
+const offer = websiteOffer(loadOfferings());
 
 export const metadata: Metadata = {
   title: { default: "LaunchPad Local", template: "%s | LaunchPad Local" },
-  description: "LaunchPad Local, Jacksonville, Florida.",
+  description: offer
+    ? `Fast, mobile-friendly one-page websites for plumbing, HVAC and home-service businesses in Jacksonville, FL. ${usd(offer.price.build)}.`
+    : "LaunchPad Local, Jacksonville, Florida.",
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
@@ -19,7 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="wrap bar">
             <Link href="/" className="brand">LaunchPad Local</Link>
             <nav aria-label="Main">
-              <a href="mailto:tommy@launchpadlocal.org" className="btn small">Contact</a>
+              <Link href="/#contact" className="btn small nav-cta">Get a website</Link>
             </nav>
           </div>
         </header>

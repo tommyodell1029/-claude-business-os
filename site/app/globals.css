@@ -109,3 +109,7 @@ input[aria-invalid="true"] { border-color: var(--err); }
   .btn { transition: none; }
   .btn:hover { transform: none; box-shadow: none; }
 }
+
+/* Offer-page palette for the header button (2026-10-13) */
+.btn.nav-cta { background: #b5602a; border-color: #b5602a; color: #fff; }
+.btn.nav-cta:hover { background: #9c5022; border-color: #9c5022; }

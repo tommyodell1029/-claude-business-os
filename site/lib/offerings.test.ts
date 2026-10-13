@@ -39,3 +39,14 @@ test("demo phone is hidden unless SHOW_DEMO_PHONE=true and the number is valid",
   assert.equal(demoPhone({ DEMO_PHONE: "123", SHOW_DEMO_PHONE: "true" }), null);
   assert.deepEqual(demoPhone({ DEMO_PHONE: "+19045550100", SHOW_DEMO_PHONE: "TRUE" }), { display: "(904) 555-0100", tel: "+19045550100" });
 });
+
+test("the website offer comes from the yaml and only when available", async () => {
+  const { websiteOffer } = await import("./offerings.ts");
+  const o = loadOfferings(new URL("../content/offerings.yaml", import.meta.url).pathname);
+  const w = websiteOffer(o);
+  assert.ok(w);
+  assert.equal(w.price.build, 499);
+  assert.equal(w.maintenance.price_monthly, 49);
+  assert.ok(w.excludes.some((x) => /guaranteed/i.test(x)));
+  assert.equal(websiteOffer({ ...o, services: { ...o.services, website_starter: { ...w, available: false } } }), null);
+});

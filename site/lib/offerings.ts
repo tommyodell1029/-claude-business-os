@@ -20,9 +20,22 @@ export type Offerings = {
   tiers: Record<string, Tier>;
   founding_offer: { setup_waived: boolean; free_months: number; recurring_starts: string };
   terms: { contract: string; trial: string; refunds: string; cancellation: string; cancellation_email: string };
-  services: Record<string, { name: string; summary: string; available: boolean }>;
+  services: Record<string, { name: string; summary: string; available: boolean }> & { website_starter?: WebsiteOffer };
   addons: Record<string, Addon>;
 };
+
+export type WebsiteOffer = {
+  name: string; summary: string; available: boolean;
+  price: { build: number; maintenance_monthly: number };
+  includes: string[]; excludes: string[]; delivery: string; payment: string;
+  maintenance: { name: string; price_monthly: number; includes: string[]; excludes: string[]; terms: string };
+};
+
+/** The $499 one-page website offer, or null when it is not available. */
+export function websiteOffer(o: Offerings): WebsiteOffer | null {
+  const w = o.services.website_starter;
+  return w && w.available === true ? w : null;
+}
 
 export function loadOfferings(file = join(process.cwd(), "content", "offerings.yaml")): Offerings {
   return parse(readFileSync(file, "utf8")) as Offerings;

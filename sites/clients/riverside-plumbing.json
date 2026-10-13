@@ -1,0 +1,21 @@
+{
+  "slug": "riverside-plumbing",
+  "concept": true,
+  "business": "Riverside Plumbing Co.",
+  "trade": "Plumbing",
+  "schema_type": "Plumber",
+  "phone": "(904) 555-0142",
+  "city": "Jacksonville, FL",
+  "headline": "Leaks, clogs and water heaters, fixed right.",
+  "intro": "A family-run plumbing company serving Jacksonville homes. Call and talk to a plumber, not a call center.",
+  "services": [
+    { "name": "Leak repair", "text": "Dripping faucets, leaking pipes and hidden leaks found and fixed." },
+    { "name": "Drain cleaning", "text": "Slow and clogged sinks, tubs, toilets and main lines cleared." },
+    { "name": "Water heaters", "text": "Tank and tankless water heater repair and replacement." },
+    { "name": "Toilets and fixtures", "text": "Running toilets, new faucets, garbage disposals and fixture installs." }
+  ],
+  "area": "Jacksonville, Arlington, Mandarin, Riverside and the Beaches (sample area)",
+  "hours": "Mon–Fri 7am–6pm, Sat 8am–2pm (sample hours)",
+  "extra": { "title": "Not sure what's wrong?", "text": "Describe the problem in the form and we'll call you back." },
+  "colors": { "primary": "#0f4c5c", "accent": "#e36414", "light": "#eef4f5", "ink": "#14212b" }
+}
