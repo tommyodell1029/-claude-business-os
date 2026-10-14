@@ -25,6 +25,16 @@ This is a module inside the existing system, not a new platform. It uses the sam
 | Client operations | `client_projects` table + `ops/launchpad/ONBOARDING.md`, `DELIVERY.md`, `HANDOFF.md` | Table live; no clients yet |
 | Finance & cost | `revenue_entries` (venture "Launchpad Local websites"), existing AI cost tracking; quotes in `client_projects` | Existing; Launchpad revenue $0 |
 
+## Finding businesses and decision makers (owner standing workflow, 2026-10-14)
+1. **Find the company:** Google Places API only (`python -m leadgen discover` / Places source). Never scrape Maps HTML.
+2. **Find the decision maker:** Apollo and Hunter, free plans only, through the connected MCP tools.
+   - Hunter Free: 50 searches + 100 verifications per month (resets on the 13th). Use Domain Search when the business has a website; it only spends a credit when emails come back.
+   - Apollo Free: organization lookup is free. People search is **not available on the Free plan** (API_INACCESSIBLE, checked 2026-10-14). People match/enrichment and organization search spend credits (180 available on 2026-10-14) and need the owner's OK, with the cost shown first.
+   - First run (2026-10-14, current 15 leads): Hunter found nothing for plumbingjacksonville.com (Rolland Reash). For aldridgesonsplumbing.com it found only a generic `admin@` address on an accept-all domain, so deliverability can't be confirmed and it is not a decision maker; Aldridge stays phone-only. Apollo's free lookup had no record of Rooter Express of Jax. Expect one- or two-truck shops without a website to be missing from both tools; the phone call is how we reach the owner.
+   - No paid upgrades or extra credits without the owner's OK.
+3. **Store:** the decision maker's name, title and source go on the prospect (`decision_maker_*` columns, `qualification_notes`). The call script then says "ask for <name>".
+4. **Email rule unchanged:** a provider-found email can be used for a first touch only after an independent verifier marks it deliverable. Never build an address from a name pattern. Unverified or no email → phone only.
+
 ## Approval gate (enforced in code, not just prompts)
 - **ULTRON can't send anything.** Its tool list has no send, call, DNS, deploy, payment or delete tool (`tools.ts` header). Its only Launchpad write is a confirm-gated stage change, and the database rejects any tool not in the check constraint.
 - **Lead gen never sends.** It writes `outreach_events` drafted/pending only. Email sending happens only after the owner approves a draft in a session, via the Gmail connector, under the CLAUDE.md caps, and is reconciled by `gmail_sync`. First touches only go to verifier-confirmed addresses, and every email has the mailing address and opt-out (validated in code). Phone contact is done by the owner. The system never places calls.
