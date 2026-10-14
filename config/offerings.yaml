@@ -82,6 +82,9 @@ services:
       - A short handoff guide
     delivery: "3-5 business days after we receive your content, photos, approvals and access"
     payment: "50% deposit before work starts; the remaining 50% before launch or handoff"
+    # Website refund policy: drafted 2026-10-14 for the terms page, owner to confirm before the first deposit.
+    refunds: "If you cancel before we start work, we refund your deposit in full. Once work has started, the deposit is not refundable. The remaining balance is only due once you approve the finished site."
+    revisions_extra: "Changes beyond the one included revision round are quoted before we do them."
     excludes:
       - Logo or brand design
       - Copywriting beyond the one page (we draft from your details; you approve)

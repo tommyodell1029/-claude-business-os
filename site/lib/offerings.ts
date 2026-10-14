@@ -27,7 +27,7 @@ export type Offerings = {
 export type WebsiteOffer = {
   name: string; summary: string; available: boolean;
   price: { build: number; maintenance_monthly: number };
-  includes: string[]; excludes: string[]; delivery: string; payment: string;
+  includes: string[]; excludes: string[]; delivery: string; payment: string; refunds: string; revisions_extra: string;
   maintenance: { name: string; price_monthly: number; includes: string[]; excludes: string[]; terms: string };
 };
 
