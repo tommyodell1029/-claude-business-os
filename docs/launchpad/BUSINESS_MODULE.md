@@ -49,9 +49,13 @@ This is a module inside the existing system, not a new platform. It uses the sam
 Read packets in `ops/launchpad/packets/`. Approve or skip them in chat, or tell ULTRON "move X to contacted, follow up Friday" (confirm needed).
 Desktop still needed: nothing for daily use. Running lead gen or audits needs a Claude Code session, which also works from the phone app.
 
+## Run log
+- 2026-10-14: owner approved the production deploy (dpl_BhjFkVDw…, commit bb518c6). Live QA on launchpadlocal.org passed (offer, sample and terms pages: 200, no overflow, no console errors).
+- 2026-10-14: owner approved discovery. Places Text Search: plumbing + HVAC in Orange Park, Fleming Island and Jacksonville, 9 API calls (cap 12), 120 results upserted (duplicates merged by place_id). 72 newly audited plus the browser re-check. 15 leads are now awaiting approval (12 with no website, 3 with verified site problems). 2 non-targets removed: a realtor whose surname is Plummer, and a handyman. No paid email lookups were run.
+
 ## Status (2026-10-14)
 - **Implemented and tested:** offer config, offer page and concept site (local build, Playwright QA), audit and verification, packets, overview, ULTRON tools, migrations (applied), export, docs.
-- **Deployed:** database migrations (live). Site and ULTRON changes are on the branch (Vercel preview); **production deploy awaits owner approval.**
+- **Deployed:** database migrations, and site + ULTRON + /os Launchpad tab are in production (owner-approved 2026-10-14).
 - **Awaiting the owner:**
   1. Approve the production deploy of the new homepage, sample site and /os tab.
   2. Approve or skip the 3 call packets.
