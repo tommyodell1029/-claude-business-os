@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const UNAVAILABLE = "DATA UNAVAILABLE";
 const TABS = [
-  ["command", "Command"], ["opportunities", "Opportunities"], ["experiments", "Experiments"], ["revenue", "Revenue"],
+  ["command", "Command"], ["launchpad", "Launchpad"], ["opportunities", "Opportunities"], ["experiments", "Experiments"], ["revenue", "Revenue"],
   ["cost", "AI Cost"], ["activity", "Activity"], ["settings", "Settings"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
@@ -551,6 +551,72 @@ function Cost({ nonce }: { nonce: number }) {
   );
 }
 
+type LpFinding = { id: string; title: string; evidence: string; url: string | null };
+type LpLead = { id: string; name: string; industry: string; phone: string | null; website: string | null; fit: number | null; notes: string | null; contactPath: string; findings: LpFinding[]; verifiedInBrowser: boolean; stage: string; nextFollowUp: string | null };
+const LP_COUNTS: [string, string][] = [
+  ["identified", "Leads identified"], ["qualified", "Qualified"], ["auditPrepared", "Audit ready"], ["awaitingApproval", "Outreach awaiting approval"],
+  ["sent", "Outreach sent"], ["replies", "Replies"], ["quotesPending", "Quotes pending"], ["awaitingPayment", "Awaiting payment"],
+  ["won", "Customers won"], ["inProduction", "Projects in production"], ["overdue", "Overdue follow-ups"],
+];
+
+/** Launchpad Local: the $499 website business ULTRON operates. Read-only; changes go through ULTRON with a confirm. */
+function Launchpad({ nonce }: { nonce: number }) {
+  const load = useView("launchpad", nonce);
+  return (
+    <Shell load={load}>
+      {(d) => {
+        const counts = (d.counts ?? null) as Record<string, number | null> | null;
+        const ready = list<LpLead>(d.ready) ?? [];
+        const qualified = list<LpLead>(d.qualified) ?? [];
+        const projects = list<Any>(d.projects);
+        const blockers = list<string>(d.blockers) ?? [];
+        return (
+          <>
+            <div className="os-card">
+              <h3 className="os-h3">Launchpad Local</h3>
+              <p className="os-line">{String(d.objective)}</p>
+              <p className="os-meta">Status: {String(d.status)} · Revenue collected: {usd(d.revenueUsd)}</p>
+              <p className="os-line os-good">Next: {String(d.next)}</p>
+              {blockers.map((b) => <p key={b} className="os-line os-warn">Blocker: {b}</p>)}
+            </div>
+            <div className="os-card">
+              <h3 className="os-h3">Pipeline</h3>
+              {counts === null ? <p className="os-warn">{UNAVAILABLE}</p> : LP_COUNTS.map(([k, label]) => (
+                <p key={k} className="os-line">{label}: <strong>{typeof counts[k] === "number" ? counts[k] : UNAVAILABLE}</strong></p>
+              ))}
+            </div>
+            <div className="os-card">
+              <h3 className="os-h3">Audit-ready leads ({ready.length})</h3>
+              {!ready.length ? <p className="os-dim">None yet.</p> : ready.map((l) => {
+                const site = l.website ? safeHref(l.website) : null;
+                return (
+                  <div key={l.id} className="os-line">
+                    <strong>{l.name}</strong> <span className="os-meta">· {l.industry} · fit {l.fit ?? UNAVAILABLE}/100{l.verifiedInBrowser ? " · checked in a browser" : ""}</span><br />
+                    {l.phone ? <a href={`tel:${l.phone}`}>{l.phone}</a> : null}{site ? <> · <a href={site} target="_blank" rel="noopener noreferrer">website</a></> : " · no website"}<br />
+                    <span className="os-meta">Contact path: {l.contactPath}</span>
+                    <ul>{l.findings.map((f) => <li key={f.id}>{f.title}: <span className="os-dim">{f.evidence}</span></li>)}</ul>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="os-card">
+              <h3 className="os-h3">Qualified, below the outreach bar ({qualified.length})</h3>
+              {qualified.map((l) => <p key={l.id} className="os-line">{l.name} <span className="os-meta">· {l.notes ?? ""}</span></p>)}
+            </div>
+            <div className="os-card">
+              <h3 className="os-h3">Client projects</h3>
+              {projects === null ? <p className="os-warn">{UNAVAILABLE}</p> : !projects.length ? <p className="os-dim">No customers yet.</p> : projects.map((p) => (
+                <p key={String(p.id)} className="os-line">{String(p.business)} <span className="os-meta">· {String(p.status).replace(/_/g, " ")} · deposit {String(p.deposit_status).replace(/_/g, " ")} · {usd(Number(p.price_usd))}</span></p>
+              ))}
+            </div>
+            <p className="os-dim">To change a lead, tell ULTRON, for example: &quot;move Aldridge &amp; Sons to contacted, follow up Friday&quot;. Every change waits for your confirm. Nothing is ever sent without your approval.</p>
+          </>
+        );
+      }}
+    </Shell>
+  );
+}
+
 function Activity({ nonce }: { nonce: number }) {
   const load = useView("activity", nonce);
   return (
@@ -983,6 +1049,7 @@ function Dashboard() {
         <main className="os-main">
           {detail ? <OpportunityDetail id={detail} nonce={nonce} onBack={() => go("opportunities")} />
             : tab === "command" ? <Command nonce={nonce} go={go} />
+            : tab === "launchpad" ? <Launchpad nonce={nonce} />
             : tab === "opportunities" ? <Opportunities nonce={nonce} onOpen={(id) => go(`opportunity/${id}`)} />
             : tab === "experiments" ? <Experiments nonce={nonce} />
             : tab === "revenue" ? <Revenue nonce={nonce} />

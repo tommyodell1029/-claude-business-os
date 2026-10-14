@@ -158,7 +158,7 @@ export async function settingsView(db: Db | null = null) {
   };
 }
 
-export const VIEWS = ["opportunities", "opportunity", "experiments", "revenue", "cost", "activity", "settings", "next"] as const;
+export const VIEWS = ["opportunities", "opportunity", "experiments", "revenue", "cost", "activity", "settings", "next", "launchpad"] as const;
 export type View = (typeof VIEWS)[number];
 
 export async function loadView(view: string, db: Db | null, q: URLSearchParams, now: number): Promise<{ status: number; body: unknown }> {
@@ -174,6 +174,7 @@ export async function loadView(view: string, db: Db | null, q: URLSearchParams, 
     case "experiments": return { status: 200, body: { ok: true, ...(await experimentsView(db)) } };
     case "revenue": return { status: 200, body: { ok: true, ...(await revenueView(db, now)) } };
     case "cost": return { status: 200, body: { ok: true, ...(await costView(db, now)) } };
+    case "launchpad": return { status: 200, body: { ok: true, ...(await (await import("./launchpad.ts")).launchpadOverview(db, now)) } };
     case "next": {
       const n = await safe(() => whatNext(db, now));
       return n ? { status: 200, body: { ok: true, ...n } } : { status: 200, body: { ok: true, recommended: null, top_opportunity: null } };

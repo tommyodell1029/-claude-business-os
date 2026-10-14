@@ -64,6 +64,16 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="python -m leadgen", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("google-places-test")
+    au = sub.add_parser("audit", help="website audit for the $499 website offer (plumbing + hvac by default)")
+    au.add_argument("--industry", action="append")
+    au.add_argument("--limit", type=int, default=20)
+    au.add_argument("--dry-run", action="store_true")
+    au.add_argument("--snapshot")
+    au.add_argument("--sql-out")
+    wd = sub.add_parser("website-drafts", help="first-contact packets for audit-ready website leads (prepares only)")
+    wd.add_argument("--dry-run", action="store_true")
+    wd.add_argument("--snapshot")
+    wd.add_argument("--sql-out")
     for name in ("scout", "enrich", "leads"):
         p = sub.add_parser(name)
         p.add_argument("--snapshot")
@@ -90,6 +100,16 @@ def main(argv=None) -> int:
     if a.cmd == "google-places-test":
         from .places_diag import main as diag
         return diag([])
+
+    if a.cmd == "audit":
+        from .audit import main_cli
+        return main_cli(a, _store(a, write=not a.dry_run), cfg)
+
+    if a.cmd == "website-drafts":
+        from .website_outreach import run as wd_run
+        for d in wd_run(_store(a, write=not a.dry_run), os.environ, a.dry_run):
+            print(f"{d['channel']:6} {d['name']}")
+        return 0
 
     if a.cmd == "scout":
         from .pipeline import scout

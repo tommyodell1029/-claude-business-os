@@ -57,6 +57,8 @@ export const TOOLS: ToolSpec[] = [
   { name: "experiment_check", kind: "read", description: "Decision check for experiments, computed in code: recorded sales (units) and revenue against the number in the target, day X of the window, deadline, and a suggested next step (validated, wait, extend, review traffic). Omit experiment_id for every open experiment. It only suggests; changing status still needs set_experiment_status and the owner's confirmation. Views/traffic are not in Money OS.", fields: { experiment_id: { type: "uuid", description: "One experiment id, or omit for all open ones." } }, required: [] },
   { name: "radar_sweep", kind: "write", description: "Propose a Money Radar web search for new opportunities in one category. It costs money (web searches plus tokens, within the AI budgets), so it does NOT run until the owner confirms. A recent identical sweep is reused for free.", fields: { category: { type: "enum", values: RADAR_KEYS, description: "The Radar category." } }, required: ["category"] },
   { name: "social_radar", kind: "write", description: "Propose a Social Radar sweep: searches YouTube (official API) for what people watch about making money online, saves the videos with their real view counts, then groups them into opportunities with the videos as evidence. Uses YouTube quota and a small model call, so it does NOT run until the owner confirms. A sweep from the last 24 hours is reused for free unless fresh is yes. mode shorts searches YouTube Shorts only.", fields: { fresh: { type: "enum", values: ["yes", "no"], description: "yes to ignore a recent cached sweep (default no)." }, mode: { type: "enum", values: ["all", "shorts"], description: "shorts = YouTube Shorts only (up to 3 minutes); all = any length (default)." } }, required: [] },
+  { name: "launchpad_status", kind: "read", description: "Launchpad Local business status ($499 one-page website offer, plumbing/HVAC first): pipeline counts by stage, audit-ready leads with their verified website findings and contact path, overdue follow-ups, client projects, revenue, blockers and the next recommended action. All computed in code; quote findings exactly as given.", fields: {}, required: [] },
+  { name: "set_prospect_stage", kind: "write", description: "Propose moving a Launchpad Local prospect to a new pipeline stage, with an optional note and next follow-up date. Use stage lost with a note when someone declines or asks not to be contacted. Does NOT execute until the owner confirms. Never sends anything.", fields: { prospect_id: { type: "uuid", description: "The prospect id from launchpad_status." }, stage: { type: "enum", values: ["identified", "researching", "qualified", "audit_prepared", "awaiting_approval", "contacted", "replied", "quote_prepared", "awaiting_payment", "won", "in_production", "delivered", "maintenance", "lost"], description: "The new stage." }, note: { type: "text", min: 1, max: 500, description: "What happened (stored as the outcome)." }, next_follow_up: { type: "date", description: "Next follow-up date (YYYY-MM-DD)." } }, required: ["prospect_id", "stage"] },
   { name: "sync_gumroad_sales", kind: "write", description: "Propose pulling new sales from Gumroad (official API, read-only) into Money OS revenue, linked to the prompt-pack experiment. Free; re-running never double-counts. Does NOT run until the owner confirms.", fields: {}, required: [] },
   { name: "research_opportunity", kind: "write", description: "Propose web research on one opportunity (evidence plus proposed sub-scores; the score itself is computed in code). Costs money, so it does NOT run until the owner confirms. Results from the last 14 days are reused for free unless fresh is yes.", fields: { opportunity_id: { type: "uuid", description: "The opportunity id." }, fresh: { type: "enum", values: ["yes", "no"], description: "yes to ignore a recent cached result (default no)." } }, required: ["opportunity_id"] },
   { name: "create_experiment", kind: "write", description: "Propose a new Money OS experiment (status validating). Does NOT execute until the owner confirms. Use only details the owner gave; never invent targets or budgets.", fields: { name: { type: "text", min: 1, max: 160, description: "Short experiment name." }, opportunity_id: { type: "uuid", description: "The opportunity it tests, if any." }, hypothesis: { type: "text", min: 1, max: 1000, description: "What we believe will happen." }, success_metric: { type: "text", min: 1, max: 300, description: "How success is measured." }, target: { type: "text", min: 1, max: 300, description: "The number that counts as success." }, budget_usd: { type: "number", min: 0, max: 10000, description: "Money budget in USD (default 0)." } }, required: ["name"] },
@@ -208,6 +210,10 @@ async function readTool(name: string, v: Record<string, string | number>, ctx: T
     }
     case "what_next":
       return (await import("../os/next.ts")).whatNext(db, ctx.now);
+    case "launchpad_status": {
+      const o = await (await import("../os/launchpad.ts")).launchpadOverview(db, ctx.now);
+      return { ...o, ready: o.ready.map((l) => ({ id: l.id, name: l.name, industry: l.industry, phone: l.phone, website: l.website, fit: l.fit, contact_path: l.contactPath, findings: l.findings.map((f) => ({ problem: f.title, evidence: f.evidence, url: f.url })), checked_in_browser: l.verifiedInBrowser })), qualified: o.qualified.map((l) => ({ id: l.id, name: l.name, fit: l.fit, notes: l.notes })), overdue: o.overdue.map((l) => ({ id: l.id, name: l.name, stage: l.stage, next_follow_up: l.nextFollowUp })) };
+    }
     case "experiment_check": {
       const checks = await (await import("../os/decide.ts")).experimentChecks(db, ctx.now, v.experiment_id ? String(v.experiment_id) : undefined);
       if (v.experiment_id && !checks.length) return { error: "no experiment with that id" };
@@ -295,6 +301,11 @@ async function describeMoneyOs(name: string, v: Record<string, string | number>,
     const worst = worstCase(model(R.role, "os"), R.max_searches, R.max_tokens, 2000);
     return { summary: `Run Money Radar on ${R.categories[String(v.category)]}: up to ${R.max_searches} web searches, at most about ${money(worst)} (free if a sweep from the last 14 days exists).` };
   }
+  if (name === "set_prospect_stage") {
+    const p = await loadOne(db, "prospects", "id,name,pipeline_stage", String(v.prospect_id));
+    if (!p) return { error: "no prospect with that id" };
+    return { summary: `Move "${clip(p.name, 100)}" from ${String(p.pipeline_stage).replace(/_/g, " ")} to ${String(v.stage).replace(/_/g, " ")}${v.next_follow_up ? `, follow up on ${String(v.next_follow_up)}` : ""}${v.note ? ` (note: ${clip(v.note, 120)})` : ""}. Nothing is sent.` };
+  }
   if (name === "sync_gumroad_sales") return { summary: "Pull new Gumroad sales into Money OS revenue (official API, read-only, free; sales already recorded are skipped)." };
   if (name === "social_radar") {
     const social = await import("../os/social.ts");
@@ -349,6 +360,16 @@ async function executeMoneyOs(tool: string, v: Record<string, string | number>, 
     const r = await research.researchOpportunity(rctx, String(v.opportunity_id), { force: v.fresh === "yes" });
     if (!r.ok) throw new Error(r.error ?? "research failed");
     return `${r.cached ? "Reused recent research: " : ""}${r.evidenceAdded} evidence items saved, ${r.evidenceDropped} unsupported claims dropped, ${r.scored} dimensions scored. Cost ${money(r.spentUsd)}.`;
+  }
+  if (tool === "set_prospect_stage") {
+    const p = await loadOne(db, "prospects", "id,name,pipeline_stage", String(v.prospect_id));
+    if (!p) throw new Error("prospect no longer exists");
+    const patch: Record<string, unknown> = { pipeline_stage: v.stage, updated_at: stamp };
+    if (v.note) patch.outcome = String(v.note);
+    if (v.next_follow_up) patch.next_follow_up = String(v.next_follow_up);
+    await db.update("prospects", [["id", "eq", String(p.id)]], patch);
+    await logActivity(db, actor, "prospect_stage", `${String(p.name)}: ${String(p.pipeline_stage)} -> ${String(v.stage)} (action ${actionId})`);
+    return `${String(p.name)} is now ${String(v.stage).replace(/_/g, " ")}.`;
   }
   if (tool === "sync_gumroad_sales") {
     const r = await (await import("../os/gumroad.ts")).syncGumroad(db, ctx.env, ctx.fetchImpl, ctx.now);

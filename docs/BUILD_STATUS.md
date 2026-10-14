@@ -263,6 +263,22 @@ Written only when the thing they describe exists, so no empty stubs: ARCHITECTUR
   - Listing sheets: titles checked against Etsy's 140-character limit; 13 tags each, all within 20 characters.
 - Claude cannot open the shops or publish; the owner uploads. Experiment start dates move to the go-live date when the owner says so.
 
+## Launchpad Local website business (ULTRON business launch): 2026-10-13/14 (orchestrator, Opus)
+- Owner master prompt: ULTRON operates Launchpad Local. First offer is a $499 one-page website (+$49/mo care plan), plumbing/HVAC first. Supersedes "websites dropped" (2026-10-08). Etsy planners continue as a side line.
+- Built (details, status and approval gate in `docs/launchpad/BUSINESS_MODULE.md`):
+  - offer in `config/offerings.yaml`
+  - new homepage offer page and fictional concept site (`/sample/riverside-plumbing/index.html`)
+  - reusable client-site template, build and QA (`sites/`)
+  - migrations `20261013000001`/`000002` (applied)
+  - `leadgen audit` + `verify_audit.mjs`; `leadgen website-drafts`
+  - ULTRON `launchpad_status` / `set_prospect_stage`
+  - /os Launchpad tab
+  - export script
+  - ops quote, onboarding, delivery and handoff docs
+- Real run: 53 plumbing/HVAC prospects audited; the browser re-check removed 7 false findings; 3 audit-ready (2 with no website, 1 with no tap-to-call and no form), all phone-only. 3 owner call packets pending approval.
+- Tests: Python 291 OK, site 156/156, lint and typecheck clean, local build + Playwright QA (offer page and sample: no overflow, no console errors, no broken links; client QA 14/14).
+- Awaiting the owner: production deploy, packet approvals, Places discovery of no-website businesses.
+
 ## Focus change: Etsy planners only + AI influencer venture (owner, 2026-10-12)
 - Owner: keep only the Etsy planners. Reason: planners are easier to sell and market, and buyers can ask ChatGPT for prompts themselves. Experiments "AI prompt packs" (a90685aa) and "AI Side Hustle Starter Kit" (f56731bb) are killed with result notes, and their opportunities killed. Owner to unpublish the Gumroad products and remove them from Linktree. All prompt files are kept in the repo.
 - Owner: the Higgsfield AI influencer becomes his own venture. The opportunity is logged in Money OS (59e8c6c2); rules and open decisions are in `ventures/ai-influencer/README.md`.
