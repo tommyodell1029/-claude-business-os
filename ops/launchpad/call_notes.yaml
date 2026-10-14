@@ -1,0 +1,116 @@
+# Personal notes for the Saturday call scripts (2026-10-18). Every fact has a source; nothing here is guessed.
+# "hook" = what you noticed, "pain" = the question that opens their real problem. Ask, never tell them their business.
+leads:
+  - name: "ROOTER EXPRESS OF JAX LLC"
+    order: 1
+    facts:
+      - "5.0 stars from 173 Google reviews, listed as open 24 hours (Google Business listing)"
+      - "Also on HomeAdvisor (4.64, 95 reviews) and Thumbtack, which lists about 4 years in business and 1 employee (homeadvisor.com, thumbtack.com)"
+    hook: "You've got 173 five-star reviews on Google, which is more than most of the big companies in town, but when someone taps 'Website' on your listing there's nothing there."
+    pain: "Are you still getting a good chunk of your work through HomeAdvisor or Thumbtack, or is it mostly people finding you on Google?"
+    why_it_matters: "Lead sites charge per lead. A site of his own turns his 173 Google reviews into direct calls. Don't claim his costs. Let him say it."
+  - name: "Precision Plumbing"
+    order: 2
+    facts:
+      - "5.0 stars from 75 Google reviews, open 24 hours, 3718 Emerson St (Google Business listing)"
+      - "The website on the Google listing, precisionplumbingflorida.com, has expired. It now shows 'Buy this expired domain' for $195 (checked in a browser 2026-10-14)"
+    hook: "I was looking at Jacksonville plumbers and you've got a perfect 5.0 from 75 reviews. But heads up: the website link on your Google listing goes to a page selling your old domain name for $195."
+    pain: "Did you know that link was dead? Anybody who taps it from Google lands on a 'buy this domain' page."
+    why_it_matters: "This is a real, urgent problem, and you're helping him by telling him. Lead with the help, not the sale."
+  - name: "Able Plumbing Repair Service, Inc."
+    order: 3
+    facts:
+      - "4.2 stars from 90 Google reviews, listed as open 24 hours, 170 College Dr, Orange Park (Google Business listing)"
+      - "A directory page has reviews praising fast emergency response and mentions plumbers named Greg and John (bestprosintown.com; third-party, so treat as unconfirmed)"
+    hook: "You're open 24 hours with 90 reviews, but there's no website on your Google listing."
+    pain: "When somebody's got water on the floor at midnight, are most of your calls coming straight from Google, or from people who already know you?"
+    why_it_matters: "Night-time emergency searchers compare 2–3 listings fast. A page with services, a tap-to-call button and a service area helps them pick him."
+  - name: "Harry H Hill Plumbing Inc"
+    order: 4
+    facts:
+      - "5.0 stars from 86 Google reviews, 12 Widener Way, Orange Park; listed open 24 hours Mon–Fri, closed Sat–Sun (Google Business listing)"
+      - "No other web presence found in a search (2026-10-14): the Google listing is basically their whole online footprint"
+    hook: "A perfect 5.0 from 86 reviews is really strong, and from what I can see the Google listing is the only place online people can find you."
+    pain: "When people find you on Google, do they usually just call, or do you ever hear 'I couldn't find much about you online'?"
+    why_it_matters: "Closed on weekends. A request form catches weekend jobs so he can call them back Monday, before they call someone else."
+  - name: "Stevenson plumbing"
+    order: 5
+    facts:
+      - "5.0 stars from 38 Google reviews, listed open 24 hours (Google Business listing)"
+      - "Only a generic directory profile found online (lantern.llc), no website"
+    hook: "You've got a perfect 5.0 on Google, and you're listed as open 24 hours, but there's no website on the listing."
+    pain: "Is it mostly you running the calls yourself? How do people find you when they're not a referral?"
+    why_it_matters: "Small or solo operator. Keep it short and respect his time."
+  - name: "Rolland Reash Plumbing"
+    order: 6
+    facts:
+      - "4.7 stars from 665 Google reviews, open 24 hours (Google Business listing)"
+      - "Website plumbingjacksonville.com says 25+ years in Jacksonville. The number at the top (904.260.7059) is plain text, not tappable, and there's no request form on the homepage (browser check 2026-10-14)"
+    hook: "You've got 665 reviews and 25 years in Jacksonville, which is a serious reputation. I was looking at your site on my phone and noticed the phone number at the top isn't tappable."
+    pain: "Do you have someone who manages the website for you, or is that something you handle?"
+    why_it_matters: "Big established company: likely has a web person already. The goal is a referral to whoever manages it, or a quick-fix quote. Lowest chance of the $499 sale. Keep it light."
+  - name: "Black Pearl Plumbing"
+    order: 7
+    facts:
+      - "4.1 stars from 28 Google reviews, 2487 County Rd 220, Middleburg; open Mon–Fri 8–5, closed weekends (Google Business listing)"
+    hook: "I noticed Black Pearl doesn't have a website on its Google listing, and you're closed on weekends."
+    pain: "When somebody's toilet overflows on a Saturday, what happens? Do they just call the next plumber on the list?"
+    why_it_matters: "The form catches weekend requests for Monday follow-up."
+  - name: "Gunderson Plumbing Co"
+    order: 8
+    facts:
+      - "4.0 stars from 20 Google reviews, 118 Industrial Loop Dr N, Orange Park; no hours listed (Google Business listing)"
+    hook: "I was looking at Orange Park plumbers and noticed Gunderson doesn't have a website on its Google listing, and the listing doesn't show your hours either."
+    pain: "How do most new customers find you these days?"
+    why_it_matters: "A missing hours field is an easy, free fix to mention as a goodwill tip (they can add it in Google Business Profile)."
+  - name: "Senstemp Cooling"
+    order: 9
+    facts:
+      - "5.0 stars from 15 Google reviews, Orange Park; open 24 hours Mon–Sat (Google Business listing)"
+    hook: "You've got a perfect 5.0 and you're open 24 hours six days a week, but there's no website on your Google listing."
+    pain: "When an AC goes out in the middle of the night in July, how are people finding you?"
+    why_it_matters: "This is HVAC, not plumbing: swap the examples to AC repair and tune-ups."
+  - name: "Sonny Firth Plumbing Co Inc"
+    order: 10
+    facts:
+      - "4.4 stars from 15 Google reviews, Green Cove Springs; open Mon–Fri 9–5 (Google Business listing)"
+    hook: "I noticed Sonny Firth Plumbing doesn't have a website on its Google listing."
+    pain: "Do most of your jobs come from Green Cove and Clay County word of mouth, or are you trying to reach more people up toward Orange Park and Fleming Island?"
+    why_it_matters: "Weekday-only hours. A form catches after-hours requests."
+  - name: "Gator Plumbing of Orange Park"
+    order: 11
+    facts:
+      - "3.3 stars from 13 Google reviews, 99 Industrial Loop Dr N, Orange Park; no hours listed (Google Business listing)"
+    hook: "I noticed Gator Plumbing doesn't have a website on its Google listing, and your hours aren't listed either."
+    pain: "Right now the Google listing is all people see. Would it help to have a page where you can show your services and tell people who you are in your own words?"
+    why_it_matters: "Never mention the 3.3 rating unless he does. If he brings it up, a site lets him present his work, but it doesn't change reviews."
+  - name: "Budget Plumbing"
+    order: 12
+    facts:
+      - "5.0 stars from 5 Google reviews, Lawrence Rd, Orange Park; no hours listed (Google Business listing)"
+    hook: "You've got a perfect 5.0 on Google, but there's no website or hours on your listing yet."
+    pain: "Are you still building up the business, or have you been at it a while?"
+    why_it_matters: "Possibly newer and price-sensitive. Mention the payment split (half to start)."
+  - name: "Hoffman Plumbing Inc"
+    order: 13
+    facts:
+      - "4.0 stars from 2 Google reviews, Farm Way, Middleburg; no hours listed (Google Business listing)"
+    hook: "I noticed Hoffman Plumbing doesn't have a website on its Google listing."
+    pain: "Do you get most of your work from contractors and builders, or from homeowners?"
+    why_it_matters: "Only 2 reviews: maybe commercial or new-construction focused, so a homeowner site may matter less. Ask before pitching."
+  - name: "Aldridge & Sons Plumbing"
+    order: 14
+    phone: "+19042873855"
+    facts:
+      - "Website aldridgesonsplumbing.com: 'family owned and operated', 'State Certified, licensed & insured', phone (904) 287-3855 (their homepage)"
+      - "On a phone the number isn't tappable, and there's no request form or main headline on the homepage (browser check 2026-10-14)"
+    hook: "I was on your website, the family-owned, state-certified part really comes through, and I noticed on my phone that the number isn't tap-to-call and there's no way to send a request."
+    pain: "Do most people call you, or do you get emails through the site?"
+    why_it_matters: "This is a redesign of an existing site. Offer to rebuild the homepage as one fast page."
+  - name: "Prime AC Repair Service"
+    order: 15
+    facts:
+      - "Listed in Orange Park, open 24/7, no reviews, but the phone number has a Michigan area code, (269) 354-7490 (Google Business listing)"
+    hook: "I noticed Prime AC Repair doesn't have a website on its Google listing."
+    pain: "Are you based here in Orange Park?"
+    why_it_matters: "A Michigan number plus no reviews can mean a lead-reseller listing, not a local company. If it's a call center or they won't say who does the work, thank them, hang up and mark the lead lost."

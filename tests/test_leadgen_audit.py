@@ -39,6 +39,10 @@ class AuditTest(unittest.TestCase):
         self.assertEqual(f["outdated_copyright"]["evidence"], "Footer shows © 2019")
         self.assertEqual(f["missing_title"]["evidence"], 'Page title: "Home"')
 
+    def test_parked_domain_is_one_finding_only(self):
+        f = check_html("<html><title>x.com — Buy this expired domain</title><body>Buy this expired domain $195</body></html>", "https://x.com/", "9045550100", TODAY)
+        self.assertEqual([x["id"] for x in f], ["domain_expired"])
+
     def test_no_website_and_unreachable(self):
         a = audit_prospect(FakeCrawler({}), {"website": None}, TODAY)
         self.assertEqual(a["status"], "no_website")

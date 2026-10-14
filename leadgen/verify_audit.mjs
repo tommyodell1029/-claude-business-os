@@ -38,13 +38,15 @@ for (const p of rows) {
       form: document.querySelectorAll("form, iframe[src*='form'], iframe[src*='book'], a[href*='book'], a[href*='schedule'], a[href*='quote']").length,
       h1: document.querySelectorAll("h1").length,
       viewport: !!document.querySelector('meta[name="viewport"]'),
+      title: document.title || "",
+      desc: document.querySelector('meta[name="description"]')?.content || "",
       text: document.body.innerText.replace(/\D/g, ""),
     }));
   } catch (e) { console.log(`${p.name}: browser load failed (${e.name}); kept for manual check`); }
   await page.close();
   if (!dom) continue;
   const digits = String(p.phone ?? "").replace(/\D/g, "").slice(-10);
-  const contradicted = { no_click_to_call: dom.tel > 0, no_form: dom.form > 0, no_h1: dom.h1 > 0, no_viewport: dom.viewport, phone_not_on_page: digits && dom.text.includes(digits) };
+  const contradicted = { no_click_to_call: dom.tel > 0, no_form: dom.form > 0, no_h1: dom.h1 > 0, no_viewport: dom.viewport, phone_not_on_page: digits && dom.text.includes(digits), missing_title: dom.title.trim().length >= 6, missing_description: dom.desc.trim().length >= 10 };
   const kept = a.findings.filter((f) => !contradicted[f.id]);
   const dropped = a.findings.filter((f) => contradicted[f.id]).map((f) => f.id);
   const fit = Math.min(100, kept.reduce((s, f) => s + f.weight, 0));

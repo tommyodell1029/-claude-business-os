@@ -70,6 +70,8 @@ def main(argv=None) -> int:
     au.add_argument("--dry-run", action="store_true")
     au.add_argument("--snapshot")
     au.add_argument("--sql-out")
+    cs = sub.add_parser("call-sheet", help="personalized call scripts for the leads awaiting approval")
+    cs.add_argument("--snapshot")
     wd = sub.add_parser("website-drafts", help="first-contact packets for audit-ready website leads (prepares only)")
     wd.add_argument("--dry-run", action="store_true")
     wd.add_argument("--snapshot")
@@ -104,6 +106,10 @@ def main(argv=None) -> int:
     if a.cmd == "audit":
         from .audit import main_cli
         return main_cli(a, _store(a, write=not a.dry_run), cfg)
+
+    if a.cmd == "call-sheet":
+        from .call_scripts import main_cli as cs_cli
+        return cs_cli(_store(a, write=False))
 
     if a.cmd == "website-drafts":
         from .website_outreach import run as wd_run

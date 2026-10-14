@@ -20,6 +20,7 @@ from .research import Crawler
 # weight = how strongly the finding suggests they'd benefit from the offer (0-100 scale after summing, capped)
 FINDINGS = {
     "no_website":          (45, "No website listed", "The Google Business listing has no website."),
+    "domain_expired":      (45, "Website address expired", "The website on the Google listing is a parked or for-sale domain page, not the business's site."),
     "site_unreachable":    (25, "Website did not load", "The website returned an error or no response when checked."),
     "no_https":            (15, "Not secure (no HTTPS)", "The site only loads over http://, so browsers can show a \"Not secure\" warning."),
     "no_viewport":         (20, "Not set up for phones", "The homepage has no mobile viewport tag, so phones show a shrunken desktop page."),
@@ -53,6 +54,10 @@ def check_html(page: str, url: str, phone: str | None = None, today: dt.date | N
         w, title, detail = FINDINGS[fid]
         out.append({"id": fid, "title": title, "detail": detail, "evidence": evidence[:240], "url": url, "weight": w})
 
+    _parked = re.search(r"(domain (?:is )?for sale|buy this (?:expired )?domain|this domain (?:may be|is) for sale|expired domain|parked (?:free|domain)|domain parking)", page, re.I)
+    if _parked:
+        add("domain_expired", f"The page says: \"{_parked.group(0)}\"")
+        return out                       # the rest of the page isn't theirs, so nothing else applies
     if urlparse(url).scheme == "http":
         add("no_https", f"The secure (https://) connection failed; the page only loaded at {url}")
     if not re.search(r"<meta[^>]+name=[\"']?viewport", page, re.I):
